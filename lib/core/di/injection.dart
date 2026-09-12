@@ -2,11 +2,14 @@ import 'package:get_it/get_it.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import '../../features/addresses/addresses_injection.dart';
+import '../../features/auth/auth_injection.dart';
+import '../../features/auth/presentation/cubit/session_cubit.dart';
 import '../config/app_config.dart';
 import '../locale/locale_cubit.dart';
 import '../mock/mock_database.dart';
 import '../network/api_client.dart';
 import '../network/dio_factory.dart';
+import '../router/app_router.dart';
 import '../storage/token_storage.dart';
 
 final sl = GetIt.instance;
@@ -29,10 +32,18 @@ Future<void> configureDependencies() async {
           baseUrl: AppConfig.apiBaseUrl,
           tokenStorage: sl(),
           languageCode: () => sl<LocaleCubit>().languageCode,
-          onUnauthorized: () {},
+          onUnauthorized: () => sl<SessionCubit>().expire(),
         ),
       ),
     );
 
   registerAddressesFeature(sl);
+  registerAuthFeature(sl);
+
+  sl.registerLazySingleton(
+    () => createRouter(session: sl<SessionCubit>(), locale: sl<LocaleCubit>()),
+  );
+
+  // The session is restored once, before the first frame using the router.
+  await sl<SessionCubit>().restore();
 }

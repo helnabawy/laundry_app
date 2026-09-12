@@ -16,6 +16,7 @@ extension FailureMessage on Failure {
     InputFailure(error: InputError.invalidPhone) => l10n.invalidPhone,
     InputFailure(error: InputError.invalidOtp) => l10n.invalidCode,
     InputFailure(error: InputError.requiredField) => l10n.requiredField,
+    UnsupportedRoleFailure() => l10n.staffMustUsePortal,
     ServerFailure(:final message?) => message,
     _ => l10n.genericError,
   };

@@ -189,5 +189,6 @@
   "deliveryConfirmed": "تم تأكيد التسليم",
   "reportSubmitted": "تم إرسال البلاغ",
   "collectCashFirst": "أكّد تحصيل المبلغ أولًا",
-  "listSeparator": "، "
+  "listSeparator": "، ",
+  "staffMustUsePortal": "حسابات الموظفين يجب أن تستخدم لوحة التحكم على الويب."
 }

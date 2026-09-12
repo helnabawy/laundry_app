@@ -376,5 +376,6 @@
   "deliveryConfirmed": "Delivery confirmed",
   "reportSubmitted": "Report sent",
   "collectCashFirst": "Confirm you've collected the amount first",
-  "listSeparator": ", "
+  "listSeparator": ", ",
+  "staffMustUsePortal": "Staff accounts must use the Admin Portal on the web."
 }

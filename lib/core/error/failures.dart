@@ -37,6 +37,12 @@ final class UnexpectedFailure extends Failure {
   const UnexpectedFailure([super.message]);
 }
 
+/// Signed in with an operator/admin account, which must use the web portal
+/// instead of this app.
+final class UnsupportedRoleFailure extends Failure {
+  const UnsupportedRoleFailure();
+}
+
 /// Client-side validation errors raised by use cases before hitting the API.
 enum InputError { invalidPhone, invalidOtp, requiredField }
 
