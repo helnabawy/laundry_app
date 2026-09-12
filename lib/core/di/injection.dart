@@ -4,6 +4,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import '../../features/addresses/addresses_injection.dart';
 import '../../features/auth/auth_injection.dart';
 import '../../features/auth/presentation/cubit/session_cubit.dart';
+import '../../features/orders/orders_injection.dart';
 import '../config/app_config.dart';
 import '../locale/locale_cubit.dart';
 import '../mock/mock_database.dart';
@@ -39,6 +40,7 @@ Future<void> configureDependencies() async {
 
   registerAddressesFeature(sl);
   registerAuthFeature(sl);
+  registerOrdersFeature(sl);
 
   sl.registerLazySingleton(
     () => createRouter(session: sl<SessionCubit>(), locale: sl<LocaleCubit>()),

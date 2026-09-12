@@ -23,6 +23,8 @@ abstract final class ApiEndpoints {
   static String orderInvoice(String orderId) => '/api/orders/$orderId/invoice';
   static String invoicePayment(String invoiceId) =>
       '/api/invoices/$invoiceId/payment';
+  static String orderPaymentMethod(String orderId) =>
+      '/api/orders/$orderId/payment-method';
 
   static const driverMe = '/api/driver/me';
   static const driverAvailability = '/api/driver/availability';

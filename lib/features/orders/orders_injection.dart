@@ -1,0 +1,66 @@
+import 'package:get_it/get_it.dart';
+
+import '../../core/config/app_config.dart';
+import 'data/datasources/catalog_api_data_source.dart';
+import 'data/datasources/catalog_mock_data_source.dart';
+import 'data/datasources/catalog_remote_data_source.dart';
+import 'data/datasources/driver_task_api_data_source.dart';
+import 'data/datasources/driver_task_remote_data_source.dart';
+import 'data/datasources/order_api_data_source.dart';
+import 'data/datasources/order_mock_data_source.dart';
+import 'data/datasources/order_remote_data_source.dart';
+import 'data/repositories/catalog_repository_impl.dart';
+import 'data/repositories/driver_task_repository_impl.dart';
+import 'data/repositories/order_repository_impl.dart';
+import 'domain/repositories/catalog_repository.dart';
+import 'domain/repositories/driver_task_repository.dart';
+import 'domain/repositories/order_repository.dart';
+import 'domain/usecases/catalog_usecases.dart';
+import 'domain/usecases/driver_task_usecases.dart';
+import 'domain/usecases/order_usecases.dart';
+
+void registerOrdersFeature(GetIt sl) {
+  if (AppConfig.useMockApi) {
+    // OrderMockDataSource backs both the customer and driver contracts so
+    // they share one in-memory `orders` table (see its doc comment).
+    sl
+      ..registerLazySingleton(() => CatalogMockDataSource(sl()))
+      ..registerLazySingleton<CatalogRemoteDataSource>(() => sl<CatalogMockDataSource>())
+      ..registerLazySingleton(() => OrderMockDataSource(sl(), sl()))
+      ..registerLazySingleton<OrderRemoteDataSource>(() => sl<OrderMockDataSource>())
+      ..registerLazySingleton<DriverTaskRemoteDataSource>(
+        () => sl<OrderMockDataSource>(),
+      );
+  } else {
+    sl
+      ..registerLazySingleton<CatalogRemoteDataSource>(() => CatalogApiDataSource(sl()))
+      ..registerLazySingleton<OrderRemoteDataSource>(() => OrderApiDataSource(sl()))
+      ..registerLazySingleton<DriverTaskRemoteDataSource>(
+        () => DriverTaskApiDataSource(sl()),
+      );
+  }
+
+  sl
+    ..registerLazySingleton<CatalogRepository>(() => CatalogRepositoryImpl(sl()))
+    ..registerLazySingleton<OrderRepository>(() => OrderRepositoryImpl(sl()))
+    ..registerLazySingleton<DriverTaskRepository>(() => DriverTaskRepositoryImpl(sl()))
+    // Catalog
+    ..registerFactory(() => GetServiceCategories(sl()))
+    ..registerFactory(() => GetSubServices(sl()))
+    ..registerFactory(() => GetServiceTiers(sl()))
+    ..registerFactory(() => GetPickupSlots(sl()))
+    ..registerFactory(() => GetDeliverySlots(sl()))
+    // Orders
+    ..registerFactory(() => CreateOrder(sl()))
+    ..registerFactory(() => GetOrders(sl()))
+    ..registerFactory(() => GetOrder(sl()))
+    ..registerFactory(() => ChoosePaymentMethod(sl()))
+    // Driver tasks
+    ..registerFactory(() => GetTodayTasks(sl()))
+    ..registerFactory(() => GetCompletedTasks(sl()))
+    ..registerFactory(() => SetAvailability(sl()))
+    ..registerFactory(() => ConfirmPickup(sl()))
+    ..registerFactory(() => ReportPickupFailed(sl()))
+    ..registerFactory(() => ConfirmDelivery(sl()))
+    ..registerFactory(() => ReportDeliveryFailed(sl()));
+}

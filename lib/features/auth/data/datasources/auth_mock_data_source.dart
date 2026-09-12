@@ -11,8 +11,8 @@ import 'auth_remote_data_source.dart';
 class AuthMockDataSource implements AuthRemoteDataSource {
   AuthMockDataSource(this._db, this._tokens) {
     AddressMockDataSource.seed(_db);
-    _db.seedOnce(_table, () {
-      _db.table(_table).addAll([
+    _db.seedOnce(table, () {
+      _db.table(table).addAll([
         {
           'id': MockDatabase.customerId,
           'phone': MockDatabase.customerPhone,
@@ -29,7 +29,9 @@ class AuthMockDataSource implements AuthRemoteDataSource {
     });
   }
 
-  static const _table = 'users';
+  /// Shared with the orders mock, which resolves customer/driver names and
+  /// phone numbers by id.
+  static const table = 'users';
   static const _tokenPrefix = 'mock.';
 
   final MockDatabase _db;
@@ -42,7 +44,7 @@ class AuthMockDataSource implements AuthRemoteDataSource {
   Future<VerifyOtpResponse> verifyOtp(String phone, String code) async {
     await _db.delay();
     if (code != MockDatabase.otpCode) _db.badRequest('Invalid code');
-    final users = _db.table(_table);
+    final users = _db.table(table);
     final row = users.firstWhere(
       (u) => u['phone'] == phone,
       orElse: () {
@@ -65,7 +67,7 @@ class AuthMockDataSource implements AuthRemoteDataSource {
     await _db.delay();
     final token = await _tokens.read();
     final row = token != null && token.startsWith(_tokenPrefix)
-        ? _db.findById(_table, token.substring(_tokenPrefix.length))
+        ? _db.findById(table, token.substring(_tokenPrefix.length))
         : null;
     if (row == null) throw const UnauthorizedException();
     _db.currentUserId = row['id'] as String;
@@ -75,7 +77,7 @@ class AuthMockDataSource implements AuthRemoteDataSource {
   @override
   Future<AppUser> updateProfile(String fullName) async {
     await _db.delay();
-    final row = _db.findById(_table, _db.requireUserId())!;
+    final row = _db.findById(table, _db.requireUserId())!;
     row['fullName'] = fullName;
     return _toUser(row);
   }
