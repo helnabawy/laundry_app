@@ -1,6 +1,5 @@
 {
   "@@locale": "en",
-
   "appName": "Laundry",
   "appTagline": "Wash, iron & delivery to your door",
   "next": "Next",
@@ -16,36 +15,68 @@
   "networkError": "No internet connection. Check your network and try again.",
   "sessionExpired": "Your session has expired. Please log in again.",
   "currencyAed": "AED {amount}",
-  "@currencyAed": { "placeholders": { "amount": { "type": "String" } } },
+  "@currencyAed": {
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
   "stepOf": "Step {current} of {total}",
-  "@stepOf": { "placeholders": { "current": { "type": "int" }, "total": { "type": "int" } } },
+  "@stepOf": {
+    "placeholders": {
+      "current": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      }
+    }
+  },
   "am": "AM",
   "pm": "PM",
   "today": "Today",
   "tomorrow": "Tomorrow",
-
   "chooseLanguage": "Choose your language",
   "continueLabel": "Continue",
   "language": "Language",
-
   "mobileNumber": "Mobile number",
   "sendCode": "Send verification code",
   "smsHint": "We'll text you a code to verify your number",
   "termsNotice": "By continuing you agree to the Terms & Conditions",
   "invalidPhone": "Enter a valid UAE mobile number (5X XXX XXXX)",
   "mockLoginHint": "Demo mode — customer: {customer} · driver: {driver}",
-  "@mockLoginHint": { "placeholders": { "customer": { "type": "String" }, "driver": { "type": "String" } } },
-
+  "@mockLoginHint": {
+    "placeholders": {
+      "customer": {
+        "type": "String"
+      },
+      "driver": {
+        "type": "String"
+      }
+    }
+  },
   "enterCode": "Enter verification code",
   "codeSentTo": "We sent a 4-digit code to",
   "resendIn": "Resend in {time}",
-  "@resendIn": { "placeholders": { "time": { "type": "String" } } },
+  "@resendIn": {
+    "placeholders": {
+      "time": {
+        "type": "String"
+      }
+    }
+  },
   "resendCode": "Resend code",
   "codeResent": "A new code has been sent",
   "invalidCode": "Incorrect verification code",
   "mockCodeHint": "Demo mode: use code {code}",
-  "@mockCodeHint": { "placeholders": { "code": { "type": "String" } } },
-
+  "@mockCodeHint": {
+    "placeholders": {
+      "code": {
+        "type": "String"
+      }
+    }
+  },
   "completeProfile": "Complete your profile",
   "completeProfileSubtitle": "Tell us your name and where to pick up your items",
   "fullName": "Full name",
@@ -62,23 +93,55 @@
   "noAddress": "Add a pickup address to continue",
   "chooseAddress": "Choose an address",
   "buildingApartment": "Building {building}, Apt {apartment}",
-  "@buildingApartment": { "placeholders": { "building": { "type": "String" }, "apartment": { "type": "String" } } },
-
+  "@buildingApartment": {
+    "placeholders": {
+      "building": {
+        "type": "String"
+      },
+      "apartment": {
+        "type": "String"
+      }
+    }
+  },
   "goodMorning": "Good morning",
   "goodEvening": "Good evening",
   "greetingMorning": "Good morning, {name}",
-  "@greetingMorning": { "placeholders": { "name": { "type": "String" } } },
+  "@greetingMorning": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
   "greetingEvening": "Good evening, {name}",
-  "@greetingEvening": { "placeholders": { "name": { "type": "String" } } },
+  "@greetingEvening": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
   "noPickupToday": "No pickups scheduled today",
   "pickupToday": "You have a pickup today",
   "orderNow": "Order now",
   "orderNowSubtitle": "Choose a service and pickup time",
   "currentOrder": "Current order",
   "orderNumber": "Order {number}",
-  "@orderNumber": { "placeholders": { "number": { "type": "String" } } },
+  "@orderNumber": {
+    "placeholders": {
+      "number": {
+        "type": "String"
+      }
+    }
+  },
   "deliveryAt": "Delivery: {when}",
-  "@deliveryAt": { "placeholders": { "when": { "type": "String" } } },
+  "@deliveryAt": {
+    "placeholders": {
+      "when": {
+        "type": "String"
+      }
+    }
+  },
   "track": "Track",
   "previousOrders": "Your previous orders",
   "ourServices": "Our services",
@@ -86,26 +149,36 @@
   "navHome": "Home",
   "navOrders": "My orders",
   "navAccount": "Account",
-
   "whatToWash": "What would you like cleaned?",
   "serviceType": "Service type",
   "serviceLevel": "Service level",
   "scheduleTitle": "Pickup & delivery times",
   "deliveryWithin": "Delivery within {hours} hours",
-  "@deliveryWithin": { "placeholders": { "hours": { "type": "int" } } },
+  "@deliveryWithin": {
+    "placeholders": {
+      "hours": {
+        "type": "int"
+      }
+    }
+  },
   "fastest": "Fastest",
   "finalPriceTitle": "Final price after inspection",
   "finalPriceBody": "You'll receive the invoice once the laundry checks your items",
   "pickupTime": "Pickup time",
   "deliveryTime": "Delivery time",
   "basedOnTier": "Based on service level: {tier}",
-  "@basedOnTier": { "placeholders": { "tier": { "type": "String" } } },
+  "@basedOnTier": {
+    "placeholders": {
+      "tier": {
+        "type": "String"
+      }
+    }
+  },
   "slotFull": "Full",
   "slotSelected": "Selected",
   "noSlots": "No available slots on this day",
   "selectPickupFirst": "Choose a pickup time first",
   "confirmOrder": "Confirm order",
-
   "orderPlaced": "Your order has been placed",
   "orderPlacedSubtitle": "We'll assign a driver before your pickup time",
   "orderNumberLabel": "Order number",
@@ -119,17 +192,27 @@
   "invoiceAfterInspectionBody": "The final price is set at the laundry",
   "trackOrder": "Track order",
   "backToHome": "Back to home",
-
   "expectedDelivery": "Expected delivery: {when}",
-  "@expectedDelivery": { "placeholders": { "when": { "type": "String" } } },
+  "@expectedDelivery": {
+    "placeholders": {
+      "when": {
+        "type": "String"
+      }
+    }
+  },
   "inProgressNow": "In progress now",
   "driverName": "Driver {name}",
-  "@driverName": { "placeholders": { "name": { "type": "String" } } },
+  "@driverName": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
   "timelineCreated": "Order placed",
   "timelineDriverAssigned": "Driver assigned",
   "timelinePickedUp": "Items picked up",
   "timelineAtFacility": "Arrived at the laundry",
-
   "statusPending": "New",
   "statusDriverAssigned": "Driver assigned",
   "statusPickedUp": "Picked up",
@@ -141,22 +224,39 @@
   "statusPickupFailed": "Pickup failed",
   "statusDeliveryFailed": "Delivery failed",
   "statusCancelled": "Cancelled",
-
   "invoiceTitle": "Invoice",
   "invoiceNumber": "Invoice {number}",
-  "@invoiceNumber": { "placeholders": { "number": { "type": "String" } } },
+  "@invoiceNumber": {
+    "placeholders": {
+      "number": {
+        "type": "String"
+      }
+    }
+  },
   "itemsDetails": "Item details",
   "afterInspection": "After inspection",
   "subtotal": "Subtotal",
   "vat": "VAT ({percent}%)",
-  "@vat": { "placeholders": { "percent": { "type": "String" } } },
+  "@vat": {
+    "placeholders": {
+      "percent": {
+        "type": "String"
+      }
+    }
+  },
   "total": "Total",
   "laundryNote": "Note from the laundry",
   "paymentMethod": "Payment method",
   "card": "Bank card",
   "cashOnDelivery": "Pay on delivery",
   "payAmount": "Pay {amount}",
-  "@payAmount": { "placeholders": { "amount": { "type": "String" } } },
+  "@payAmount": {
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
   "paymentSuccess": "Payment successful",
   "codConfirmed": "You'll pay the driver on delivery",
   "completePaymentInBrowser": "Complete the payment in your browser, then come back",
@@ -164,36 +264,72 @@
   "paid": "Paid",
   "unpaid": "Unpaid",
   "paidWith": "Paid · {method}",
-  "@paidWith": { "placeholders": { "method": { "type": "String" } } },
+  "@paidWith": {
+    "placeholders": {
+      "method": {
+        "type": "String"
+      }
+    }
+  },
   "invoiceNotReady": "The invoice will be issued after your items are inspected",
-
   "myOrders": "My orders",
   "activeOrders": "Active",
   "pastOrders": "Past",
   "noActiveOrders": "You have no active orders",
   "noPastOrders": "You have no past orders",
-
   "account": "Account",
   "logout": "Log out",
-
   "todaysTasks": "Today's tasks",
   "shift": "Shift {from} - {to}",
-  "@shift": { "placeholders": { "from": { "type": "String" }, "to": { "type": "String" } } },
+  "@shift": {
+    "placeholders": {
+      "from": {
+        "type": "String"
+      },
+      "to": {
+        "type": "String"
+      }
+    }
+  },
   "available": "Available",
   "unavailable": "Offline",
   "pickupsTab": "Pickup ({count})",
-  "@pickupsTab": { "placeholders": { "count": { "type": "int" } } },
+  "@pickupsTab": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
   "deliveriesTab": "Delivery ({count})",
-  "@deliveriesTab": { "placeholders": { "count": { "type": "int" } } },
+  "@deliveriesTab": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
   "viewDetails": "View details",
   "noTasks": "No tasks right now",
   "navTasks": "Tasks",
   "navHistory": "History",
   "completedTasks": "Completed tasks",
   "pickupTitle": "Pickup #{number}",
-  "@pickupTitle": { "placeholders": { "number": { "type": "String" } } },
+  "@pickupTitle": {
+    "placeholders": {
+      "number": {
+        "type": "String"
+      }
+    }
+  },
   "deliveryTitle": "Delivery #{number}",
-  "@deliveryTitle": { "placeholders": { "number": { "type": "String" } } },
+  "@deliveryTitle": {
+    "placeholders": {
+      "number": {
+        "type": "String"
+      }
+    }
+  },
   "openInMaps": "Open in Maps",
   "call": "Call",
   "message": "Message",
@@ -205,11 +341,23 @@
   "handOverToLaundry": "Hand over to laundry",
   "deliveredItems": "Delivered items",
   "itemsCount": "{count, plural, =0{No items} =1{1 item} other{{count} items}}",
-  "@itemsCount": { "placeholders": { "count": { "type": "int" } } },
+  "@itemsCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
   "invoicePaidTitle": "Invoice paid",
   "noCollection": "No collection needed",
   "collectAmountTitle": "Collect {amount}",
-  "@collectAmountTitle": { "placeholders": { "amount": { "type": "String" } } },
+  "@collectAmountTitle": {
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
   "collectAmountBody": "Customer chose to pay on delivery",
   "cashCollected": "I've collected the amount",
   "proofOfDelivery": "Proof of delivery",
@@ -227,5 +375,6 @@
   "handedOver": "Items handed over to the laundry",
   "deliveryConfirmed": "Delivery confirmed",
   "reportSubmitted": "Report sent",
-  "collectCashFirst": "Confirm you've collected the amount first"
+  "collectCashFirst": "Confirm you've collected the amount first",
+  "listSeparator": ", "
 }

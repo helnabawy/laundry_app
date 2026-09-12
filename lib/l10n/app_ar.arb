@@ -1,6 +1,5 @@
 {
   "@@locale": "ar",
-
   "appName": "مغسلة",
   "appTagline": "غسيل وكي وتوصيل إلى باب المنزل",
   "next": "التالي",
@@ -21,18 +20,15 @@
   "pm": "م",
   "today": "اليوم",
   "tomorrow": "غدًا",
-
   "chooseLanguage": "اختر اللغة",
   "continueLabel": "متابعة",
   "language": "اللغة",
-
   "mobileNumber": "رقم الموبايل",
   "sendCode": "إرسال رمز التحقق",
   "smsHint": "سنرسل رسالة نصية للتحقق من رقمك",
   "termsNotice": "بالمتابعة أنت توافق على الشروط والأحكام",
   "invalidPhone": "أدخل رقم موبايل إماراتي صحيح (5X XXX XXXX)",
   "mockLoginHint": "وضع تجريبي — عميل: {customer} · سائق: {driver}",
-
   "enterCode": "أدخل رمز التحقق",
   "codeSentTo": "أرسلنا رمزًا مكونًا من 4 أرقام إلى",
   "resendIn": "إعادة الإرسال خلال {time}",
@@ -40,7 +36,6 @@
   "codeResent": "تم إرسال رمز جديد",
   "invalidCode": "رمز التحقق غير صحيح",
   "mockCodeHint": "وضع تجريبي: استخدم الرمز {code}",
-
   "completeProfile": "استكمال البيانات",
   "completeProfileSubtitle": "أخبرنا باسمك ومكان استلام القطع",
   "fullName": "الاسم",
@@ -57,7 +52,6 @@
   "noAddress": "أضف عنوان استلام للمتابعة",
   "chooseAddress": "اختر العنوان",
   "buildingApartment": "مبنى {building}، شقة {apartment}",
-
   "goodMorning": "صباح الخير",
   "goodEvening": "مساء الخير",
   "greetingMorning": "صباح الخير، {name}",
@@ -76,7 +70,6 @@
   "navHome": "الرئيسية",
   "navOrders": "طلباتي",
   "navAccount": "حسابي",
-
   "whatToWash": "ما الذي تريد غسله؟",
   "serviceType": "نوع الخدمة",
   "serviceLevel": "مستوى الخدمة",
@@ -93,7 +86,6 @@
   "noSlots": "لا توجد فترات متاحة في هذا اليوم",
   "selectPickupFirst": "اختر موعد الاستلام أولًا",
   "confirmOrder": "تأكيد الطلب",
-
   "orderPlaced": "تم استلام طلبك",
   "orderPlacedSubtitle": "سنخصص لك سائقًا قبل موعد الاستلام",
   "orderNumberLabel": "رقم الطلب",
@@ -107,7 +99,6 @@
   "invoiceAfterInspectionBody": "يتم تحديد السعر النهائي في المغسلة",
   "trackOrder": "تتبع الطلب",
   "backToHome": "العودة للرئيسية",
-
   "expectedDelivery": "التسليم المتوقع: {when}",
   "inProgressNow": "جارٍ الآن",
   "driverName": "السائق {name}",
@@ -115,7 +106,6 @@
   "timelineDriverAssigned": "تم تعيين سائق",
   "timelinePickedUp": "تم استلام القطع",
   "timelineAtFacility": "وصلت المغسلة",
-
   "statusPending": "جديد",
   "statusDriverAssigned": "تم تعيين سائق",
   "statusPickedUp": "تم الاستلام",
@@ -127,7 +117,6 @@
   "statusPickupFailed": "تعذّر الاستلام",
   "statusDeliveryFailed": "تعذّر التسليم",
   "statusCancelled": "ملغي",
-
   "invoiceTitle": "الفاتورة",
   "invoiceNumber": "فاتورة {number}",
   "itemsDetails": "تفاصيل القطع",
@@ -148,16 +137,13 @@
   "unpaid": "غير مدفوعة",
   "paidWith": "مدفوعة · {method}",
   "invoiceNotReady": "ستصدر الفاتورة بعد فحص القطع",
-
   "myOrders": "طلباتي",
   "activeOrders": "الحالية",
   "pastOrders": "السابقة",
   "noActiveOrders": "لا توجد طلبات حالية",
   "noPastOrders": "لا توجد طلبات سابقة",
-
   "account": "حسابي",
   "logout": "تسجيل الخروج",
-
   "todaysTasks": "مهام اليوم",
   "shift": "وردية {from} - {to}",
   "available": "متاح",
@@ -202,5 +188,6 @@
   "handedOver": "تم تسليم القطع للمغسلة",
   "deliveryConfirmed": "تم تأكيد التسليم",
   "reportSubmitted": "تم إرسال البلاغ",
-  "collectCashFirst": "أكّد تحصيل المبلغ أولًا"
+  "collectCashFirst": "أكّد تحصيل المبلغ أولًا",
+  "listSeparator": "، "
 }
