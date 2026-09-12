@@ -1,5 +1,3 @@
-import 'package:flutter/material.dart';
-import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../features/addresses/presentation/pages/add_address_page.dart';
@@ -11,6 +9,13 @@ import '../../features/auth/presentation/pages/language_page.dart';
 import '../../features/auth/presentation/pages/login_page.dart';
 import '../../features/auth/presentation/pages/otp_page.dart';
 import '../../features/auth/presentation/pages/splash_page.dart';
+import '../../features/orders/presentation/pages/customer_home_shell.dart';
+import '../../features/orders/presentation/pages/delivery_detail_page.dart';
+import '../../features/orders/presentation/pages/driver_home_shell.dart';
+import '../../features/orders/presentation/pages/invoice_page.dart';
+import '../../features/orders/presentation/pages/order_tracking_page.dart';
+import '../../features/orders/presentation/pages/order_wizard_page.dart';
+import '../../features/orders/presentation/pages/pickup_detail_page.dart';
 import '../locale/locale_cubit.dart';
 import 'refresh_listenable.dart';
 import 'routes.dart';
@@ -52,11 +57,37 @@ GoRouter createRouter({
       ),
       GoRoute(
         path: Routes.customerHome,
-        builder: (_, _) => const _SignedInPlaceholder(),
+        builder: (_, _) => const CustomerHomeShell(),
+      ),
+      GoRoute(
+        path: Routes.orderNew,
+        builder: (_, _) => const OrderWizardPage(),
+      ),
+      GoRoute(
+        path: '/orders/:id',
+        builder: (_, state) =>
+            OrderTrackingPage(orderId: state.pathParameters['id']!),
+        routes: [
+          GoRoute(
+            path: 'invoice',
+            builder: (_, state) =>
+                InvoicePage(orderId: state.pathParameters['id']!),
+          ),
+        ],
       ),
       GoRoute(
         path: Routes.driverHome,
-        builder: (_, _) => const _SignedInPlaceholder(),
+        builder: (_, _) => const DriverHomeShell(),
+      ),
+      GoRoute(
+        path: '/driver/pickup/:orderId',
+        builder: (_, state) =>
+            PickupDetailPage(orderId: state.pathParameters['orderId']!),
+      ),
+      GoRoute(
+        path: '/driver/delivery/:orderId',
+        builder: (_, state) =>
+            DeliveryDetailPage(orderId: state.pathParameters['orderId']!),
       ),
     ],
   );
@@ -97,34 +128,13 @@ String? resolveRedirect({
         Routes.completeProfile,
       };
       if (entryPoints.contains(location)) return home;
-      // Keep each role inside its own area.
-      final foreignArea = isDriver ? Routes.customerHome : Routes.driverHome;
-      if (location.startsWith(foreignArea)) return home;
+      // Keep each role inside its own area (order screens are customer-only;
+      // `/driver/...` is driver-only).
+      const customerAreaPrefixes = [Routes.customerHome, '/orders'];
+      final inCustomerArea = customerAreaPrefixes.any(location.startsWith);
+      final inDriverArea = location.startsWith(Routes.driverHome);
+      if (isDriver && inCustomerArea) return home;
+      if (!isDriver && inDriverArea) return home;
       return null;
-  }
-}
-
-// Replaced by the customer / driver shells in the following features.
-class _SignedInPlaceholder extends StatelessWidget {
-  const _SignedInPlaceholder();
-
-  @override
-  Widget build(BuildContext context) {
-    final state = context.watch<SessionCubit>().state;
-    final name = state is SessionAuthenticated ? state.user.fullName : null;
-    return Scaffold(
-      body: Center(
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Text(name ?? ''),
-            TextButton(
-              onPressed: context.read<SessionCubit>().logout,
-              child: const Icon(Icons.logout),
-            ),
-          ],
-        ),
-      ),
-    );
   }
 }

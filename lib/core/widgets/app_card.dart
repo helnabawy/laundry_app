@@ -50,6 +50,7 @@ class SelectableCard extends StatelessWidget {
     required this.child,
     this.padding = const EdgeInsets.all(20),
     this.enabled = true,
+    this.borderColor,
   });
 
   final bool selected;
@@ -57,6 +58,10 @@ class SelectableCard extends StatelessWidget {
   final Widget child;
   final EdgeInsetsGeometry padding;
   final bool enabled;
+
+  /// Border color when NOT selected (e.g. a permanent accent border).
+  /// Selected always wins with the ink border.
+  final Color? borderColor;
 
   @override
   Widget build(BuildContext context) {
@@ -66,7 +71,7 @@ class SelectableCard extends StatelessWidget {
       enabled: enabled,
       child: AppCard(
         padding: padding,
-        borderColor: selected ? AppColors.ink : AppColors.line,
+        borderColor: selected ? AppColors.ink : (borderColor ?? AppColors.line),
         borderWidth: selected ? 2 : 1,
         onTap: enabled ? onTap : null,
         child: child,

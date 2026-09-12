@@ -11,5 +11,11 @@ abstract final class Routes {
   static const addAddress = '/addresses/new';
 
   static const customerHome = '/customer';
+  static const orderNew = '/orders/new';
+  static String orderDetail(String id) => '/orders/$id';
+  static String orderInvoice(String id) => '/orders/$id/invoice';
+
   static const driverHome = '/driver';
+  static String driverPickup(String orderId) => '/driver/pickup/$orderId';
+  static String driverDelivery(String orderId) => '/driver/delivery/$orderId';
 }

@@ -18,6 +18,11 @@ import 'domain/repositories/order_repository.dart';
 import 'domain/usecases/catalog_usecases.dart';
 import 'domain/usecases/driver_task_usecases.dart';
 import 'domain/usecases/order_usecases.dart';
+import 'presentation/cubit/driver_tasks_cubit.dart';
+import 'presentation/cubit/order_tracking_cubit.dart';
+import 'presentation/cubit/order_wizard_cubit.dart';
+import 'presentation/cubit/orders_cubit.dart';
+import 'presentation/cubit/task_detail_cubit.dart';
 
 void registerOrdersFeature(GetIt sl) {
   if (AppConfig.useMockApi) {
@@ -62,5 +67,25 @@ void registerOrdersFeature(GetIt sl) {
     ..registerFactory(() => ConfirmPickup(sl()))
     ..registerFactory(() => ReportPickupFailed(sl()))
     ..registerFactory(() => ConfirmDelivery(sl()))
-    ..registerFactory(() => ReportDeliveryFailed(sl()));
+    ..registerFactory(() => ReportDeliveryFailed(sl()))
+    // Cubits
+    ..registerFactory(() => OrdersCubit(sl()))
+    ..registerFactory(
+      () => OrderWizardCubit(
+        getCategories: sl(),
+        getSubServices: sl(),
+        getTiers: sl(),
+        getPickupSlots: sl(),
+        getDeliverySlots: sl(),
+        getAddresses: sl(),
+        createOrder: sl(),
+      ),
+    )
+    ..registerFactoryParam<OrderTrackingCubit, String, void>(
+      (orderId, _) => OrderTrackingCubit(orderId, sl(), sl()),
+    )
+    ..registerFactory(() => DriverTasksCubit(sl(), sl(), sl()))
+    ..registerFactoryParam<TaskDetailCubit, String, void>(
+      (orderId, _) => TaskDetailCubit(orderId, sl(), sl(), sl(), sl(), sl()),
+    );
 }
