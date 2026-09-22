@@ -55,7 +55,8 @@ class TaskDetailCubit extends Cubit<TaskDetailState> {
     final result = await _getOrder(_orderId);
     emit(
       result.fold(
-        onErr: (f) => TaskDetailState(order: state.order, loading: false, failure: f),
+        onErr: (f) =>
+            TaskDetailState(order: state.order, loading: false, failure: f),
         onOk: (order) => TaskDetailState(order: order, loading: false),
       ),
     );
@@ -63,30 +64,44 @@ class TaskDetailCubit extends Cubit<TaskDetailState> {
 
   Future<void> confirmPickup() => _run(() => _confirmPickup(_orderId));
 
-  Future<void> reportPickupFailed(TaskFailureReason reason, String? note) => _run(
-    () => _reportPickupFailed((orderId: _orderId, reason: reason, note: note)),
-  );
-
-  Future<void> confirmDelivery({required bool cashCollected, bool hasProofPhoto = false}) =>
+  Future<void> reportPickupFailed(TaskFailureReason reason, String? note) =>
       _run(
-        () => _confirmDelivery((
+        () => _reportPickupFailed((
           orderId: _orderId,
-          cashCollected: cashCollected,
-          hasProofPhoto: hasProofPhoto,
+          reason: reason,
+          note: note,
         )),
       );
 
-  Future<void> reportDeliveryFailed(TaskFailureReason reason, String? note) => _run(
-    () => _reportDeliveryFailed((orderId: _orderId, reason: reason, note: note)),
+  Future<void> confirmDelivery({
+    required bool cashCollected,
+    bool hasProofPhoto = false,
+  }) => _run(
+    () => _confirmDelivery((
+      orderId: _orderId,
+      cashCollected: cashCollected,
+      hasProofPhoto: hasProofPhoto,
+    )),
   );
+
+  Future<void> reportDeliveryFailed(TaskFailureReason reason, String? note) =>
+      _run(
+        () => _reportDeliveryFailed((
+          orderId: _orderId,
+          reason: reason,
+          note: note,
+        )),
+      );
 
   Future<void> _run(Future<Result<LaundryOrder>> Function() action) async {
     emit(TaskDetailState(order: state.order, loading: false, submitting: true));
     final result = await action();
     emit(
       result.fold(
-        onErr: (f) => TaskDetailState(order: state.order, loading: false, failure: f),
-        onOk: (order) => TaskDetailState(order: order, loading: false, done: true),
+        onErr: (f) =>
+            TaskDetailState(order: state.order, loading: false, failure: f),
+        onOk: (order) =>
+            TaskDetailState(order: order, loading: false, done: true),
       ),
     );
   }

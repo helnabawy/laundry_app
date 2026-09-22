@@ -1,11 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
+import '../../../../core/design/design.dart';
 import '../../../../core/di/injection.dart';
 import '../../../../core/l10n/l10n.dart';
-import '../../../../core/widgets/app_buttons.dart';
-import '../../../../core/widgets/flow_header.dart';
-import '../../../../core/widgets/labeled_rows.dart';
 import '../../../addresses/presentation/widgets/address_form_fields.dart';
 import '../cubit/complete_profile_cubit.dart';
 import '../cubit/session_cubit.dart';
@@ -55,57 +53,49 @@ class _CompleteProfileViewState extends State<_CompleteProfileView> {
     final l10n = context.l10n;
     return BlocConsumer<CompleteProfileCubit, CompleteProfileState>(
       listener: (context, state) {
-        if (state.user != null) {
-          context.read<SessionCubit>().userUpdated(state.user!);
+        if (state.user case final user?) {
+          context.read<SessionCubit>().userUpdated(user);
         }
-        if (state.failure != null) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text(state.failure!.localized(l10n))),
-          );
+        if (state.failure case final failure?) {
+          ScaffoldMessenger.of(context)
+              .showSnackBar(SnackBar(content: Text(failure.localized(l10n))));
         }
       },
-      builder: (context, state) => Scaffold(
-        body: Column(
+      builder: (context, state) => FlowPage(
+        title: l10n.completeProfile,
+        subtitle: l10n.completeProfileSubtitle,
+        // Going back means using a different number.
+        onBack: context.read<SessionCubit>().logout,
+        bottomBar: ActionBar(
           children: [
-            FlowHeader(
-              title: l10n.completeProfile,
-              subtitle: l10n.completeProfileSubtitle,
-              // Going back means using a different number.
-              onBack: context.read<SessionCubit>().logout,
-            ),
-            Expanded(
-              child: Form(
-                key: _formKey,
-                child: ListView(
-                  padding: const EdgeInsets.all(24),
-                  children: [
-                    TextFormField(
-                      controller: _name,
-                      textInputAction: TextInputAction.next,
-                      textCapitalization: TextCapitalization.words,
-                      autofillHints: const [AutofillHints.name],
-                      decoration: InputDecoration(labelText: l10n.fullName),
-                      validator: (v) => (v == null || v.trim().isEmpty)
-                          ? l10n.requiredField
-                          : null,
-                    ),
-                    const SizedBox(height: 28),
-                    SectionTitle(l10n.addressTitle),
-                    AddressFormFields(data: _address),
-                  ],
-                ),
-              ),
-            ),
-          ],
-        ),
-        bottomNavigationBar: BottomActions(
-          children: [
-            PrimaryButton(
+            ActionButton(
               label: l10n.save,
               loading: state.submitting,
               onPressed: _submit,
             ),
           ],
+        ),
+        child: Form(
+          key: _formKey,
+          child: ListView(
+            padding: const EdgeInsets.fromLTRB(
+              DesignSpace.gutter,
+              DesignSpace.xxl,
+              DesignSpace.gutter,
+              DesignSpace.huge,
+            ),
+            children: [
+              LabelField(
+                controller: _name,
+                label: l10n.fullName,
+                validator: (v) =>
+                    (v == null || v.trim().isEmpty) ? l10n.requiredField : null,
+              ),
+              StampHeading(l10n.addressTitle),
+              const SizedBox(height: DesignSpace.sm),
+              AddressFormFields(data: _address),
+            ],
+          ),
         ),
       ),
     );

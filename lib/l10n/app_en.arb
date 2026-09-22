@@ -377,5 +377,13 @@
   "reportSubmitted": "Report sent",
   "collectCashFirst": "Confirm you've collected the amount first",
   "listSeparator": ", ",
-  "staffMustUsePortal": "Staff accounts must use the Admin Portal on the web."
+  "staffMustUsePortal": "Staff accounts must use the Admin Portal on the web.",
+  "stageCollect": "Collection",
+  "stageCustody": "Picked up",
+  "stageInspect": "Inspection",
+  "stageTreat": "Cleaning",
+  "stageDeliver": "Return",
+  "nothingInCustody": "No items in custody",
+  "nothingInCustodyNote": "Book a collection and we'll pick up from your door.",
+  "chooseAnyThatApply": "Choose any that apply"
 }

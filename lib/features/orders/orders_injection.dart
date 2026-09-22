@@ -30,25 +30,37 @@ void registerOrdersFeature(GetIt sl) {
     // they share one in-memory `orders` table (see its doc comment).
     sl
       ..registerLazySingleton(() => CatalogMockDataSource(sl()))
-      ..registerLazySingleton<CatalogRemoteDataSource>(() => sl<CatalogMockDataSource>())
+      ..registerLazySingleton<CatalogRemoteDataSource>(
+        () => sl<CatalogMockDataSource>(),
+      )
       ..registerLazySingleton(() => OrderMockDataSource(sl(), sl()))
-      ..registerLazySingleton<OrderRemoteDataSource>(() => sl<OrderMockDataSource>())
+      ..registerLazySingleton<OrderRemoteDataSource>(
+        () => sl<OrderMockDataSource>(),
+      )
       ..registerLazySingleton<DriverTaskRemoteDataSource>(
         () => sl<OrderMockDataSource>(),
       );
   } else {
     sl
-      ..registerLazySingleton<CatalogRemoteDataSource>(() => CatalogApiDataSource(sl()))
-      ..registerLazySingleton<OrderRemoteDataSource>(() => OrderApiDataSource(sl()))
+      ..registerLazySingleton<CatalogRemoteDataSource>(
+        () => CatalogApiDataSource(sl()),
+      )
+      ..registerLazySingleton<OrderRemoteDataSource>(
+        () => OrderApiDataSource(sl()),
+      )
       ..registerLazySingleton<DriverTaskRemoteDataSource>(
         () => DriverTaskApiDataSource(sl()),
       );
   }
 
   sl
-    ..registerLazySingleton<CatalogRepository>(() => CatalogRepositoryImpl(sl()))
+    ..registerLazySingleton<CatalogRepository>(
+      () => CatalogRepositoryImpl(sl()),
+    )
     ..registerLazySingleton<OrderRepository>(() => OrderRepositoryImpl(sl()))
-    ..registerLazySingleton<DriverTaskRepository>(() => DriverTaskRepositoryImpl(sl()))
+    ..registerLazySingleton<DriverTaskRepository>(
+      () => DriverTaskRepositoryImpl(sl()),
+    )
     // Catalog
     ..registerFactory(() => GetServiceCategories(sl()))
     ..registerFactory(() => GetSubServices(sl()))

@@ -14,28 +14,40 @@ class DriverTaskApiDataSource implements DriverTaskRemoteDataSource {
 
   @override
   Future<List<DriverTask>> getTodayTasks() async {
-    final json =
-        await _api.get(ApiEndpoints.driverTasks, query: {'status': 'today'})
-            as List<dynamic>;
-    return json.cast<Map<String, dynamic>>().map(DriverTaskModel.fromJson).toList();
+    final json = await _api.get(
+      ApiEndpoints.driverTasks,
+      query: {'status': 'today'},
+    ) as List<dynamic>;
+    return json
+        .cast<Map<String, dynamic>>()
+        .map(DriverTaskModel.fromJson)
+        .toList();
   }
 
   @override
   Future<List<DriverTask>> getCompletedTasks() async {
-    final json =
-        await _api.get(ApiEndpoints.driverTasks, query: {'status': 'completed'})
-            as List<dynamic>;
-    return json.cast<Map<String, dynamic>>().map(DriverTaskModel.fromJson).toList();
+    final json = await _api.get(
+      ApiEndpoints.driverTasks,
+      query: {'status': 'completed'},
+    ) as List<dynamic>;
+    return json
+        .cast<Map<String, dynamic>>()
+        .map(DriverTaskModel.fromJson)
+        .toList();
   }
 
   @override
   Future<bool> setAvailability(bool available) async {
-    await _api.post(ApiEndpoints.driverAvailability, data: {'available': available});
+    await _api.post(
+      ApiEndpoints.driverAvailability,
+      data: {'available': available},
+    );
     return available;
   }
 
   @override
-  Future<LaundryOrder> confirmPickup(String orderId) => _action(orderId, 'confirm-pickup');
+  Future<LaundryOrder> confirmPickup(String orderId) =>
+      _action(orderId, 'confirm-pickup');
 
   @override
   Future<LaundryOrder> reportPickupFailed(

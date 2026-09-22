@@ -58,8 +58,11 @@ class DriverTasksState extends Equatable {
 }
 
 class DriverTasksCubit extends Cubit<DriverTasksState> {
-  DriverTasksCubit(this._getTodayTasks, this._getCompletedTasks, this._setAvailability)
-    : super(const DriverTasksState());
+  DriverTasksCubit(
+    this._getTodayTasks,
+    this._getCompletedTasks,
+    this._setAvailability,
+  ) : super(const DriverTasksState());
 
   final GetTodayTasks _getTodayTasks;
   final GetCompletedTasks _getCompletedTasks;
@@ -67,10 +70,7 @@ class DriverTasksCubit extends Cubit<DriverTasksState> {
 
   Future<void> load() async {
     emit(state.copyWith(loading: true));
-    final results = await (
-      _getTodayTasks(),
-      _getCompletedTasks(),
-    ).wait;
+    final results = await (_getTodayTasks(), _getCompletedTasks()).wait;
     final failure = results.$1.failureOrNull ?? results.$2.failureOrNull;
     emit(
       state.copyWith(

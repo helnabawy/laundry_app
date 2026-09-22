@@ -2,14 +2,13 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../../../core/design/design.dart';
 import '../../../../core/l10n/l10n.dart';
 import '../../../../core/router/routes.dart';
-import '../../../../core/widgets/state_views.dart';
-import '../../domain/entities/laundry_order.dart';
 import '../cubit/orders_cubit.dart';
 import '../widgets/order_list_tile.dart';
 
-/// Plan §8.1 "طلباتي": active / past tabs.
+/// The customer's own record: active and past orders.
 class MyOrdersPage extends StatefulWidget {
   const MyOrdersPage({super.key});
 
@@ -17,93 +16,134 @@ class MyOrdersPage extends StatefulWidget {
   State<MyOrdersPage> createState() => _MyOrdersPageState();
 }
 
-class _MyOrdersPageState extends State<MyOrdersPage>
-    with SingleTickerProviderStateMixin {
-  late final _tabController = TabController(length: 2, vsync: this);
-
-  @override
-  void dispose() {
-    _tabController.dispose();
-    super.dispose();
-  }
+class _MyOrdersPageState extends State<MyOrdersPage> {
+  var _tab = 0;
 
   @override
   Widget build(BuildContext context) {
     final l10n = context.l10n;
-    return Scaffold(
-      appBar: AppBar(
-        title: Text(l10n.myOrders),
-        bottom: TabBar(
-          controller: _tabController,
-          tabs: [Tab(text: l10n.activeOrders), Tab(text: l10n.pastOrders)],
-        ),
-      ),
-      body: BlocBuilder<OrdersCubit, OrdersState>(
-        builder: (context, state) {
-          if (state.loading && state.orders.isEmpty) return const LoadingView();
-          if (state.failure != null && state.orders.isEmpty) {
-            return ErrorView(
-              message: state.failure!.localized(l10n),
-              onRetry: () => context.read<OrdersCubit>().load(),
-            );
-          }
-          return TabBarView(
-            controller: _tabController,
-            children: [
-              _OrderList(
-                orders: state.active,
-                emptyMessage: l10n.noActiveOrders,
-                onRefresh: () => context.read<OrdersCubit>().load(),
+    final colors = context.colors;
+
+    return BlocBuilder<OrdersCubit, OrdersState>(
+      builder: (context, state) {
+        final orders = _tab == 0 ? state.active : state.past;
+        final empty = _tab == 0 ? l10n.noActiveOrders : l10n.noPastOrders;
+
+        return LargeTitlePage(
+          title: l10n.myOrders,
+          onRefresh: () => context.read<OrdersCubit>().load(),
+          slivers: [
+            SliverToBoxAdapter(
+              child: Padding(
+                padding: const EdgeInsets.fromLTRB(
+                  DesignSpace.gutter,
+                  DesignSpace.sm,
+                  DesignSpace.gutter,
+                  DesignSpace.lg,
+                ),
+                child: _Segmented(
+                  labels: [
+                    '${l10n.activeOrders} (${state.active.length})',
+                    '${l10n.pastOrders} (${state.past.length})',
+                  ],
+                  index: _tab,
+                  onChanged: (i) => setState(() => _tab = i),
+                ),
               ),
-              _OrderList(
-                orders: state.past,
-                emptyMessage: l10n.noPastOrders,
-                onRefresh: () => context.read<OrdersCubit>().load(),
+            ),
+            if (state.loading && state.orders.isEmpty)
+              const SliverFillRemaining(
+                hasScrollBody: false,
+                child: LoadingView(),
+              )
+            else if (state.failure != null && state.orders.isEmpty)
+              SliverFillRemaining(
+                hasScrollBody: false,
+                child: ErrorView(
+                  message: state.failure!.localized(l10n),
+                  retryLabel: l10n.retry,
+                  onRetry: () => context.read<OrdersCubit>().load(),
+                ),
+              )
+            else if (orders.isEmpty)
+              SliverFillRemaining(
+                hasScrollBody: false,
+                child: EmptyView(message: empty),
+              )
+            else
+              SliverToBoxAdapter(
+                child: DecoratedBox(
+                  decoration: BoxDecoration(color: colors.tape),
+                  child: LabelGroup(
+                    children: [
+                      for (final order in orders)
+                        OrderListTile(
+                          order: order,
+                          onTap: () async {
+                            final cubit = context.read<OrdersCubit>();
+                            await context.push(Routes.orderDetail(order.id));
+                            await cubit.load();
+                          },
+                        ),
+                    ],
+                  ),
+                ),
               ),
-            ],
-          );
-        },
-      ),
+          ],
+        );
+      },
     );
   }
 }
 
-class _OrderList extends StatelessWidget {
-  const _OrderList({
-    required this.orders,
-    required this.emptyMessage,
-    required this.onRefresh,
+/// Two fields on one strip; the chosen one inverts.
+class _Segmented extends StatelessWidget {
+  const _Segmented({
+    required this.labels,
+    required this.index,
+    required this.onChanged,
   });
 
-  final List<LaundryOrder> orders;
-  final String emptyMessage;
-  final Future<void> Function() onRefresh;
+  final List<String> labels;
+  final int index;
+  final ValueChanged<int> onChanged;
 
   @override
   Widget build(BuildContext context) {
-    if (orders.isEmpty) {
-      return RefreshIndicator(
-        onRefresh: onRefresh,
-        child: ListView(
-          children: [
-            SizedBox(
-              height: MediaQuery.of(context).size.height * .5,
-              child: EmptyView(message: emptyMessage),
+    final colors = context.colors;
+    return DecoratedBox(
+      decoration: BoxDecoration(
+        border: Border.all(color: colors.ruleStrong),
+        borderRadius: BorderRadius.circular(DesignRadius.slot),
+      ),
+      child: Row(
+        children: [
+          for (var i = 0; i < labels.length; i++)
+            Expanded(
+              child: Semantics(
+                button: true,
+                selected: i == index,
+                child: GestureDetector(
+                  behavior: HitTestBehavior.opaque,
+                  onTap: () => onChanged(i),
+                  child: AnimatedContainer(
+                    duration: DesignMotion.quick,
+                    height: 40,
+                    alignment: Alignment.center,
+                    color: i == index ? colors.ink : const Color(0x00000000),
+                    child: Text(
+                      labels[i].toUpperCase(),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: DesignTypography.stamp(
+                        i == index ? colors.onInk : colors.inkSecondary,
+                      ),
+                    ),
+                  ),
+                ),
+              ),
             ),
-          ],
-        ),
-      );
-    }
-    return RefreshIndicator(
-      onRefresh: onRefresh,
-      child: ListView.separated(
-        padding: const EdgeInsets.all(20),
-        itemCount: orders.length,
-        separatorBuilder: (_, _) => const SizedBox(height: 10),
-        itemBuilder: (context, i) => OrderListTile(
-          order: orders[i],
-          onTap: () => context.push(Routes.orderDetail(orders[i].id)),
-        ),
+        ],
       ),
     );
   }

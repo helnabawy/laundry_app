@@ -1,5 +1,6 @@
 import '../../../addresses/data/models/address_model.dart';
 import '../../domain/entities/laundry_order.dart';
+import '../../domain/entities/order_line.dart';
 import '../../domain/entities/order_status.dart';
 import '../../domain/entities/order_timeline_event.dart';
 import 'invoice_model.dart';
@@ -12,12 +13,7 @@ abstract final class LaundryOrderModel {
   static LaundryOrder fromJson(Map<String, dynamic> json) => LaundryOrder(
     id: json['id'] as String,
     number: json['number'] as int,
-    category: ServiceCategoryModel.fromJson(
-      json['category'] as Map<String, dynamic>,
-    ),
-    subService: SubServiceModel.fromJson(
-      json['subService'] as Map<String, dynamic>,
-    ),
+    lines: _lines(json),
     tier: ServiceTierModel.fromJson(json['tier'] as Map<String, dynamic>),
     pickupSlot: TimeSlotModel.fromJson(
       json['pickupSlot'] as Map<String, dynamic>,
@@ -44,4 +40,35 @@ abstract final class LaundryOrderModel {
         ? InvoiceModel.fromJson(json['invoice'] as Map<String, dynamic>)
         : null,
   );
+
+  /// Reads the multi-line shape, falling back to the single `category` /
+  /// `subService` pair an older payload sends so one backend version does not
+  /// break the app.
+  static List<OrderLine> _lines(Map<String, dynamic> json) {
+    if (json['lines'] case final List<dynamic> raw when raw.isNotEmpty) {
+      return raw
+          .cast<Map<String, dynamic>>()
+          .map(
+            (e) => OrderLine(
+              category: ServiceCategoryModel.fromJson(
+                e['category'] as Map<String, dynamic>,
+              ),
+              subService: SubServiceModel.fromJson(
+                e['subService'] as Map<String, dynamic>,
+              ),
+            ),
+          )
+          .toList();
+    }
+    return [
+      OrderLine(
+        category: ServiceCategoryModel.fromJson(
+          json['category'] as Map<String, dynamic>,
+        ),
+        subService: SubServiceModel.fromJson(
+          json['subService'] as Map<String, dynamic>,
+        ),
+      ),
+    ];
+  }
 }

@@ -2,12 +2,10 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
 import '../../../../core/config/app_config.dart';
+import '../../../../core/design/design.dart';
 import '../../../../core/di/injection.dart';
 import '../../../../core/l10n/l10n.dart';
 import '../../../../core/mock/mock_database.dart';
-import '../../../../core/theme/app_colors.dart';
-import '../../../../core/widgets/app_buttons.dart';
-import '../../../../core/widgets/flow_header.dart';
 import '../../domain/entities/phone_number.dart';
 import '../cubit/otp_cubit.dart';
 import '../cubit/session_cubit.dart';
@@ -22,8 +20,7 @@ class OtpPage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return BlocProvider(
-      create: (_) =>
-          OtpCubit(phone: phone, verifyOtp: sl(), requestOtp: sl()),
+      create: (_) => OtpCubit(phone: phone, verifyOtp: sl(), requestOtp: sl()),
       child: const _OtpView(),
     );
   }
@@ -52,47 +49,59 @@ class _OtpViewState extends State<_OtpView> {
   @override
   Widget build(BuildContext context) {
     final l10n = context.l10n;
+    final colors = context.colors;
     final text = Theme.of(context).textTheme;
     final cubit = context.read<OtpCubit>();
 
     return BlocConsumer<OtpCubit, OtpState>(
       listener: (context, state) {
-        if (state.user != null) {
-          context.read<SessionCubit>().signedIn(state.user!);
+        if (state.user case final user?) {
+          context.read<SessionCubit>().signedIn(user);
         }
         if (state.resent) {
           _code.clear();
-          ScaffoldMessenger.of(
-            context,
-          ).showSnackBar(SnackBar(content: Text(l10n.codeResent)));
+          ScaffoldMessenger.of(context)
+              .showSnackBar(SnackBar(content: Text(l10n.codeResent)));
         }
       },
-      builder: (context, state) => Scaffold(
-        backgroundColor: AppColors.surface,
-        body: Column(
+      builder: (context, state) => DetailPage(
+        title: l10n.enterCode,
+        bottomBar: ActionBar(
           children: [
-            FlowHeader(title: l10n.enterCode),
-            Expanded(
-              child: ListView(
-                padding: const EdgeInsets.symmetric(horizontal: 28),
+            ActionButton(
+              label: l10n.confirm,
+              loading: state.verifying,
+              onPressed: state.isComplete ? cubit.verify : null,
+            ),
+          ],
+        ),
+        child: LayoutBuilder(
+          builder: (context, constraints) => SingleChildScrollView(
+            padding: const EdgeInsets.symmetric(horizontal: DesignSpace.gutter),
+            child: ConstrainedBox(
+              constraints: BoxConstraints(minHeight: constraints.maxHeight),
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
-                  const SizedBox(height: 16),
+                  const SizedBox(height: DesignSpace.xxl),
                   Text(
-                    l10n.codeSentTo,
-                    style: text.bodyLarge?.copyWith(color: AppColors.muted),
+                    l10n.codeSentTo.toUpperCase(),
+                    textAlign: TextAlign.center,
+                    style: DesignTypography.stamp(colors.inkSecondary),
                   ),
-                  const SizedBox(height: 4),
-                  Align(
-                    alignment: AlignmentDirectional.centerStart,
-                    child: Text(
-                      cubit.phone.formatted,
-                      textDirection: TextDirection.ltr,
-                      style: text.titleMedium?.copyWith(
-                        fontWeight: FontWeight.w800,
-                      ),
+                  const SizedBox(height: DesignSpace.sm),
+                  Text(
+                    cubit.phone.formatted,
+                    textAlign: TextAlign.center,
+                    textDirection: TextDirection.ltr,
+                    style: DesignTypography.numeric(
+                      colors.ink,
+                      size: 19,
+                      weight: FontWeight.w700,
                     ),
                   ),
-                  const SizedBox(height: 36),
+                  const SizedBox(height: DesignSpace.huge),
                   OtpInput(
                     controller: _code,
                     length: AppConfig.otpLength,
@@ -100,47 +109,46 @@ class _OtpViewState extends State<_OtpView> {
                     enabled: !state.verifying,
                     onChanged: cubit.codeChanged,
                   ),
-                  const SizedBox(height: 20),
-                  if (state.failure != null)
+                  const SizedBox(height: DesignSpace.xl),
+                  if (state.failure case final failure?)
                     Text(
-                      state.failure!.localized(l10n),
+                      failure.localized(l10n),
                       textAlign: TextAlign.center,
-                      style: text.bodyMedium?.copyWith(color: AppColors.danger),
+                      style: text.bodyMedium?.copyWith(color: colors.signal),
                     ),
+                  const SizedBox(height: DesignSpace.sm),
                   Center(
                     child: state.canResend
-                        ? TextButton(
+                        ? TintAction(
+                            label: l10n.resendCode,
                             onPressed: cubit.resend,
-                            child: Text(l10n.resendCode),
                           )
                         : Padding(
-                            padding: const EdgeInsets.symmetric(vertical: 12),
+                            padding: const EdgeInsets.symmetric(
+                              vertical: DesignSpace.md,
+                            ),
                             child: Text(
                               l10n.resendIn(_countdown(state.secondsLeft)),
-                              style: text.bodyMedium?.copyWith(
-                                color: AppColors.muted,
+                              style: DesignTypography.numeric(
+                                colors.inkTertiary,
+                                size: 15,
+                                weight: FontWeight.w500,
                               ),
                             ),
                           ),
                   ),
-                  const SizedBox(height: 20),
-                  PrimaryButton(
-                    label: l10n.confirm,
-                    loading: state.verifying,
-                    onPressed: state.isComplete ? cubit.verify : null,
-                  ),
                   if (AppConfig.useMockApi) ...[
-                    const SizedBox(height: 16),
-                    Text(
-                      l10n.mockCodeHint(MockDatabase.otpCode),
-                      textAlign: TextAlign.center,
-                      style: text.bodySmall?.copyWith(color: AppColors.gold),
+                    const SizedBox(height: DesignSpace.xl),
+                    NoticeBlock(
+                      title: 'Demo',
+                      message: l10n.mockCodeHint(MockDatabase.otpCode),
                     ),
                   ],
+                  const SizedBox(height: DesignSpace.xxl),
                 ],
               ),
             ),
-          ],
+          ),
         ),
       ),
     );

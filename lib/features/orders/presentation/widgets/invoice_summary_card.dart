@@ -1,9 +1,8 @@
-import 'package:flutter/material.dart';
+import 'package:flutter/cupertino.dart';
 
+import '../../../../core/design/design.dart';
 import '../../../../core/l10n/l10n.dart';
-import '../../../../core/theme/app_colors.dart';
 import '../../../../core/utils/formatters.dart';
-import '../../../../core/widgets/app_card.dart';
 import '../../domain/entities/invoice.dart';
 
 extension PaymentMethodLabel on PaymentMethod {
@@ -13,10 +12,13 @@ extension PaymentMethodLabel on PaymentMethod {
   };
 }
 
-/// The invoice teaser at the bottom of the tracking page (plan §8.1, screen
-/// "تتبع الطلب"), tap-through to the full invoice.
+/// The invoice teaser on the tracking page, tapping through to the full one.
 class InvoiceSummaryCard extends StatelessWidget {
-  const InvoiceSummaryCard({super.key, required this.invoice, required this.onTap});
+  const InvoiceSummaryCard({
+    super.key,
+    required this.invoice,
+    required this.onTap,
+  });
 
   final Invoice invoice;
   final VoidCallback onTap;
@@ -24,40 +26,24 @@ class InvoiceSummaryCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final l10n = context.l10n;
+    final colors = context.colors;
     final format = AppFormat.of(context);
-    final text = Theme.of(context).textTheme;
-    return AppCard(
-      onTap: onTap,
-      child: Row(
-        children: [
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  l10n.invoiceNumber(invoice.id.toUpperCase()),
-                  style: text.titleSmall?.copyWith(fontWeight: FontWeight.w800),
-                ),
-                const SizedBox(height: 2),
-                Text(
-                  invoice.paid
-                      ? l10n.paidWith(invoice.paymentMethod?.label(l10n) ?? '')
-                      : l10n.unpaid,
-                  style: TextStyle(
-                    color: invoice.paid ? AppColors.success : AppColors.gold,
-                    fontSize: 13,
-                  ),
-                ),
-              ],
-            ),
+
+    return LabelGroup(
+      children: [
+        LabelRow(
+          title: l10n.invoiceNumber(invoice.id.toUpperCase()),
+          subtitle: invoice.paid
+              ? l10n.paidWith(invoice.paymentMethod?.label(l10n) ?? '')
+              : l10n.unpaid,
+          value: format.money(invoice.total),
+          trailing: Icon(
+            CupertinoIcons.chevron_forward,
+            color: colors.inkTertiary,
           ),
-          Text(
-            format.money(invoice.total),
-            style: text.titleMedium?.copyWith(fontWeight: FontWeight.w800),
-          ),
-          const Icon(Icons.chevron_left, color: AppColors.faint),
-        ],
-      ),
+          onTap: onTap,
+        ),
+      ],
     );
   }
 }

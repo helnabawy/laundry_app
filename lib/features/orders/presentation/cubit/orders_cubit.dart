@@ -8,13 +8,18 @@ import '../../domain/usecases/order_usecases.dart';
 /// The customer's order list, shared by the home screen and "My orders"
 /// (plan §8.1 "الطلب الحالي" / "طلباتك السابقة" / "طلباتي").
 class OrdersState extends Equatable {
-  const OrdersState({this.orders = const [], this.loading = true, this.failure});
+  const OrdersState({
+    this.orders = const [],
+    this.loading = true,
+    this.failure,
+  });
 
   final List<LaundryOrder> orders;
   final bool loading;
   final Failure? failure;
 
-  List<LaundryOrder> get active => orders.where((o) => o.status.isActive).toList();
+  List<LaundryOrder> get active =>
+      orders.where((o) => o.status.isActive).toList();
   List<LaundryOrder> get past => orders.where((o) => o.status.isPast).toList();
   LaundryOrder? get current => active.isEmpty ? null : active.first;
 
@@ -32,7 +37,8 @@ class OrdersCubit extends Cubit<OrdersState> {
     final result = await _getOrders();
     emit(
       result.fold(
-        onErr: (f) => OrdersState(orders: state.orders, loading: false, failure: f),
+        onErr: (f) =>
+            OrdersState(orders: state.orders, loading: false, failure: f),
         onOk: (orders) => OrdersState(orders: orders, loading: false),
       ),
     );

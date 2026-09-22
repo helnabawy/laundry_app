@@ -40,7 +40,8 @@ class OrderTrackingCubit extends Cubit<OrderTrackingState> {
     final result = await _getOrder(_orderId);
     emit(
       result.fold(
-        onErr: (f) => OrderTrackingState(order: state.order, loading: false, failure: f),
+        onErr: (f) =>
+            OrderTrackingState(order: state.order, loading: false, failure: f),
         onOk: (order) => OrderTrackingState(order: order, loading: false),
       ),
     );
@@ -48,14 +49,14 @@ class OrderTrackingCubit extends Cubit<OrderTrackingState> {
 
   Future<void> choosePaymentMethod(PaymentMethod method) async {
     emit(OrderTrackingState(order: state.order, loading: false, paying: true));
-    final result = await _choosePaymentMethod((orderId: _orderId, method: method));
+    final result = await _choosePaymentMethod((
+      orderId: _orderId,
+      method: method,
+    ));
     emit(
       result.fold(
-        onErr: (f) => OrderTrackingState(
-          order: state.order,
-          loading: false,
-          failure: f,
-        ),
+        onErr: (f) =>
+            OrderTrackingState(order: state.order, loading: false, failure: f),
         onOk: (order) => OrderTrackingState(order: order, loading: false),
       ),
     );

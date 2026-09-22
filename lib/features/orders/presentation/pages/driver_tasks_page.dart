@@ -1,17 +1,20 @@
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../../../core/design/design.dart';
 import '../../../../core/l10n/l10n.dart';
 import '../../../../core/router/routes.dart';
-import '../../../../core/theme/app_colors.dart';
 import '../../../../core/utils/formatters.dart';
-import '../../../../core/widgets/state_views.dart';
 import '../../domain/entities/driver_task.dart';
 import '../cubit/driver_tasks_cubit.dart';
 import '../widgets/task_card.dart';
 
-/// Plan §8.2 "مهام اليوم".
+/// The driver's day, printed on the routing tag.
+///
+/// Hi-vis ground, ink type, one stop per row. Colour is committed here on
+/// purpose: this screen is read in direct sun, at arm's length.
 class DriverTasksPage extends StatefulWidget {
   const DriverTasksPage({super.key});
 
@@ -25,204 +28,210 @@ class _DriverTasksPageState extends State<DriverTasksPage> {
   @override
   Widget build(BuildContext context) {
     final l10n = context.l10n;
+    final colors = context.colors;
     final format = AppFormat.of(context);
     final today = DateTime.now();
 
     return Scaffold(
-      backgroundColor: AppColors.background,
-      body: RefreshIndicator(
-        onRefresh: () => context.read<DriverTasksCubit>().load(),
-        child: BlocBuilder<DriverTasksCubit, DriverTasksState>(
-          builder: (context, state) {
-            return CustomScrollView(
+      backgroundColor: colors.tape,
+      body: BlocBuilder<DriverTasksCubit, DriverTasksState>(
+        builder: (context, state) {
+          final tasks = _showPickups ? state.pickups : state.deliveries;
+          return RefreshIndicator(
+            color: colors.ink,
+            backgroundColor: colors.tape,
+            onRefresh: () => context.read<DriverTasksCubit>().load(),
+            child: CustomScrollView(
+              physics: const AlwaysScrollableScrollPhysics(),
               slivers: [
                 SliverToBoxAdapter(
-                  child: Container(
-                    color: AppColors.ink,
-                    child: SafeArea(
-                      bottom: false,
-                      child: Padding(
-                        padding: const EdgeInsets.fromLTRB(20, 8, 20, 20),
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.stretch,
-                          children: [
-                            Row(
-                              children: [
-                                Expanded(
-                                  child: Column(
-                                    crossAxisAlignment: CrossAxisAlignment.start,
-                                    children: [
-                                      Text(
-                                        l10n.todaysTasks,
-                                        style: const TextStyle(
-                                          color: Colors.white,
-                                          fontSize: 20,
-                                          fontWeight: FontWeight.w800,
-                                        ),
-                                      ),
-                                      Text(
-                                        '${format.relativeDay(today)} ${today.day} ${format.month(today)}',
-                                        style: const TextStyle(color: Colors.white70, fontSize: 13),
-                                      ),
-                                    ],
-                                  ),
-                                ),
-                              ],
-                            ),
-                            const SizedBox(height: 16),
-                            Row(
-                              children: [
-                                Text(
-                                  state.available ? l10n.available : l10n.unavailable,
-                                  style: const TextStyle(color: Colors.white),
-                                ),
-                                const Spacer(),
-                                Switch(
-                                  value: state.available,
-                                  onChanged: state.togglingAvailability
-                                      ? null
-                                      : (v) => context.read<DriverTasksCubit>().setAvailability(v),
-                                ),
-                              ],
-                            ),
-                            const SizedBox(height: 12),
-                            _SegmentedTabs(
-                              showPickups: _showPickups,
-                              pickupCount: state.pickups.length,
-                              deliveryCount: state.deliveries.length,
-                              onChanged: (v) => setState(() => _showPickups = v),
-                            ),
-                          ],
-                        ),
-                      ),
+                  child: TagHeader(
+                    title: l10n.todaysTasks,
+                    shift:
+                        '${format.relativeDay(today)} ${today.day} ${format.month(today)}',
+                    count: '${state.pickups.length + state.deliveries.length}',
+                    countLabel: l10n.navTasks,
+                  ),
+                ),
+                SliverToBoxAdapter(
+                  child: TagPanel(
+                    ruledTop: true,
+                    padding: const EdgeInsets.fromLTRB(
+                      DesignSpace.gutter,
+                      DesignSpace.md,
+                      DesignSpace.gutter,
+                      DesignSpace.md,
+                    ),
+                    child: _AvailabilityRow(state: state),
+                  ),
+                ),
+                SliverToBoxAdapter(
+                  child: Padding(
+                    padding: const EdgeInsets.fromLTRB(
+                      DesignSpace.gutter,
+                      DesignSpace.lg,
+                      DesignSpace.gutter,
+                      DesignSpace.lg,
+                    ),
+                    child: _TagSegmented(
+                      labels: [
+                        l10n.pickupsTab(state.pickups.length),
+                        l10n.deliveriesTab(state.deliveries.length),
+                      ],
+                      index: _showPickups ? 0 : 1,
+                      onChanged: (i) => setState(() => _showPickups = i == 0),
                     ),
                   ),
                 ),
                 if (state.loading && state.tasks.isEmpty)
-                  const SliverFillRemaining(child: LoadingView())
+                  const SliverFillRemaining(
+                    hasScrollBody: false,
+                    child: LoadingView(),
+                  )
                 else if (state.failure != null && state.tasks.isEmpty)
                   SliverFillRemaining(
+                    hasScrollBody: false,
                     child: ErrorView(
                       message: state.failure!.localized(l10n),
+                      retryLabel: l10n.retry,
                       onRetry: () => context.read<DriverTasksCubit>().load(),
                     ),
                   )
+                else if (tasks.isEmpty)
+                  SliverFillRemaining(
+                    hasScrollBody: false,
+                    child: EmptyView(
+                      message: l10n.noTasks,
+                      glyph: _showPickups
+                          ? CareGlyph.collect
+                          : CareGlyph.deliver,
+                    ),
+                  )
                 else
-                  _TaskListSliver(
-                    tasks: _showPickups ? state.pickups : state.deliveries,
-                    emptyMessage: l10n.noTasks,
+                  SliverList.builder(
+                    itemCount: tasks.length,
+                    itemBuilder: (context, i) {
+                      final task = tasks[i];
+                      return TaskCard(
+                        task: task,
+                        // A stop can be confirmed or failed while it is open,
+                        // so the day is re-read on the way back rather than
+                        // leaving a completed stop sitting in the list.
+                        onTap: () async {
+                          final cubit = context.read<DriverTasksCubit>();
+                          await context.push<bool>(
+                            task.type == TaskType.pickup
+                                ? Routes.driverPickup(task.orderId)
+                                : Routes.driverDelivery(task.orderId),
+                          );
+                          await cubit.load();
+                        },
+                      );
+                    },
                   ),
+                const SliverToBoxAdapter(
+                  child: SizedBox(height: DesignSpace.huge),
+                ),
               ],
-            );
-          },
-        ),
+            ),
+          );
+        },
       ),
     );
   }
 }
 
-class _SegmentedTabs extends StatelessWidget {
-  const _SegmentedTabs({
-    required this.showPickups,
-    required this.pickupCount,
-    required this.deliveryCount,
-    required this.onChanged,
-  });
+class _AvailabilityRow extends StatelessWidget {
+  const _AvailabilityRow({required this.state});
 
-  final bool showPickups;
-  final int pickupCount;
-  final int deliveryCount;
-  final ValueChanged<bool> onChanged;
+  final DriverTasksState state;
 
   @override
   Widget build(BuildContext context) {
     final l10n = context.l10n;
-    return Container(
-      padding: const EdgeInsets.all(4),
+    final colors = context.colors;
+    return Row(
+      children: [
+        CareGlyphIcon(
+          CareGlyph.custody,
+          color: colors.onTag,
+          size: 22,
+          filled: state.available,
+          crossed: !state.available,
+          crossColor: colors.onTag,
+        ),
+        const SizedBox(width: DesignSpace.md),
+        Expanded(
+          child: Text(
+            (state.available ? l10n.available : l10n.unavailable).toUpperCase(),
+            style: DesignTypography.stamp(colors.onTag, size: 13),
+          ),
+        ),
+        // The platform control, tinted from the world. A bespoke switch is
+        // the off-spec tell an iPhone user reads as untrustworthy.
+        CupertinoSwitch(
+          value: state.available,
+          activeTrackColor: colors.onTag,
+          inactiveTrackColor: colors.onTag.withValues(alpha: .30),
+          thumbColor: colors.tag,
+          onChanged: state.togglingAvailability
+              ? null
+              : (v) => context.read<DriverTasksCubit>().setAvailability(v),
+        ),
+      ],
+    );
+  }
+}
+
+/// Two fields on the tag; the chosen one inverts to ink.
+class _TagSegmented extends StatelessWidget {
+  const _TagSegmented({
+    required this.labels,
+    required this.index,
+    required this.onChanged,
+  });
+
+  final List<String> labels;
+  final int index;
+  final ValueChanged<int> onChanged;
+
+  @override
+  Widget build(BuildContext context) {
+    final colors = context.colors;
+    return DecoratedBox(
       decoration: BoxDecoration(
-        color: Colors.white.withValues(alpha: .12),
-        borderRadius: BorderRadius.circular(14),
+        border: Border.all(color: colors.ruleStrong),
+        borderRadius: BorderRadius.circular(DesignRadius.slot),
       ),
       child: Row(
         children: [
-          Expanded(
-            child: _SegmentButton(
-              label: l10n.pickupsTab(pickupCount),
-              selected: showPickups,
-              onTap: () => onChanged(true),
+          for (var i = 0; i < labels.length; i++)
+            Expanded(
+              child: Semantics(
+                button: true,
+                selected: i == index,
+                child: GestureDetector(
+                  behavior: HitTestBehavior.opaque,
+                  onTap: () => onChanged(i),
+                  child: AnimatedContainer(
+                    duration: DesignMotion.quick,
+                    height: 44,
+                    alignment: Alignment.center,
+                    color: i == index ? colors.ink : const Color(0x00000000),
+                    child: Text(
+                      labels[i].toUpperCase(),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: DesignTypography.stamp(
+                        i == index ? colors.onInk : colors.inkSecondary,
+                        size: 12,
+                      ),
+                    ),
+                  ),
+                ),
+              ),
             ),
-          ),
-          Expanded(
-            child: _SegmentButton(
-              label: l10n.deliveriesTab(deliveryCount),
-              selected: !showPickups,
-              onTap: () => onChanged(false),
-            ),
-          ),
         ],
-      ),
-    );
-  }
-}
-
-class _SegmentButton extends StatelessWidget {
-  const _SegmentButton({required this.label, required this.selected, required this.onTap});
-
-  final String label;
-  final bool selected;
-  final VoidCallback onTap;
-
-  @override
-  Widget build(BuildContext context) {
-    return Material(
-      color: selected ? Colors.white : Colors.transparent,
-      borderRadius: BorderRadius.circular(10),
-      child: InkWell(
-        borderRadius: BorderRadius.circular(10),
-        onTap: onTap,
-        child: Padding(
-          padding: const EdgeInsets.symmetric(vertical: 10),
-          child: Text(
-            label,
-            textAlign: TextAlign.center,
-            style: TextStyle(
-              color: selected ? AppColors.ink : Colors.white,
-              fontWeight: FontWeight.w800,
-            ),
-          ),
-        ),
-      ),
-    );
-  }
-}
-
-class _TaskListSliver extends StatelessWidget {
-  const _TaskListSliver({required this.tasks, required this.emptyMessage});
-
-  final List<DriverTask> tasks;
-  final String emptyMessage;
-
-  @override
-  Widget build(BuildContext context) {
-    if (tasks.isEmpty) {
-      return SliverFillRemaining(child: EmptyView(message: emptyMessage));
-    }
-    return SliverPadding(
-      padding: const EdgeInsets.all(20),
-      sliver: SliverList.separated(
-        itemCount: tasks.length,
-        separatorBuilder: (_, _) => const SizedBox(height: 12),
-        itemBuilder: (context, i) {
-          final task = tasks[i];
-          return TaskCard(
-            task: task,
-            onTap: () => context.push(
-              task.type == TaskType.pickup
-                  ? Routes.driverPickup(task.orderId)
-                  : Routes.driverDelivery(task.orderId),
-            ),
-          );
-        },
       ),
     );
   }

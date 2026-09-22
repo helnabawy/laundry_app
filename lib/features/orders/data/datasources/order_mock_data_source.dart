@@ -8,6 +8,7 @@ import '../../../auth/data/datasources/auth_mock_data_source.dart';
 import '../../domain/entities/driver_task.dart';
 import '../../domain/entities/invoice.dart';
 import '../../domain/entities/laundry_order.dart';
+import '../../domain/entities/order_line.dart';
 import '../../domain/entities/new_order_params.dart';
 import '../../domain/entities/order_item.dart';
 import '../../domain/entities/order_status.dart';
@@ -61,8 +62,13 @@ class OrderMockDataSource
       'id': 'ord-${++_orderSeq}',
       'number': _orderSeq,
       'userId': userId,
-      'category': _catalog.categoryById(params.categoryId),
-      'subService': _catalog.subServiceById(params.subServiceId),
+      'lines': [
+        for (final line in params.lines)
+          OrderLine(
+            category: _catalog.categoryById(line.categoryId),
+            subService: _catalog.subServiceById(line.subServiceId),
+          ),
+      ],
       'tier': _catalog.tierById(params.tierId),
       'pickupSlot': _catalog.slotById(params.pickupSlotId),
       'deliverySlot': _catalog.slotById(params.deliverySlotId),
@@ -213,7 +219,11 @@ class OrderMockDataSource
     final row = _requireDriverOrder(orderId, OrderStatus.driverAssigned);
     final now = DateTime.now();
     _appendStatus(row, OrderStatus.pickedUp, now);
-    _appendStatus(row, OrderStatus.atFacility, now.add(const Duration(seconds: 1)));
+    _appendStatus(
+      row,
+      OrderStatus.atFacility,
+      now.add(const Duration(seconds: 1)),
+    );
     row['invoice'] = _generateInvoice(row['number'] as int);
     _appendStatus(
       row,
@@ -283,7 +293,10 @@ class OrderMockDataSource
   Map<String, dynamic> _findOrder(String id) =>
       _db.findById(_table, id) ?? _db.notFound('Order not found');
 
-  Map<String, dynamic> _requireDriverOrder(String orderId, OrderStatus expected) {
+  Map<String, dynamic> _requireDriverOrder(
+    String orderId,
+    OrderStatus expected,
+  ) {
     final driverId = _db.requireUserId();
     final row = _findOrder(orderId);
     if (row['driverId'] != driverId) _db.notFound('Task not found');
@@ -293,7 +306,11 @@ class OrderMockDataSource
     return row;
   }
 
-  void _appendStatus(Map<String, dynamic> row, OrderStatus status, DateTime at) {
+  void _appendStatus(
+    Map<String, dynamic> row,
+    OrderStatus status,
+    DateTime at,
+  ) {
     row['status'] = status;
     (row['timeline'] as List<OrderTimelineEvent>).add(
       OrderTimelineEvent(status: status, at: at),
@@ -322,7 +339,11 @@ class OrderMockDataSource
     }
     if (items.isEmpty) {
       items.add(
-        OrderItem(name: _db.tr({'ar': 'قميص', 'en': 'Shirt'}), quantity: 2, unitPrice: 10),
+        OrderItem(
+          name: _db.tr({'ar': 'قميص', 'en': 'Shirt'}),
+          quantity: 2,
+          unitPrice: 10,
+        ),
       );
     }
     return Invoice(
@@ -345,11 +366,20 @@ class OrderMockDataSource
     return row?['fullName'] as String?;
   }
 
+  /// Seeded rows still carry the single `category` / `subService` pair.
+  List<OrderLine> _rowLines(Map<String, dynamic> row) =>
+      (row['lines'] as List<OrderLine>?) ??
+      [
+        OrderLine(
+          category: row['category'] as ServiceCategory,
+          subService: row['subService'] as SubService,
+        ),
+      ];
+
   LaundryOrder _toOrder(Map<String, dynamic> row) => LaundryOrder(
     id: row['id'] as String,
     number: row['number'] as int,
-    category: row['category'] as ServiceCategory,
-    subService: row['subService'] as SubService,
+    lines: _rowLines(row),
     tier: row['tier'] as ServiceTier,
     pickupSlot: row['pickupSlot'] as TimeSlot,
     deliverySlot: row['deliverySlot'] as TimeSlot,

@@ -11,7 +11,8 @@ class DriverTaskRepositoryImpl implements DriverTaskRepository {
   final DriverTaskRemoteDataSource _remote;
 
   @override
-  Future<Result<List<DriverTask>>> getTodayTasks() => guard(_remote.getTodayTasks);
+  Future<Result<List<DriverTask>>> getTodayTasks() =>
+      guard(_remote.getTodayTasks);
 
   @override
   Future<Result<List<DriverTask>>> getCompletedTasks() =>

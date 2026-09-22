@@ -1,23 +1,20 @@
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../../../core/design/design.dart';
 import '../../../../core/di/injection.dart';
 import '../../../../core/l10n/l10n.dart';
-import '../../../../core/theme/app_colors.dart';
 import '../../../../core/utils/formatters.dart';
-import '../../../../core/widgets/app_buttons.dart';
-import '../../../../core/widgets/app_card.dart';
-import '../../../../core/widgets/flow_header.dart';
-import '../../../../core/widgets/info_banner.dart';
-import '../../../../core/widgets/state_views.dart';
 import '../../domain/entities/invoice.dart';
 import '../../domain/entities/order_status.dart';
 import '../cubit/task_detail_cubit.dart';
-import '../utils/launchers.dart';
 import '../widgets/failure_reason_sheet.dart';
+import '../widgets/map_placeholder.dart';
+import '../widgets/stop_contact.dart';
 
-/// Plan §8.2 "تأكيد التسليم" / §9 Stage 5.
+/// One delivery stop: hand the items over, collect what is owed, confirm.
 class DeliveryDetailPage extends StatelessWidget {
   const DeliveryDetailPage({super.key, required this.orderId});
 
@@ -46,183 +43,64 @@ class _DeliveryDetailViewState extends State<_DeliveryDetailView> {
   @override
   Widget build(BuildContext context) {
     final l10n = context.l10n;
+    final colors = context.colors;
+
     return BlocConsumer<TaskDetailCubit, TaskDetailState>(
       listenWhen: (prev, curr) =>
-          (curr.done && !prev.done) || (curr.failure != null && curr.failure != prev.failure),
+          (curr.done && !prev.done) ||
+          (curr.failure != null && curr.failure != prev.failure),
       listener: (context, state) {
         if (state.done) {
-          ScaffoldMessenger.of(
-            context,
-          ).showSnackBar(SnackBar(content: Text(l10n.deliveryConfirmed)));
+          ScaffoldMessenger.of(context)
+              .showSnackBar(SnackBar(content: Text(l10n.deliveryConfirmed)));
           context.pop(true);
           return;
         }
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(state.failure!.localized(l10n))),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text(state.failure!.localized(l10n))));
       },
       builder: (context, state) {
         final order = state.order;
         final invoice = order?.invoice;
         final needsCollection =
-            invoice != null && invoice.paymentMethod == PaymentMethod.cashOnDelivery && !invoice.paid;
+            invoice != null &&
+            invoice.paymentMethod == PaymentMethod.cashOnDelivery &&
+            !invoice.paid;
+        final format = AppFormat.of(context);
 
-        return Scaffold(
-          body: Column(
-            children: [
-              FlowHeader(
-                title: order != null ? l10n.deliveryTitle(order.number.toString()) : '',
-                subtitle: order != null
-                    ? AppFormat.of(context).timeRange(
-                        order.deliverySlot.start,
-                        order.deliverySlot.end,
-                      )
-                    : null,
-              ),
-              Expanded(
-                child: order == null || invoice == null
-                    ? (state.loading
-                          ? const LoadingView()
-                          : ErrorView(
-                              message: state.failure?.localized(l10n) ?? l10n.genericError,
-                              onRetry: () => context.read<TaskDetailCubit>().load(),
-                            ))
-                    : ListView(
-                        padding: const EdgeInsets.all(20),
-                        children: [
-                          Container(
-                            padding: const EdgeInsets.all(18),
-                            decoration: BoxDecoration(
-                              color: AppColors.ink,
-                              borderRadius: BorderRadius.circular(20),
-                            ),
-                            child: Row(
-                              children: [
-                                Expanded(
-                                  child: Column(
-                                    crossAxisAlignment: CrossAxisAlignment.start,
-                                    children: [
-                                      Text(
-                                        order.customerName,
-                                        style: const TextStyle(
-                                          color: Colors.white,
-                                          fontWeight: FontWeight.w800,
-                                        ),
-                                      ),
-                                      const SizedBox(height: 2),
-                                      Text(
-                                        '${order.address.area}، ${order.address.city}',
-                                        style: const TextStyle(color: Colors.white70, fontSize: 13),
-                                      ),
-                                    ],
-                                  ),
-                                ),
-                                OutlinedButton.icon(
-                                  onPressed: () => launchTel(order.customerPhone),
-                                  style: OutlinedButton.styleFrom(
-                                    foregroundColor: Colors.white,
-                                    side: const BorderSide(color: Colors.white54),
-                                  ),
-                                  icon: const Icon(Icons.call_outlined, size: 18),
-                                  label: Text(l10n.call),
-                                ),
-                              ],
-                            ),
-                          ),
-                          const SizedBox(height: 16),
-                          AppCard(
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.stretch,
-                              children: [
-                                Text(
-                                  l10n.deliveredItems,
-                                  style: const TextStyle(fontWeight: FontWeight.w800),
-                                ),
-                                const SizedBox(height: 6),
-                                for (final item in invoice.items)
-                                  Padding(
-                                    padding: const EdgeInsets.symmetric(vertical: 6),
-                                    child: Row(
-                                      children: [
-                                        Expanded(child: Text(item.name)),
-                                        const Icon(
-                                          Icons.check_circle,
-                                          size: 18,
-                                          color: AppColors.success,
-                                        ),
-                                        const SizedBox(width: 6),
-                                        Text('${item.quantity}'),
-                                      ],
-                                    ),
-                                  ),
-                                const Divider(height: 20),
-                                Row(
-                                  children: [
-                                    Text(
-                                      l10n.total,
-                                      style: const TextStyle(fontWeight: FontWeight.w800),
-                                    ),
-                                    const Spacer(),
-                                    Text(
-                                      AppFormat.of(context).money(invoice.total),
-                                      style: const TextStyle(fontWeight: FontWeight.w800),
-                                    ),
-                                  ],
-                                ),
-                              ],
-                            ),
-                          ),
-                          const SizedBox(height: 16),
-                          if (needsCollection)
-                            _CollectCashCard(
-                              amount: AppFormat.of(context).money(invoice.total),
-                              collected: _cashCollected,
-                              onToggle: (v) => setState(() => _cashCollected = v),
-                            )
-                          else
-                            InfoBanner(
-                              title: l10n.invoicePaidTitle,
-                              message: l10n.noCollection,
-                              tone: BannerTone.success,
-                            ),
-                          const SizedBox(height: 16),
-                          Text(
-                            l10n.proofOfDelivery,
-                            style: const TextStyle(fontWeight: FontWeight.w800),
-                          ),
-                          const SizedBox(height: 8),
-                          _ProofPhotoBox(
-                            hasPhoto: _hasProofPhoto,
-                            onTap: () => setState(() => _hasProofPhoto = !_hasProofPhoto),
-                          ),
-                        ],
-                      ),
-              ),
-            ],
-          ),
-          bottomNavigationBar: order == null || order.status != OrderStatus.outForDelivery
+        return DetailPage(
+          title: order != null
+              ? l10n.deliveryTitle(order.number.toString())
+              : l10n.navTasks,
+          subtitle: order != null
+              ? format.timeRange(
+                  order.deliverySlot.start,
+                  order.deliverySlot.end,
+                )
+              : null,
+          bottomBar: order == null || order.status != OrderStatus.outForDelivery
               ? null
-              : BottomActions(
+              : ActionBar(
+                  note: needsCollection && !_cashCollected
+                      ? l10n.collectCashFirst
+                      : null,
                   children: [
-                    PrimaryButton(
+                    ActionButton(
                       label: l10n.confirmDelivery,
-                      tone: ButtonTone.accent,
+                      tone: ActionTone.field,
                       loading: state.submitting,
-                      onPressed: () {
-                        if (needsCollection && !_cashCollected) {
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            SnackBar(content: Text(l10n.collectCashFirst)),
-                          );
-                          return;
-                        }
-                        context.read<TaskDetailCubit>().confirmDelivery(
-                          cashCollected: _cashCollected,
-                          hasProofPhoto: _hasProofPhoto,
-                        );
-                      },
+                      onPressed: needsCollection && !_cashCollected
+                          ? null
+                          : () =>
+                                context.read<TaskDetailCubit>().confirmDelivery(
+                                  cashCollected: _cashCollected,
+                                  hasProofPhoto: _hasProofPhoto,
+                                ),
                     ),
-                    SecondaryButton(
+                    ActionButton(
                       label: l10n.deliveryFailed,
+                      tone: ActionTone.danger,
                       onPressed: state.submitting
                           ? null
                           : () async {
@@ -231,12 +109,114 @@ class _DeliveryDetailViewState extends State<_DeliveryDetailView> {
                                 title: l10n.deliveryFailed,
                               );
                               if (result != null && context.mounted) {
-                                context.read<TaskDetailCubit>().reportDeliveryFailed(
-                                  result.reason,
-                                  result.note,
-                                );
+                                context
+                                    .read<TaskDetailCubit>()
+                                    .reportDeliveryFailed(
+                                      result.reason,
+                                      result.note,
+                                    );
                               }
                             },
+                    ),
+                  ],
+                ),
+          child: order == null || invoice == null
+              ? (state.loading
+                    ? const LoadingView()
+                    : ErrorView(
+                        message:
+                            state.failure?.localized(l10n) ?? l10n.genericError,
+                        retryLabel: l10n.retry,
+                        onRetry: () => context.read<TaskDetailCubit>().load(),
+                      ))
+              : ListView(
+                  padding: EdgeInsets.zero,
+                  children: [
+                    TagPanel(
+                      child: SerialBlock(
+                        serial: order.number.toString(),
+                        size: 34,
+                        color: colors.onTag,
+                        caption:
+                            '${order.customerName} · '
+                            '${order.address.area}${l10n.listSeparator}'
+                            '${order.address.city}',
+                      ),
+                    ),
+                    Padding(
+                      padding: const EdgeInsets.fromLTRB(
+                        DesignSpace.gutter,
+                        DesignSpace.xl,
+                        DesignSpace.gutter,
+                        0,
+                      ),
+                      child: MapPlaceholder(address: order.address),
+                    ),
+                    const SizedBox(height: DesignSpace.xl),
+                    StopContact(
+                      name: order.customerName,
+                      phone: order.customerPhone,
+                    ),
+
+                    LabelGroup(
+                      heading: l10n.deliveredItems,
+                      children: [
+                        for (final item in invoice.items)
+                          LabelRow(title: item.name, value: '${item.quantity}'),
+                      ],
+                    ),
+
+                    Padding(
+                      padding: const EdgeInsets.fromLTRB(
+                        DesignSpace.gutter,
+                        DesignSpace.xl,
+                        DesignSpace.gutter,
+                        0,
+                      ),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.stretch,
+                        children: [
+                          FieldLine(
+                            label: l10n.total,
+                            value: format.money(invoice.total),
+                            emphasised: true,
+                          ),
+                          const SizedBox(height: DesignSpace.lg),
+                          if (needsCollection)
+                            _CollectCash(
+                              amount: format.money(invoice.total),
+                              collected: _cashCollected,
+                              onToggle: (v) =>
+                                  setState(() => _cashCollected = v),
+                            )
+                          else
+                            NoticeBlock(
+                              title: l10n.invoicePaidTitle,
+                              message: l10n.noCollection,
+                              tone: NoticeTone.done,
+                            ),
+                        ],
+                      ),
+                    ),
+
+                    Padding(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: DesignSpace.gutter,
+                      ),
+                      child: StampHeading(l10n.proofOfDelivery),
+                    ),
+                    Padding(
+                      padding: const EdgeInsets.fromLTRB(
+                        DesignSpace.gutter,
+                        0,
+                        DesignSpace.gutter,
+                        DesignSpace.huge,
+                      ),
+                      child: _ProofPhotoField(
+                        hasPhoto: _hasProofPhoto,
+                        onTap: () =>
+                            setState(() => _hasProofPhoto = !_hasProofPhoto),
+                      ),
                     ),
                   ],
                 ),
@@ -246,8 +226,10 @@ class _DeliveryDetailViewState extends State<_DeliveryDetailView> {
   }
 }
 
-class _CollectCashCard extends StatelessWidget {
-  const _CollectCashCard({
+/// Cash owed is the one thing on this screen that can go wrong after the fact,
+/// so it holds the confirm action hostage until the driver marks it collected.
+class _CollectCash extends StatelessWidget {
+  const _CollectCash({
     required this.amount,
     required this.collected,
     required this.onToggle,
@@ -260,35 +242,44 @@ class _CollectCashCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final l10n = context.l10n;
+    final colors = context.colors;
+    final text = Theme.of(context).textTheme;
+
     return Container(
-      padding: const EdgeInsets.all(18),
+      padding: const EdgeInsets.all(DesignSpace.lg),
       decoration: BoxDecoration(
-        color: AppColors.goldSoft,
-        borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: AppColors.goldBorder),
+        color: collected ? colors.tape : colors.tag,
+        border: Border.all(
+          color: collected ? colors.rule : colors.onTag,
+          width: DesignRule.medium,
+        ),
+        borderRadius: BorderRadius.circular(DesignRadius.panel),
       ),
-      child: Row(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  l10n.collectAmountTitle(amount),
-                  style: const TextStyle(fontWeight: FontWeight.w800, color: AppColors.gold),
-                ),
-                const SizedBox(height: 2),
-                Text(l10n.collectAmountBody, style: const TextStyle(color: AppColors.gold)),
-              ],
+          Text(
+            l10n.collectAmountTitle(amount).toUpperCase(),
+            style: DesignTypography.stamp(
+              collected ? colors.ink : colors.onTag,
+              size: 14,
             ),
           ),
-          FilterChip(
-            selected: collected,
-            onSelected: onToggle,
-            avatar: collected ? const Icon(Icons.check, size: 16) : null,
-            label: Text(l10n.cashCollected),
-            selectedColor: AppColors.gold,
-            labelStyle: TextStyle(color: collected ? Colors.white : AppColors.gold),
+          const SizedBox(height: DesignSpace.xs),
+          Text(
+            l10n.collectAmountBody,
+            style: text.bodySmall?.copyWith(
+              color: collected
+                  ? colors.inkSecondary
+                  : colors.onTag.withValues(alpha: .8),
+            ),
+          ),
+          const SizedBox(height: DesignSpace.lg),
+          ActionButton(
+            label: l10n.cashCollected,
+            tone: collected ? ActionTone.secondary : ActionTone.primary,
+            icon: collected ? const Icon(CupertinoIcons.checkmark_alt) : null,
+            onPressed: () => onToggle(!collected),
           ),
         ],
       ),
@@ -296,8 +287,8 @@ class _CollectCashCard extends StatelessWidget {
   }
 }
 
-class _ProofPhotoBox extends StatelessWidget {
-  const _ProofPhotoBox({required this.hasPhoto, required this.onTap});
+class _ProofPhotoField extends StatelessWidget {
+  const _ProofPhotoField({required this.hasPhoto, required this.onTap});
 
   final bool hasPhoto;
   final VoidCallback onTap;
@@ -305,28 +296,34 @@ class _ProofPhotoBox extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final l10n = context.l10n;
-    return Material(
-      color: AppColors.surface,
-      borderRadius: BorderRadius.circular(16),
-      child: InkWell(
-        borderRadius: BorderRadius.circular(16),
+    final colors = context.colors;
+
+    return Semantics(
+      button: true,
+      label: hasPhoto ? l10n.retakePhoto : l10n.takePhotoOptional,
+      excludeSemantics: true,
+      child: GestureDetector(
+        behavior: HitTestBehavior.opaque,
         onTap: onTap,
         child: Container(
-          padding: const EdgeInsets.symmetric(vertical: 24),
+          padding: const EdgeInsets.symmetric(vertical: DesignSpace.xxl),
           decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(16),
-            border: Border.all(color: AppColors.line),
+            color: hasPhoto ? colors.tapeRecessed : null,
+            border: Border.all(color: colors.rule),
+            borderRadius: BorderRadius.circular(DesignRadius.panel),
           ),
           child: Column(
             children: [
               Icon(
-                hasPhoto ? Icons.check_circle : Icons.camera_alt_outlined,
-                color: hasPhoto ? AppColors.success : AppColors.muted,
+                hasPhoto ? CupertinoIcons.checkmark_alt : CupertinoIcons.camera,
+                color: hasPhoto ? colors.ink : colors.inkTertiary,
+                size: 26,
               ),
-              const SizedBox(height: 8),
+              const SizedBox(height: DesignSpace.sm),
               Text(
-                hasPhoto ? l10n.retakePhoto : l10n.takePhotoOptional,
-                style: const TextStyle(color: AppColors.muted),
+                (hasPhoto ? l10n.retakePhoto : l10n.takePhotoOptional)
+                    .toUpperCase(),
+                style: DesignTypography.stamp(colors.inkSecondary),
               ),
             ],
           ),

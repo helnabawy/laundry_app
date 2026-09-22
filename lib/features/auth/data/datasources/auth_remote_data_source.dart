@@ -23,12 +23,10 @@ class AuthApiDataSource implements AuthRemoteDataSource {
 
   @override
   Future<VerifyOtpResponse> verifyOtp(String phone, String code) async {
-    final json =
-        await _api.post(
-              ApiEndpoints.verifyOtp,
-              data: {'phone': phone, 'code': code},
-            )
-            as Map<String, dynamic>;
+    final json = await _api.post(
+      ApiEndpoints.verifyOtp,
+      data: {'phone': phone, 'code': code},
+    ) as Map<String, dynamic>;
     return (
       token: json['token'] as String,
       user: AppUserModel.fromJson(json['user'] as Map<String, dynamic>),

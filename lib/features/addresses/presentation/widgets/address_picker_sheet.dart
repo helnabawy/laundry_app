@@ -1,6 +1,8 @@
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../../../core/design/design.dart';
 import '../../../../core/l10n/l10n.dart';
 import '../../../../core/router/routes.dart';
 import '../../domain/entities/address.dart';
@@ -18,47 +20,52 @@ Future<Address?> showAddressPicker(
     isScrollControlled: true,
     builder: (sheetContext) {
       final l10n = sheetContext.l10n;
+      final colors = sheetContext.colors;
       return SafeArea(
-        child: Padding(
-          padding: const EdgeInsets.fromLTRB(20, 0, 20, 16),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              Text(
-                l10n.chooseAddress,
-                style: Theme.of(sheetContext).textTheme.titleMedium?.copyWith(
-                  fontWeight: FontWeight.w800,
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            Padding(
+              padding: const EdgeInsets.fromLTRB(
+                DesignSpace.gutter,
+                0,
+                DesignSpace.gutter,
+                DesignSpace.md,
+              ),
+              child: Text(
+                l10n.chooseAddress.toUpperCase(),
+                style: DesignTypography.stamp(colors.inkSecondary),
+              ),
+            ),
+            Flexible(
+              child: SingleChildScrollView(
+                child: LabelGroup(
+                  children: [
+                    for (final address in addresses)
+                      AddressTile(
+                        address: address,
+                        selected: address == selected,
+                        onTap: () => Navigator.pop(sheetContext, address),
+                      ),
+                    LabelRow(
+                      leading: Icon(CupertinoIcons.add, color: colors.tint),
+                      title: l10n.addAddress,
+                      onTap: () async {
+                        final created = await sheetContext.push<Address>(
+                          Routes.addAddress,
+                        );
+                        if (created != null && sheetContext.mounted) {
+                          Navigator.pop(sheetContext, created);
+                        }
+                      },
+                    ),
+                  ],
                 ),
               ),
-              const SizedBox(height: 16),
-              Flexible(
-                child: ListView.separated(
-                  shrinkWrap: true,
-                  itemCount: addresses.length,
-                  separatorBuilder: (_, _) => const SizedBox(height: 10),
-                  itemBuilder: (_, i) => AddressTile(
-                    address: addresses[i],
-                    selected: addresses[i] == selected,
-                    onTap: () => Navigator.pop(sheetContext, addresses[i]),
-                  ),
-                ),
-              ),
-              const SizedBox(height: 12),
-              TextButton.icon(
-                icon: const Icon(Icons.add),
-                label: Text(l10n.addAddress),
-                onPressed: () async {
-                  final created = await sheetContext.push<Address>(
-                    Routes.addAddress,
-                  );
-                  if (created != null && sheetContext.mounted) {
-                    Navigator.pop(sheetContext, created);
-                  }
-                },
-              ),
-            ],
-          ),
+            ),
+            const SizedBox(height: DesignSpace.lg),
+          ],
         ),
       );
     },

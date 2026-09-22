@@ -1,13 +1,12 @@
-import 'package:flutter/material.dart';
+import 'package:flutter/widgets.dart';
 
+import '../../../../core/design/design.dart';
 import '../../../../core/l10n/l10n.dart';
-import '../../../../core/theme/app_colors.dart';
 import '../../../../core/utils/formatters.dart';
-import '../../../../core/widgets/app_card.dart';
-import '../../../../core/widgets/labeled_rows.dart';
 import '../../domain/entities/driver_task.dart';
+import '../utils/category_icons.dart';
 
-/// One row in the driver's today list (plan §8.2 "مهام اليوم").
+/// One stop in the driver's day, printed as a tag row.
 class TaskCard extends StatelessWidget {
   const TaskCard({super.key, required this.task, required this.onTap});
 
@@ -17,64 +16,30 @@ class TaskCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final l10n = context.l10n;
+    final colors = context.colors;
     final format = AppFormat.of(context);
-    final text = Theme.of(context).textTheme;
     final order = task.order;
-    return AppCard(
-      onTap: onTap,
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            children: [
-              Text(
-                l10n.orderNumber(order.number.toString()),
-                style: text.titleMedium?.copyWith(fontWeight: FontWeight.w800),
-              ),
-              const Spacer(),
-              Pill(
-                label: format.timeRange(task.slot.start, task.slot.end),
-                foreground: AppColors.ink,
-                background: AppColors.background,
-              ),
-            ],
-          ),
-          const SizedBox(height: 10),
-          Row(
-            children: [
-              const Icon(Icons.location_on_outlined, size: 18, color: AppColors.muted),
-              const SizedBox(width: 6),
-              Expanded(
-                child: Text(
-                  '${task.address.area}، ${task.address.city}',
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                  style: const TextStyle(fontWeight: FontWeight.w600),
-                ),
-              ),
-              if (order.tier.isVip)
-                const Padding(
-                  padding: EdgeInsetsDirectional.only(start: 8),
-                  child: Pill(
-                    label: 'VIP',
-                    foreground: AppColors.gold,
-                    background: AppColors.goldSoft,
-                  ),
-                ),
-            ],
-          ),
-          const SizedBox(height: 2),
-          Text(
-            '${order.category.name} · ${order.subService.name}',
-            style: const TextStyle(color: AppColors.muted, fontSize: 13),
-          ),
-          const SizedBox(height: 10),
-          Align(
-            alignment: AlignmentDirectional.centerEnd,
-            child: TextButton(onPressed: onTap, child: Text(l10n.viewDetails)),
-          ),
-        ],
+
+    return TagRow(
+      serial: l10n.orderNumber(order.number.toString()),
+      window: format.timeRange(task.slot.start, task.slot.end),
+      title: '${task.address.area}${l10n.listSeparator}${task.address.city}',
+      subtitle: order.servicesLabel,
+      leading: CareGlyphIcon(
+        categoryGlyph(order.leadCategoryId),
+        color: colors.ink,
+        size: 26,
+        // One dot standard, two VIP: the level is read off the modifier.
+        dots: order.tier.isVip ? 2 : 1,
       ),
+      stamp: order.tier.isVip
+          ? const StatusStamp(
+              label: 'VIP',
+              tone: StampTone.field,
+              compact: true,
+            )
+          : null,
+      onTap: onTap,
     );
   }
 }

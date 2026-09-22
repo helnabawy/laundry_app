@@ -19,7 +19,8 @@ class OrderRepositoryImpl implements OrderRepository {
   Future<Result<List<LaundryOrder>>> getOrders() => guard(_remote.getOrders);
 
   @override
-  Future<Result<LaundryOrder>> getOrder(String id) => guard(() => _remote.getOrder(id));
+  Future<Result<LaundryOrder>> getOrder(String id) =>
+      guard(() => _remote.getOrder(id));
 
   @override
   Future<Result<LaundryOrder>> choosePaymentMethod(

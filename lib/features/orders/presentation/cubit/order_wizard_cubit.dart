@@ -23,10 +23,10 @@ class OrderWizardState extends Equatable {
     this.step = 1,
     this.categories = const [],
     this.loadingCategories = true,
-    this.category,
-    this.subServices = const [],
+    this.selectedCategories = const [],
+    this.subServicesByCategory = const {},
     this.loadingSubServices = false,
-    this.subService,
+    this.subServiceByCategory = const {},
     this.tiers = const [],
     this.loadingTiers = false,
     this.tier,
@@ -51,11 +51,20 @@ class OrderWizardState extends Equatable {
 
   final List<ServiceCategory> categories;
   final bool loadingCategories;
-  final ServiceCategory? category;
 
-  final List<SubService> subServices;
+  /// What the customer is sending. Several categories can travel in one
+  /// collection, so this is a list, in the order they were chosen.
+  final List<ServiceCategory> selectedCategories;
+
+  /// Sub-services are category-specific, so they are loaded and held per
+  /// category rather than as one flat list.
+  final Map<String, List<SubService>> subServicesByCategory;
   final bool loadingSubServices;
-  final SubService? subService;
+
+  /// The service chosen for each selected category, keyed by category id.
+  final Map<String, SubService> subServiceByCategory;
+
+  bool isSelected(ServiceCategory c) => selectedCategories.contains(c);
 
   final List<ServiceTier> tiers;
   final bool loadingTiers;
@@ -79,9 +88,14 @@ class OrderWizardState extends Equatable {
   final Failure? failure;
   final LaundryOrder? created;
 
+  /// Every chosen category has a service picked for it.
+  bool get everyCategoryServiced =>
+      selectedCategories.isNotEmpty &&
+      selectedCategories.every((c) => subServiceByCategory[c.id] != null);
+
   bool get canGoNext => switch (step) {
-    1 => category != null,
-    2 => subService != null,
+    1 => selectedCategories.isNotEmpty,
+    2 => everyCategoryServiced,
     3 => tier != null,
     4 => pickupSlot != null && deliverySlot != null && address != null,
     _ => false,
@@ -91,10 +105,10 @@ class OrderWizardState extends Equatable {
     int? step,
     List<ServiceCategory>? categories,
     bool? loadingCategories,
-    Object? category = _unset,
-    List<SubService>? subServices,
+    List<ServiceCategory>? selectedCategories,
+    Map<String, List<SubService>>? subServicesByCategory,
     bool? loadingSubServices,
-    Object? subService = _unset,
+    Map<String, SubService>? subServiceByCategory,
     List<ServiceTier>? tiers,
     bool? loadingTiers,
     Object? tier = _unset,
@@ -117,14 +131,11 @@ class OrderWizardState extends Equatable {
       step: step ?? this.step,
       categories: categories ?? this.categories,
       loadingCategories: loadingCategories ?? this.loadingCategories,
-      category: identical(category, _unset)
-          ? this.category
-          : category as ServiceCategory?,
-      subServices: subServices ?? this.subServices,
+      selectedCategories: selectedCategories ?? this.selectedCategories,
+      subServicesByCategory:
+          subServicesByCategory ?? this.subServicesByCategory,
       loadingSubServices: loadingSubServices ?? this.loadingSubServices,
-      subService: identical(subService, _unset)
-          ? this.subService
-          : subService as SubService?,
+      subServiceByCategory: subServiceByCategory ?? this.subServiceByCategory,
       tiers: tiers ?? this.tiers,
       loadingTiers: loadingTiers ?? this.loadingTiers,
       tier: identical(tier, _unset) ? this.tier : tier as ServiceTier?,
@@ -156,10 +167,10 @@ class OrderWizardState extends Equatable {
     step,
     categories,
     loadingCategories,
-    category,
-    subServices,
+    selectedCategories,
+    subServicesByCategory,
     loadingSubServices,
-    subService,
+    subServiceByCategory,
     tiers,
     loadingTiers,
     tier,
@@ -208,13 +219,60 @@ class OrderWizardCubit extends Cubit<OrderWizardState> {
   final GetAddresses _getAddresses;
   final CreateOrder _createOrder;
 
-  void selectCategory(ServiceCategory category) {
-    emit(state.copyWith(category: category, subService: null, subServices: const []));
-    _loadSubServices(category.id);
+  /// Categories are a multiple choice: one collection can carry clothes and
+  /// curtains. Deselecting drops that category's chosen service with it.
+  void toggleCategory(ServiceCategory category) {
+    final selected = [...state.selectedCategories];
+    final services = {...state.subServiceByCategory};
+    if (selected.remove(category)) {
+      services.remove(category.id);
+      emit(
+        state.copyWith(
+          selectedCategories: selected,
+          subServiceByCategory: services,
+        ),
+      );
+      return;
+    }
+    selected.add(category);
+    emit(state.copyWith(selectedCategories: selected));
   }
 
-  void selectSubService(SubService subService) =>
-      emit(state.copyWith(subService: subService));
+  void selectSubService(String categoryId, SubService subService) => emit(
+    state.copyWith(
+      subServiceByCategory: {
+        ...state.subServiceByCategory,
+        categoryId: subService,
+      },
+    ),
+  );
+
+  /// Loads the service list for every chosen category, skipping any already
+  /// held so stepping back and forward does not refetch.
+  Future<void> _loadSubServicesForSelection() async {
+    final missing = state.selectedCategories
+        .where((c) => !state.subServicesByCategory.containsKey(c.id))
+        .toList();
+    if (missing.isEmpty) return;
+
+    emit(state.copyWith(loadingSubServices: true));
+    final loaded = {...state.subServicesByCategory};
+    Failure? failure;
+    for (final category in missing) {
+      final result = await _getSubServices(category.id);
+      result.fold(
+        onErr: (f) => failure ??= f,
+        onOk: (list) => loaded[category.id] = list,
+      );
+    }
+    emit(
+      state.copyWith(
+        subServicesByCategory: loaded,
+        loadingSubServices: false,
+        failure: failure,
+      ),
+    );
+  }
 
   void selectTier(ServiceTier tier) => emit(
     state.copyWith(
@@ -257,7 +315,8 @@ class OrderWizardCubit extends Cubit<OrderWizardState> {
     await _loadDeliverySlots();
   }
 
-  void selectDeliverySlot(TimeSlot slot) => emit(state.copyWith(deliverySlot: slot));
+  void selectDeliverySlot(TimeSlot slot) =>
+      emit(state.copyWith(deliverySlot: slot));
 
   void selectAddress(Address address) => emit(state.copyWith(address: address));
 
@@ -266,6 +325,7 @@ class OrderWizardCubit extends Cubit<OrderWizardState> {
     switch (state.step) {
       case 1:
         emit(state.copyWith(step: 2));
+        await _loadSubServicesForSelection();
       case 2:
         emit(state.copyWith(step: 3));
         if (state.tiers.isEmpty) await _loadTiers();
@@ -281,7 +341,8 @@ class OrderWizardCubit extends Cubit<OrderWizardState> {
   }
 
   void previousStep() {
-    if (state.step > 1) emit(state.copyWith(step: state.step - 1, failure: null));
+    if (state.step > 1)
+      emit(state.copyWith(step: state.step - 1, failure: null));
   }
 
   /// Retries whatever load is missing for the current step.
@@ -290,7 +351,7 @@ class OrderWizardCubit extends Cubit<OrderWizardState> {
       case 1:
         await _loadCategories();
       case 2:
-        if (state.category != null) await _loadSubServices(state.category!.id);
+        await _loadSubServicesForSelection();
       case 3:
         await _loadTiers();
       case 4:
@@ -313,17 +374,6 @@ class OrderWizardCubit extends Cubit<OrderWizardState> {
     );
   }
 
-  Future<void> _loadSubServices(String categoryId) async {
-    emit(state.copyWith(loadingSubServices: true));
-    final result = await _getSubServices(categoryId);
-    emit(
-      result.fold(
-        onErr: (f) => state.copyWith(loadingSubServices: false, failure: f),
-        onOk: (list) => state.copyWith(subServices: list, loadingSubServices: false),
-      ),
-    );
-  }
-
   Future<void> _loadTiers() async {
     emit(state.copyWith(loadingTiers: true));
     final result = await _getTiers();
@@ -331,11 +381,19 @@ class OrderWizardCubit extends Cubit<OrderWizardState> {
       result.fold(
         onErr: (f) => state.copyWith(loadingTiers: false, failure: f),
         onOk: (tiers) {
-          final preselected = state.tier ??
+          final preselected =
+              state.tier ??
               (tiers.isEmpty
                   ? null
-                  : tiers.firstWhere((t) => !t.isVip, orElse: () => tiers.first));
-          return state.copyWith(tiers: tiers, loadingTiers: false, tier: preselected);
+                  : tiers.firstWhere(
+                      (t) => !t.isVip,
+                      orElse: () => tiers.first,
+                    ));
+          return state.copyWith(
+            tiers: tiers,
+            loadingTiers: false,
+            tier: preselected,
+          );
         },
       ),
     );
@@ -345,7 +403,10 @@ class OrderWizardCubit extends Cubit<OrderWizardState> {
     final tier = state.tier;
     if (tier == null) return;
     emit(state.copyWith(loadingPickupSlots: true));
-    final result = await _getPickupSlots((day: state.pickupDay, tierId: tier.id));
+    final result = await _getPickupSlots((
+      day: state.pickupDay,
+      tierId: tier.id,
+    ));
     emit(
       result.fold(
         onErr: (f) => state.copyWith(loadingPickupSlots: false, failure: f),
@@ -393,14 +454,11 @@ class OrderWizardCubit extends Cubit<OrderWizardState> {
   }
 
   Future<void> _submit() async {
-    final category = state.category;
-    final subService = state.subService;
     final tier = state.tier;
     final pickupSlot = state.pickupSlot;
     final deliverySlot = state.deliverySlot;
     final address = state.address;
-    if (category == null ||
-        subService == null ||
+    if (!state.everyCategoryServiced ||
         tier == null ||
         pickupSlot == null ||
         deliverySlot == null ||
@@ -410,8 +468,13 @@ class OrderWizardCubit extends Cubit<OrderWizardState> {
     emit(state.copyWith(submitting: true, failure: null));
     final result = await _createOrder(
       NewOrderParams(
-        categoryId: category.id,
-        subServiceId: subService.id,
+        lines: [
+          for (final category in state.selectedCategories)
+            NewOrderLine(
+              categoryId: category.id,
+              subServiceId: state.subServiceByCategory[category.id]!.id,
+            ),
+        ],
         tierId: tier.id,
         pickupSlotId: pickupSlot.id,
         deliverySlotId: deliverySlot.id,

@@ -1,10 +1,6 @@
-import 'package:flutter/material.dart';
-
+import '../../../../core/design/design.dart';
 import '../../../../core/l10n/l10n.dart';
-import '../../../../core/theme/app_colors.dart';
 import '../../domain/entities/order_status.dart';
-
-enum StatusTone { info, warning, success, danger }
 
 extension OrderStatusPresentation on OrderStatus {
   String label(AppLocalizations l10n) => switch (this) {
@@ -21,36 +17,82 @@ extension OrderStatusPresentation on OrderStatus {
     OrderStatus.cancelled => l10n.statusCancelled,
   };
 
-  StatusTone get tone => switch (this) {
-    OrderStatus.delivered => StatusTone.success,
+  /// State is carried by form first. Only a genuine failure earns the signal
+  /// colour; everything else is ink, quiet ink, or the hi-vis tag.
+  StampTone get stampTone => switch (this) {
     OrderStatus.pickupFailed ||
     OrderStatus.deliveryFailed ||
-    OrderStatus.cancelled => StatusTone.danger,
-    OrderStatus.awaitingPayment => StatusTone.warning,
-    _ => StatusTone.info,
+    OrderStatus.cancelled => StampTone.alert,
+    OrderStatus.delivered => StampTone.quiet,
+    OrderStatus.awaitingPayment => StampTone.neutral,
+    _ => StampTone.neutral,
+  };
+
+  /// Which of the five custody stages this status sits in.
+  int get stageIndex => switch (this) {
+    OrderStatus.pending ||
+    OrderStatus.driverAssigned ||
+    OrderStatus.pickupFailed ||
+    OrderStatus.cancelled => 0,
+    OrderStatus.pickedUp => 1,
+    OrderStatus.atFacility || OrderStatus.awaitingPayment => 2,
+    OrderStatus.processing => 3,
+    OrderStatus.outForDelivery ||
+    OrderStatus.delivered ||
+    OrderStatus.deliveryFailed => 4,
   };
 }
 
-extension StatusToneColors on StatusTone {
-  Color get foreground => switch (this) {
-    StatusTone.info => AppColors.tealDark,
-    StatusTone.warning => const Color(0xFF8A6220),
-    StatusTone.success => AppColors.success,
-    StatusTone.danger => AppColors.danger,
-  };
+/// The five stages, in fixed order. The glyph row never changes shape — only
+/// which glyph is filled, and how many bars sit beneath the ones behind it.
+const custodyGlyphs = [
+  CareGlyph.collect,
+  CareGlyph.custody,
+  CareGlyph.inspect,
+  CareGlyph.treat,
+  CareGlyph.deliver,
+];
 
-  Color get background => switch (this) {
-    StatusTone.info => AppColors.tealSoft,
-    StatusTone.warning => AppColors.goldSoft,
-    StatusTone.success => AppColors.successSoft,
-    StatusTone.danger => AppColors.dangerSoft,
-  };
+List<String> custodyLabels(AppLocalizations l10n) => [
+  l10n.stageCollect,
+  l10n.stageCustody,
+  l10n.stageInspect,
+  l10n.stageTreat,
+  l10n.stageDeliver,
+];
 
-  /// Dark, solid version used for the big status banner on the tracking page.
-  Color get solid => switch (this) {
-    StatusTone.info => AppColors.ink,
-    StatusTone.warning => AppColors.gold,
-    StatusTone.success => AppColors.success,
-    StatusTone.danger => AppColors.danger,
-  };
+/// Builds the strip's stages for one order.
+List<CustodyStage> custodyStagesFor(OrderStatus status, AppLocalizations l10n) {
+  final labels = custodyLabels(l10n);
+  final reached = status.stageIndex;
+  final failed = status.isFailure;
+  final complete = status == OrderStatus.delivered;
+
+  return [
+    for (var i = 0; i < custodyGlyphs.length; i++)
+      CustodyStage(
+        glyph: custodyGlyphs[i],
+        label: labels[i],
+        state: switch (i) {
+          _ when failed && i == reached => StageState.failed,
+          _ when complete => StageState.done,
+          _ when i < reached => StageState.done,
+          _ when i == reached => StageState.active,
+          _ => StageState.upcoming,
+        },
+      ),
+  ];
+}
+
+/// An unstarted strip: every glyph outline, nothing filled.
+List<CustodyStage> blankCustodyStages(AppLocalizations l10n) {
+  final labels = custodyLabels(l10n);
+  return [
+    for (var i = 0; i < custodyGlyphs.length; i++)
+      CustodyStage(
+        glyph: custodyGlyphs[i],
+        label: labels[i],
+        state: StageState.upcoming,
+      ),
+  ];
 }

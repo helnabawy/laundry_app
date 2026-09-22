@@ -16,8 +16,7 @@ class OrderApiDataSource implements OrderRemoteDataSource {
     final json = await _api.post(
       ApiEndpoints.orders,
       data: {
-        'categoryId': params.categoryId,
-        'subServiceId': params.subServiceId,
+        'lines': [for (final line in params.lines) line.toJson()],
         'tierId': params.tierId,
         'pickupSlotId': params.pickupSlotId,
         'deliverySlotId': params.deliverySlotId,
@@ -30,7 +29,10 @@ class OrderApiDataSource implements OrderRemoteDataSource {
   @override
   Future<List<LaundryOrder>> getOrders() async {
     final json = await _api.get(ApiEndpoints.orders) as List<dynamic>;
-    return json.cast<Map<String, dynamic>>().map(LaundryOrderModel.fromJson).toList();
+    return json
+        .cast<Map<String, dynamic>>()
+        .map(LaundryOrderModel.fromJson)
+        .toList();
   }
 
   @override

@@ -6,5 +6,8 @@ abstract interface class OrderRemoteDataSource {
   Future<LaundryOrder> createOrder(NewOrderParams params);
   Future<List<LaundryOrder>> getOrders();
   Future<LaundryOrder> getOrder(String id);
-  Future<LaundryOrder> choosePaymentMethod(String orderId, PaymentMethod method);
+  Future<LaundryOrder> choosePaymentMethod(
+    String orderId,
+    PaymentMethod method,
+  );
 }

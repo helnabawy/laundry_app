@@ -1,32 +1,27 @@
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../../../core/design/design.dart';
 import '../../../../core/di/injection.dart';
 import '../../../../core/l10n/l10n.dart';
 import '../../../../core/router/routes.dart';
-import '../../../../core/theme/app_colors.dart';
 import '../../../../core/utils/formatters.dart';
-import '../../../../core/widgets/app_buttons.dart';
-import '../../../../core/widgets/app_card.dart';
-import '../../../../core/widgets/flow_header.dart';
-import '../../../../core/widgets/info_banner.dart';
-import '../../../../core/widgets/labeled_rows.dart';
-import '../../../../core/widgets/state_views.dart';
 import '../../../addresses/domain/entities/address.dart';
 import '../../../addresses/presentation/widgets/address_picker_sheet.dart';
 import '../../../addresses/presentation/widgets/address_tile.dart';
-import '../../domain/entities/service_category.dart';
-import '../../domain/entities/service_tier.dart';
 import '../../domain/entities/sub_service.dart';
 import '../../domain/entities/time_slot.dart';
 import '../cubit/order_wizard_cubit.dart';
 import '../utils/category_icons.dart';
 import 'order_confirmation_view.dart';
 
-/// Order creation wizard (plan §8.1 steps 1-4 / §9 Stage 2). A single route
-/// hosts all 4 steps plus the confirmation result, so the cubit's state
-/// survives the whole flow.
+/// Order creation, as four fields of the label being filled in sequence.
+///
+/// A single route hosts all four steps plus the confirmation, so the cubit's
+/// state survives the whole flow.
 class OrderWizardPage extends StatelessWidget {
   const OrderWizardPage({super.key});
 
@@ -46,15 +41,16 @@ class _OrderWizardView extends StatelessWidget {
   Widget build(BuildContext context) {
     final l10n = context.l10n;
     return BlocConsumer<OrderWizardCubit, OrderWizardState>(
-      listenWhen: (prev, curr) => curr.failure != null && curr.failure != prev.failure,
+      listenWhen: (prev, curr) =>
+          curr.failure != null && curr.failure != prev.failure,
       listener: (context, state) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(state.failure!.localized(l10n))),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text(state.failure!.localized(l10n))));
       },
       builder: (context, state) {
-        if (state.created != null) {
-          return OrderConfirmationView(order: state.created!);
+        if (state.created case final order?) {
+          return OrderConfirmationView(order: order);
         }
         final cubit = context.read<OrderWizardCubit>();
         final title = switch (state.step) {
@@ -68,47 +64,30 @@ class _OrderWizardView extends StatelessWidget {
           onPopInvokedWithResult: (didPop, _) {
             if (!didPop) cubit.previousStep();
           },
-          child: Scaffold(
-            body: Column(
+          child: FlowPage(
+            title: title,
+            step: state.step,
+            stepSemantics: l10n.stepOf(state.step, 4),
+            onBack: state.step == 1 ? () => context.pop() : cubit.previousStep,
+            bottomBar: ActionBar(
               children: [
-                FlowHeader(
-                  title: title,
-                  step: state.step,
-                  onBack: state.step == 1 ? () => context.pop() : cubit.previousStep,
-                ),
-                Expanded(child: _StepBody(state: state, cubit: cubit)),
-              ],
-            ),
-            bottomNavigationBar: BottomActions(
-              children: [
-                PrimaryButton(
+                ActionButton(
                   label: state.step < 4 ? l10n.next : l10n.confirmOrder,
                   loading: state.submitting,
                   onPressed: state.canGoNext ? cubit.nextStep : null,
                 ),
               ],
             ),
+            child: switch (state.step) {
+              1 => _CategoryStep(state: state, cubit: cubit),
+              2 => _SubServiceStep(state: state, cubit: cubit),
+              3 => _TierStep(state: state, cubit: cubit),
+              _ => _ScheduleStep(state: state, cubit: cubit),
+            },
           ),
         );
       },
     );
-  }
-}
-
-class _StepBody extends StatelessWidget {
-  const _StepBody({required this.state, required this.cubit});
-
-  final OrderWizardState state;
-  final OrderWizardCubit cubit;
-
-  @override
-  Widget build(BuildContext context) {
-    return switch (state.step) {
-      1 => _CategoryStep(state: state, cubit: cubit),
-      2 => _SubServiceStep(state: state, cubit: cubit),
-      3 => _TierStep(state: state, cubit: cubit),
-      _ => _ScheduleStep(state: state, cubit: cubit),
-    };
   }
 }
 
@@ -120,67 +99,85 @@ class _CategoryStep extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = context.l10n;
+    final colors = context.colors;
     if (state.loadingCategories) return const LoadingView();
     if (state.failure != null && state.categories.isEmpty) {
       return ErrorView(
-        message: state.failure!.localized(context.l10n),
+        message: state.failure!.localized(l10n),
+        retryLabel: l10n.retry,
         onRetry: cubit.retry,
       );
     }
-    return GridView.count(
-      padding: const EdgeInsets.all(20),
-      crossAxisCount: 2,
-      mainAxisSpacing: 14,
-      crossAxisSpacing: 14,
-      childAspectRatio: 1.05,
+    // The glyph family carries this step: the pictograms are the system's own
+    // language for what a category is, and they stay legible at any Dynamic
+    // Type size in a way a photographic card cannot.
+    //
+    // This is a multiple choice — one collection can carry clothes and
+    // curtains — so the rows read as checkable rather than as one-of.
+    return ListView(
+      padding: const EdgeInsets.only(bottom: DesignSpace.huge),
       children: [
-        for (final category in state.categories) _CategoryCard(category: category, state: state, cubit: cubit),
+        Padding(
+          padding: const EdgeInsets.fromLTRB(
+            DesignSpace.gutter,
+            DesignSpace.lg,
+            DesignSpace.gutter,
+            DesignSpace.md,
+          ),
+          child: Text(
+            l10n.chooseAnyThatApply.toUpperCase(),
+            style: DesignTypography.stamp(colors.inkSecondary),
+          ),
+        ),
+        LabelGroup(
+          children: [
+            for (final category in state.categories)
+              LabelRow(
+                leading: CareGlyphIcon(
+                  categoryGlyph(category.id),
+                  color: state.isSelected(category) ? colors.onInk : colors.ink,
+                  size: 28,
+                ),
+                title: category.name,
+                subtitle: category.description,
+                selected: state.isSelected(category),
+                trailing: _CheckMark(checked: state.isSelected(category)),
+                onTap: () => cubit.toggleCategory(category),
+              ),
+          ],
+        ),
       ],
     );
   }
 }
 
-class _CategoryCard extends StatelessWidget {
-  const _CategoryCard({required this.category, required this.state, required this.cubit});
+/// A checkbox in the system's own language: a ruled square that fills and
+/// takes a mark, rather than a platform checkbox dropped into a label row.
+class _CheckMark extends StatelessWidget {
+  const _CheckMark({required this.checked});
 
-  final ServiceCategory category;
-  final OrderWizardState state;
-  final OrderWizardCubit cubit;
+  final bool checked;
 
   @override
   Widget build(BuildContext context) {
-    final selected = category == state.category;
-    return SelectableCard(
-      selected: selected,
-      onTap: () => cubit.selectCategory(category),
-      child: Stack(
-        children: [
-          if (selected)
-            const PositionedDirectional(
-              top: 0,
-              end: 0,
-              child: SelectionIndicator(selected: true, size: 24),
-            ),
-          Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Icon(categoryIcon(category.id), size: 32, color: AppColors.ink),
-              const SizedBox(height: 10),
-              Text(
-                category.name,
-                textAlign: TextAlign.center,
-                style: const TextStyle(fontWeight: FontWeight.w800, fontSize: 16),
-              ),
-              const SizedBox(height: 2),
-              Text(
-                category.description,
-                textAlign: TextAlign.center,
-                style: const TextStyle(color: AppColors.muted, fontSize: 12),
-              ),
-            ],
-          ),
-        ],
+    final colors = context.colors;
+    return AnimatedContainer(
+      duration: DesignMotion.quick,
+      width: 24,
+      height: 24,
+      alignment: Alignment.center,
+      decoration: BoxDecoration(
+        color: checked ? colors.onInk : const Color(0x00000000),
+        border: Border.all(
+          color: checked ? colors.onInk : colors.ruleStrong,
+          width: DesignRule.medium,
+        ),
+        borderRadius: BorderRadius.circular(DesignRadius.slot),
       ),
+      child: checked
+          ? Icon(CupertinoIcons.checkmark_alt, size: 16, color: colors.ink)
+          : null,
     );
   }
 }
@@ -193,70 +190,81 @@ class _SubServiceStep extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = context.l10n;
+    final colors = context.colors;
     if (state.loadingSubServices) return const LoadingView();
-    if (state.failure != null && state.subServices.isEmpty) {
+    if (state.failure != null && state.subServicesByCategory.isEmpty) {
       return ErrorView(
-        message: state.failure!.localized(context.l10n),
+        message: state.failure!.localized(l10n),
+        retryLabel: l10n.retry,
         onRetry: cubit.retry,
       );
     }
+
     return ListView(
-      padding: const EdgeInsets.all(20),
+      padding: const EdgeInsets.only(bottom: DesignSpace.huge),
       children: [
-        if (state.category != null)
-          Padding(
-            padding: const EdgeInsets.only(bottom: 12),
-            child: Text(
-              state.category!.name,
-              style: Theme.of(
-                context,
-              ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w800),
+        // Services are category-specific, so each chosen category gets its own
+        // group and its own choice. The photograph names the group.
+        for (final category in state.selectedCategories) ...[
+          switch (Photo.category(category.id)) {
+            final image? => PhotoBand(
+              image: image,
+              aspectRatio: 3.2,
+              scrim: ScrimWeight.light,
+              child: Padding(
+                padding: const EdgeInsets.all(DesignSpace.gutter),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  mainAxisAlignment: MainAxisAlignment.end,
+                  children: [
+                    Text(
+                      category.name,
+                      style: Theme.of(context).textTheme.headlineMedium
+                          ?.copyWith(color: const Color(0xFFFFFFFF)),
+                    ),
+                  ],
+                ),
+              ),
             ),
+            null => Padding(
+              padding: const EdgeInsets.fromLTRB(
+                DesignSpace.gutter,
+                DesignSpace.aboveHeading,
+                DesignSpace.gutter,
+                DesignSpace.belowHeading,
+              ),
+              child: Text(
+                category.name.toUpperCase(),
+                style: DesignTypography.stamp(colors.inkSecondary),
+              ),
+            ),
+          },
+          LabelGroup(
+            children: [
+              for (final sub
+                  in state.subServicesByCategory[category.id] ??
+                      const <SubService>[])
+                LabelRow(
+                  title: sub.name,
+                  subtitle: sub.description,
+                  selected: state.subServiceByCategory[category.id] == sub,
+                  trailing: state.subServiceByCategory[category.id] == sub
+                      ? const Icon(CupertinoIcons.checkmark_alt)
+                      : null,
+                  onTap: () => cubit.selectSubService(category.id, sub),
+                ),
+            ],
           ),
-        for (final sub in state.subServices) _SubServiceRow(sub: sub, state: state, cubit: cubit),
+        ],
       ],
     );
   }
 }
 
-class _SubServiceRow extends StatelessWidget {
-  const _SubServiceRow({required this.sub, required this.state, required this.cubit});
-
-  final SubService sub;
-  final OrderWizardState state;
-  final OrderWizardCubit cubit;
-
-  @override
-  Widget build(BuildContext context) {
-    final selected = sub == state.subService;
-    return Padding(
-      padding: const EdgeInsets.only(bottom: 12),
-      child: SelectableCard(
-        selected: selected,
-        onTap: () => cubit.selectSubService(sub),
-        child: Row(
-          children: [
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    sub.name,
-                    style: const TextStyle(fontWeight: FontWeight.w800, fontSize: 16),
-                  ),
-                  const SizedBox(height: 2),
-                  Text(sub.description, style: const TextStyle(color: AppColors.muted)),
-                ],
-              ),
-            ),
-            SelectionIndicator(selected: selected),
-          ],
-        ),
-      ),
-    );
-  }
-}
-
+/// The signature moment: the level is not a card you pick, it is a modifier
+/// you add. A dot appears inside the glyph, a bar slides beneath it, and the
+/// turnaround re-sets in its own numeric slot without reflowing.
 class _TierStep extends StatelessWidget {
   const _TierStep({required this.state, required this.cubit});
 
@@ -265,96 +273,94 @@ class _TierStep extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = context.l10n;
+    final colors = context.colors;
     if (state.loadingTiers) return const LoadingView();
     if (state.failure != null && state.tiers.isEmpty) {
       return ErrorView(
-        message: state.failure!.localized(context.l10n),
+        message: state.failure!.localized(l10n),
+        retryLabel: l10n.retry,
         onRetry: cubit.retry,
       );
     }
-    final l10n = context.l10n;
+
+    final tier = state.tier;
+    final dots = tier == null ? 0 : (tier.isVip ? 2 : 1);
+    final bars = tier == null ? 0 : (tier.isVip ? 2 : 1);
+
     return ListView(
-      padding: const EdgeInsets.all(20),
+      padding: const EdgeInsets.only(bottom: DesignSpace.huge),
       children: [
-        for (final tier in state.tiers) _TierCard(tier: tier, state: state, cubit: cubit),
-        const SizedBox(height: 8),
-        InfoBanner(
-          title: l10n.finalPriceTitle,
-          message: l10n.finalPriceBody,
-          tone: BannerTone.warning,
+        TapeBand(
+          padding: const EdgeInsets.symmetric(
+            horizontal: DesignSpace.gutter,
+            vertical: DesignSpace.xxl,
+          ),
+          child: Column(
+            children: [
+              AnimatedCareGlyphIcon(
+                CareGlyph.treat,
+                color: colors.ink,
+                size: 62,
+                dots: dots,
+                bars: bars,
+                semanticLabel: tier?.name,
+              ),
+              const SizedBox(height: DesignSpace.lg),
+              AnimatedSwitcher(
+                duration: DesignMotion.base,
+                child: Text(
+                  tier == null
+                      ? l10n.serviceLevel.toUpperCase()
+                      : l10n.deliveryWithin(tier.deliveryHours).toUpperCase(),
+                  key: ValueKey(tier?.id ?? 'none'),
+                  textAlign: TextAlign.center,
+                  style: DesignTypography.stamp(colors.ink, size: 13),
+                ),
+              ),
+            ],
+          ),
         ),
-      ],
-    );
-  }
-}
-
-class _TierCard extends StatelessWidget {
-  const _TierCard({required this.tier, required this.state, required this.cubit});
-
-  final ServiceTier tier;
-  final OrderWizardState state;
-  final OrderWizardCubit cubit;
-
-  @override
-  Widget build(BuildContext context) {
-    final l10n = context.l10n;
-    final selected = tier == state.tier;
-    return Padding(
-      padding: const EdgeInsets.only(bottom: 16),
-      child: SelectableCard(
-        selected: selected,
-        onTap: () => cubit.selectTier(tier),
-        borderColor: tier.isVip ? AppColors.gold : AppColors.line,
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
+        LabelGroup(
           children: [
-            Row(
-              children: [
-                Expanded(
-                  child: Text(
-                    tier.name,
-                    style: const TextStyle(fontWeight: FontWeight.w800, fontSize: 18),
-                  ),
+            for (final t in state.tiers)
+              LabelRow(
+                leading: CareGlyphIcon(
+                  CareGlyph.treat,
+                  color: t == state.tier ? colors.onInk : colors.ink,
+                  size: 26,
+                  dots: t.isVip ? 2 : 1,
+                  bars: t.isVip ? 2 : 1,
                 ),
-                if (tier.isVip)
-                  Padding(
-                    padding: const EdgeInsetsDirectional.only(end: 8),
-                    child: Pill(
-                      label: l10n.fastest,
-                      foreground: AppColors.gold,
-                      background: AppColors.goldSoft,
-                    ),
-                  ),
-                SelectionIndicator(selected: selected),
-              ],
-            ),
-            const SizedBox(height: 4),
-            Text(
-              l10n.deliveryWithin(tier.deliveryHours),
-              style: const TextStyle(color: AppColors.muted),
-            ),
-            const Padding(
-              padding: EdgeInsets.symmetric(vertical: 10),
-              child: Divider(height: 1),
-            ),
-            for (final perk in tier.perks)
-              Padding(
-                padding: const EdgeInsets.symmetric(vertical: 3),
-                child: Row(
-                  children: [
-                    Icon(
-                      Icons.circle,
-                      size: 6,
-                      color: tier.isVip ? AppColors.gold : AppColors.teal,
-                    ),
-                    const SizedBox(width: 8),
-                    Text(perk),
-                  ],
-                ),
+                title: t.name,
+                subtitle: t.perks.join(' · '),
+                value: '${t.deliveryHours}h',
+                selected: t == state.tier,
+                trailing: t == state.tier
+                    ? const Icon(CupertinoIcons.checkmark_alt)
+                    : null,
+                onTap: () {
+                  HapticFeedback.mediumImpact();
+                  cubit.selectTier(t);
+                },
               ),
           ],
         ),
-      ),
+        Padding(
+          padding: const EdgeInsets.fromLTRB(
+            DesignSpace.gutter,
+            DesignSpace.xxl,
+            DesignSpace.gutter,
+            0,
+          ),
+          child: AmountSlot(
+            label: l10n.finalPriceTitle,
+            placeholder: l10n.currencyAed('\u2014.\u2014\u2014'),
+            pendingNote: l10n.finalPriceBody,
+            emphasised: false,
+          ),
+        ),
+      ],
     );
   }
 }
@@ -368,75 +374,92 @@ class _ScheduleStep extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final l10n = context.l10n;
+    final colors = context.colors;
     return ListView(
-      padding: const EdgeInsets.all(20),
+      padding: const EdgeInsets.only(bottom: DesignSpace.huge),
       children: [
-        Text(
-          l10n.pickupTime,
-          style: Theme.of(
-            context,
-          ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w800),
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: DesignSpace.gutter),
+          child: StampHeading(
+            l10n.pickupTime,
+            padding: const EdgeInsets.only(
+              top: DesignSpace.xl,
+              bottom: DesignSpace.belowHeading,
+            ),
+          ),
         ),
-        const SizedBox(height: 10),
         _DaySelector(
+          section: 'pickup',
           selectedDay: state.pickupDay,
           onSelected: cubit.selectPickupDay,
         ),
-        const SizedBox(height: 12),
+        const SizedBox(height: DesignSpace.lg),
         _SlotGrid(
+          section: 'pickup',
           loading: state.loadingPickupSlots,
           slots: state.pickupSlots,
           selected: state.pickupSlot,
           onSelected: cubit.selectPickupSlot,
         ),
-        const SizedBox(height: 28),
-        Text(
-          l10n.deliveryTime,
-          style: Theme.of(
-            context,
-          ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w800),
-        ),
-        if (state.tier != null) ...[
-          const SizedBox(height: 2),
-          Text(
-            l10n.basedOnTier(state.tier!.name),
-            style: const TextStyle(color: AppColors.muted, fontSize: 13),
+
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: DesignSpace.gutter),
+          child: StampHeading(
+            l10n.deliveryTime,
+            trailing: state.tier == null
+                ? null
+                : Text(
+                    l10n.basedOnTier(state.tier!.name),
+                    style: DesignTypography.fibreLine(colors.inkTertiary),
+                  ),
           ),
-        ],
-        const SizedBox(height: 10),
+        ),
         if (state.pickupSlot == null)
-          Text(l10n.selectPickupFirst, style: const TextStyle(color: AppColors.muted))
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: DesignSpace.gutter),
+            child: Text(
+              l10n.selectPickupFirst,
+              style: Theme.of(context).textTheme.bodyMedium
+                  ?.copyWith(color: colors.inkTertiary),
+            ),
+          )
         else ...[
           _DaySelector(
+            section: 'delivery',
             selectedDay: state.deliveryDay,
             minDay: state.pickupSlot!.start,
             onSelected: cubit.selectDeliveryDay,
           ),
-          const SizedBox(height: 12),
+          const SizedBox(height: DesignSpace.lg),
           _SlotGrid(
+            section: 'delivery',
             loading: state.loadingDeliverySlots,
             slots: state.deliverySlots,
             selected: state.deliverySlot,
             onSelected: cubit.selectDeliverySlot,
           ),
         ],
-        const SizedBox(height: 28),
-        Text(
-          l10n.addressTitle,
-          style: Theme.of(
-            context,
-          ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w800),
+
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: DesignSpace.gutter),
+          child: StampHeading(l10n.addressTitle),
         ),
-        const SizedBox(height: 10),
         _AddressPicker(state: state, cubit: cubit),
       ],
     );
   }
 }
 
+/// Days run along one strip; the chosen one inverts.
 class _DaySelector extends StatelessWidget {
-  const _DaySelector({required this.selectedDay, required this.onSelected, this.minDay});
+  const _DaySelector({
+    required this.section,
+    required this.selectedDay,
+    required this.onSelected,
+    this.minDay,
+  });
 
+  final String section;
   final DateTime selectedDay;
   final DateTime? minDay;
   final ValueChanged<DateTime> onSelected;
@@ -447,18 +470,19 @@ class _DaySelector extends StatelessWidget {
     final start = DateUtils.dateOnly(minDay ?? DateTime.now());
     final days = List.generate(6, (i) => start.add(Duration(days: i)));
     return SizedBox(
-      height: 66,
+      height: 62,
       child: ListView.separated(
         scrollDirection: Axis.horizontal,
+        padding: const EdgeInsets.symmetric(horizontal: DesignSpace.gutter),
         itemCount: days.length,
-        separatorBuilder: (_, _) => const SizedBox(width: 10),
+        separatorBuilder: (_, _) => const SizedBox(width: DesignSpace.sm),
         itemBuilder: (context, i) {
           final day = days[i];
-          final selected = DateUtils.isSameDay(day, selectedDay);
-          return _DayChip(
+          return _DayField(
+            key: ValueKey('$section-day-${day.toIso8601String()}'),
             weekday: format.weekday(day),
             dayNumber: day.day,
-            selected: selected,
+            selected: DateUtils.isSameDay(day, selectedDay),
             onTap: () => onSelected(day),
           );
         },
@@ -467,8 +491,9 @@ class _DaySelector extends StatelessWidget {
   }
 }
 
-class _DayChip extends StatelessWidget {
-  const _DayChip({
+class _DayField extends StatelessWidget {
+  const _DayField({
+    super.key,
     required this.weekday,
     required this.dayNumber,
     required this.selected,
@@ -482,36 +507,47 @@ class _DayChip extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Material(
-      color: selected ? AppColors.ink : AppColors.surface,
-      borderRadius: BorderRadius.circular(14),
-      child: InkWell(
-        borderRadius: BorderRadius.circular(14),
-        onTap: onTap,
-        child: Container(
-          width: 68,
-          padding: const EdgeInsets.symmetric(vertical: 10),
+    final colors = context.colors;
+    return Semantics(
+      button: true,
+      selected: selected,
+      label: '$weekday $dayNumber',
+      excludeSemantics: true,
+      child: GestureDetector(
+        behavior: HitTestBehavior.opaque,
+        onTap: () {
+          HapticFeedback.selectionClick();
+          onTap();
+        },
+        child: AnimatedContainer(
+          duration: DesignMotion.quick,
+          width: 60,
+          padding: const EdgeInsets.symmetric(vertical: DesignSpace.sm),
           decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(14),
-            border: Border.all(color: selected ? AppColors.ink : AppColors.line),
+            color: selected ? colors.ink : const Color(0x00000000),
+            border: Border.all(
+              color: selected ? colors.ink : colors.rule,
+              width: DesignRule.hair,
+            ),
+            borderRadius: BorderRadius.circular(DesignRadius.slot),
           ),
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
               Text(
-                weekday,
-                style: TextStyle(
-                  fontSize: 12,
-                  color: selected ? Colors.white70 : AppColors.muted,
+                weekday.substring(0, weekday.length.clamp(0, 3)).toUpperCase(),
+                style: DesignTypography.stamp(
+                  selected ? colors.onInk : colors.inkTertiary,
+                  size: 10,
                 ),
               ),
-              const SizedBox(height: 4),
+              const SizedBox(height: DesignSpace.xxs),
               Text(
                 '$dayNumber',
-                style: TextStyle(
-                  fontSize: 17,
-                  fontWeight: FontWeight.w800,
-                  color: selected ? Colors.white : AppColors.ink,
+                style: DesignTypography.numeric(
+                  selected ? colors.onInk : colors.ink,
+                  size: 19,
+                  weight: FontWeight.w700,
                 ),
               ),
             ],
@@ -524,12 +560,16 @@ class _DayChip extends StatelessWidget {
 
 class _SlotGrid extends StatelessWidget {
   const _SlotGrid({
+    required this.section,
     required this.loading,
     required this.slots,
     required this.selected,
     required this.onSelected,
   });
 
+  /// Distinguishes the pickup strip from the delivery strip, which
+  /// legitimately offer the same times.
+  final String section;
   final bool loading;
   final List<TimeSlot> slots;
   final TimeSlot? selected;
@@ -537,38 +577,53 @@ class _SlotGrid extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = context.l10n;
+    final colors = context.colors;
     if (loading) {
       return const Padding(
-        padding: EdgeInsets.symmetric(vertical: 24),
-        child: Center(child: CircularProgressIndicator()),
+        padding: EdgeInsets.symmetric(vertical: DesignSpace.xxl),
+        child: LoadingView(),
       );
     }
-    final l10n = context.l10n;
     if (slots.isEmpty) {
       return Padding(
-        padding: const EdgeInsets.symmetric(vertical: 16),
-        child: Text(l10n.noSlots, style: const TextStyle(color: AppColors.muted)),
+        padding: const EdgeInsets.symmetric(
+          horizontal: DesignSpace.gutter,
+          vertical: DesignSpace.lg,
+        ),
+        child: Text(
+          l10n.noSlots,
+          style: Theme.of(context).textTheme.bodyMedium
+              ?.copyWith(color: colors.inkTertiary),
+        ),
       );
     }
     final format = AppFormat.of(context);
-    return Wrap(
-      spacing: 10,
-      runSpacing: 10,
-      children: [
-        for (final slot in slots)
-          _SlotChip(
-            label: format.timeRange(slot.start, slot.end),
-            isFull: slot.isFull,
-            selected: slot == selected,
-            onTap: slot.isFull ? null : () => onSelected(slot),
-          ),
-      ],
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: DesignSpace.gutter),
+      child: Wrap(
+        spacing: DesignSpace.sm,
+        runSpacing: DesignSpace.sm,
+        children: [
+          for (final slot in slots)
+            _SlotField(
+              key: ValueKey('$section-slot-${slot.start.toIso8601String()}'),
+              label: format.timeRange(slot.start, slot.end),
+              isFull: slot.isFull,
+              selected: slot == selected,
+              onTap: slot.isFull ? null : () => onSelected(slot),
+            ),
+        ],
+      ),
     );
   }
 }
 
-class _SlotChip extends StatelessWidget {
-  const _SlotChip({
+/// A full slot wears the cross — the same modifier the system uses for every
+/// refusal — so unavailability reads by form before colour.
+class _SlotField extends StatelessWidget {
+  const _SlotField({
+    super.key,
     required this.label,
     required this.isFull,
     required this.selected,
@@ -583,44 +638,87 @@ class _SlotChip extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final l10n = context.l10n;
-    final bg = isFull
-        ? AppColors.disabled
-        : selected
-        ? AppColors.tealSoft
-        : AppColors.surface;
-    final border = selected ? AppColors.teal : AppColors.line;
-    final fg = isFull ? AppColors.faint : AppColors.ink;
-    return Material(
-      color: bg,
-      borderRadius: BorderRadius.circular(14),
-      child: InkWell(
-        borderRadius: BorderRadius.circular(14),
-        onTap: onTap,
-        child: Container(
-          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-          decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(14),
-            border: Border.all(color: selected ? border : AppColors.line, width: selected ? 1.4 : 1),
+    final colors = context.colors;
+    final ink = isFull
+        ? colors.inkDisabled
+        : (selected ? colors.onInk : colors.ink);
+
+    return Semantics(
+      button: !isFull,
+      enabled: !isFull,
+      selected: selected,
+      label: isFull ? '$label, ${l10n.slotFull}' : label,
+      excludeSemantics: true,
+      child: GestureDetector(
+        behavior: HitTestBehavior.opaque,
+        onTap: onTap == null
+            ? null
+            : () {
+                HapticFeedback.selectionClick();
+                onTap!();
+              },
+        child: AnimatedContainer(
+          duration: DesignMotion.quick,
+          constraints: const BoxConstraints(minHeight: DesignSpace.touchTarget),
+          padding: const EdgeInsets.symmetric(
+            horizontal: DesignSpace.lg,
+            vertical: DesignSpace.sm,
           ),
-          child: Column(
-            children: [
-              Text(label, style: TextStyle(color: fg, fontWeight: FontWeight.w700)),
-              if (isFull || selected) ...[
-                const SizedBox(height: 2),
+          decoration: BoxDecoration(
+            color: selected
+                ? colors.ink
+                : (isFull ? colors.tapeSunken : const Color(0x00000000)),
+            border: Border.all(
+              color: selected ? colors.ink : colors.rule,
+              width: DesignRule.hair,
+            ),
+            borderRadius: BorderRadius.circular(DesignRadius.slot),
+          ),
+          child: Center(
+            widthFactor: 1,
+            child: Stack(
+              alignment: Alignment.center,
+              children: [
                 Text(
-                  isFull ? l10n.slotFull : l10n.slotSelected,
-                  style: TextStyle(
-                    fontSize: 11,
-                    color: isFull ? AppColors.faint : AppColors.tealDark,
+                  label,
+                  style: DesignTypography.numeric(
+                    ink,
+                    size: 15,
+                    weight: FontWeight.w600,
                   ),
                 ),
+                if (isFull)
+                  Positioned.fill(
+                    child: CustomPaint(painter: _StrikePainter(colors.signal)),
+                  ),
               ],
-            ],
+            ),
           ),
         ),
       ),
     );
   }
+}
+
+class _StrikePainter extends CustomPainter {
+  const _StrikePainter(this.color);
+
+  final Color color;
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    canvas.drawLine(
+      Offset(0, size.height / 2),
+      Offset(size.width, size.height / 2),
+      Paint()
+        ..color = color
+        ..strokeWidth = DesignRule.medium
+        ..strokeCap = StrokeCap.round,
+    );
+  }
+
+  @override
+  bool shouldRepaint(_StrikePainter old) => old.color != color;
 }
 
 class _AddressPicker extends StatelessWidget {
@@ -632,13 +730,15 @@ class _AddressPicker extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final l10n = context.l10n;
+    final colors = context.colors;
     if (state.loadingAddresses) {
       return const Padding(
-        padding: EdgeInsets.symmetric(vertical: 16),
-        child: Center(child: CircularProgressIndicator()),
+        padding: EdgeInsets.symmetric(vertical: DesignSpace.lg),
+        child: LoadingView(),
       );
     }
     final address = state.address;
+
     Future<void> pick() async {
       final Address? result;
       if (state.addresses.isEmpty) {
@@ -654,22 +754,30 @@ class _AddressPicker extends StatelessWidget {
     }
 
     if (address == null) {
-      return AppCard(
-        onTap: pick,
-        child: Row(
-          children: [
-            const Icon(Icons.add_location_alt_outlined, color: AppColors.ink),
-            const SizedBox(width: 12),
-            Expanded(child: Text(l10n.noAddress)),
-          ],
-        ),
+      return LabelGroup(
+        children: [
+          LabelRow(
+            leading: Icon(CupertinoIcons.add, color: colors.tint),
+            title: l10n.noAddress,
+            onTap: pick,
+          ),
+        ],
       );
     }
-    return AddressTile(
-      address: address,
-      selected: true,
-      onTap: pick,
-      trailing: TextButton(onPressed: pick, child: Text(l10n.change)),
+    // Inversion means "chosen from a set". There is only one address here and
+    // it is simply what the order will use, so it reads as an ordinary row
+    // with a way to change it.
+    return LabelGroup(
+      children: [
+        AddressTile(
+          address: address,
+          onTap: pick,
+          trailing: Text(
+            l10n.change.toUpperCase(),
+            style: DesignTypography.stamp(colors.tint, size: 10.5),
+          ),
+        ),
+      ],
     );
   }
 }

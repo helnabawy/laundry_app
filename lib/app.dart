@@ -5,7 +5,7 @@ import 'package:go_router/go_router.dart';
 import 'core/di/injection.dart';
 import 'core/l10n/l10n.dart';
 import 'core/locale/locale_cubit.dart';
-import 'core/theme/app_theme.dart';
+import 'core/design/design.dart';
 import 'features/auth/presentation/cubit/session_cubit.dart';
 
 class LaundryApp extends StatelessWidget {
@@ -19,16 +19,25 @@ class LaundryApp extends StatelessWidget {
         BlocProvider.value(value: sl<SessionCubit>()),
       ],
       child: BlocBuilder<LocaleCubit, Locale?>(
-        builder: (context, locale) => MaterialApp.router(
-          onGenerateTitle: (context) => context.l10n.appName,
-          debugShowCheckedModeBanner: false,
-          theme: AppTheme.light(),
-          locale: locale ?? const Locale(LocaleCubit.fallbackLanguageCode),
-          supportedLocales: AppLocalizations.supportedLocales,
-          localizationsDelegates: AppLocalizations.localizationsDelegates,
-          routerConfig: sl<GoRouter>(),
-          builder: (context, child) => _SessionExpiryListener(child: child!),
-        ),
+        builder: (context, locale) {
+          // Arabic gets its own tracking and optical size; set before the
+          // first frame of a locale is laid out.
+          DesignTypography.script =
+              (locale ?? const Locale(LocaleCubit.fallbackLanguageCode))
+                  .languageCode;
+          return MaterialApp.router(
+            onGenerateTitle: (context) => context.l10n.appName,
+            debugShowCheckedModeBanner: false,
+            theme: AppTheme.light(),
+            darkTheme: AppTheme.dark(),
+            themeMode: ThemeMode.system,
+            locale: locale ?? const Locale(LocaleCubit.fallbackLanguageCode),
+            supportedLocales: AppLocalizations.supportedLocales,
+            localizationsDelegates: AppLocalizations.localizationsDelegates,
+            routerConfig: sl<GoRouter>(),
+            builder: (context, child) => _SessionExpiryListener(child: child!),
+          );
+        },
       ),
     );
   }
@@ -45,9 +54,9 @@ class _SessionExpiryListener extends StatelessWidget {
     return BlocListener<SessionCubit, SessionState>(
       listenWhen: (_, curr) => curr is SessionUnauthenticated && curr.expired,
       listener: (context, _) {
-        ScaffoldMessenger.maybeOf(context)?.showSnackBar(
-          SnackBar(content: Text(context.l10n.sessionExpired)),
-        );
+        ScaffoldMessenger.maybeOf(
+          context,
+        )?.showSnackBar(SnackBar(content: Text(context.l10n.sessionExpired)));
       },
       child: child,
     );

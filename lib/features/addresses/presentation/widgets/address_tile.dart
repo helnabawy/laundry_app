@@ -1,19 +1,19 @@
-import 'package:flutter/material.dart';
+import 'package:flutter/cupertino.dart';
 
+import '../../../../core/design/design.dart';
 import '../../../../core/l10n/l10n.dart';
-import '../../../../core/theme/app_colors.dart';
-import '../../../../core/widgets/app_card.dart';
 import '../../domain/entities/address.dart';
 
 extension AddressDisplay on Address {
-  /// `الخالدية، أبوظبي`
+  /// `Al Khalidiyah, Abu Dhabi`
   String title(AppLocalizations l10n) => '$area${l10n.listSeparator}$city';
 
-  /// `مبنى 12، شقة 704`
+  /// `Building 12, Apt 704`
   String subtitle(AppLocalizations l10n) =>
       l10n.buildingApartment(building, apartment);
 }
 
+/// An address, in the one label anatomy every row in the app uses.
 class AddressTile extends StatelessWidget {
   const AddressTile({
     super.key,
@@ -31,35 +31,24 @@ class AddressTile extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final l10n = context.l10n;
-    final text = Theme.of(context).textTheme;
-    return AppCard(
-      onTap: onTap,
-      padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 16),
-      borderColor: selected ? AppColors.ink : AppColors.line,
-      borderWidth: selected ? 2 : 1,
-      child: Row(
-        children: [
-          const Icon(Icons.location_on_outlined, color: AppColors.ink),
-          const SizedBox(width: 12),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  address.title(l10n),
-                  style: text.titleSmall?.copyWith(fontWeight: FontWeight.w800),
-                ),
-                const SizedBox(height: 2),
-                Text(
-                  address.subtitle(l10n),
-                  style: text.bodySmall?.copyWith(color: AppColors.muted),
-                ),
-              ],
-            ),
-          ),
-          ?trailing,
-        ],
+    final colors = context.colors;
+    return LabelRow(
+      leading: Icon(
+        CupertinoIcons.placemark,
+        size: 21,
+        color: selected ? colors.onInk : colors.ink,
       ),
+      title: address.title(l10n),
+      subtitle: address.subtitle(l10n),
+      selected: selected,
+      onTap: onTap,
+      trailing:
+          trailing ??
+          (selected
+              ? const Icon(CupertinoIcons.checkmark_alt)
+              : (onTap == null
+                    ? null
+                    : const Icon(CupertinoIcons.chevron_forward))),
     );
   }
 }

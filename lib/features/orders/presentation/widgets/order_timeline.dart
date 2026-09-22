@@ -1,14 +1,16 @@
 import 'package:flutter/material.dart';
 
+import '../../../../core/design/design.dart';
 import '../../../../core/l10n/l10n.dart';
-import '../../../../core/theme/app_colors.dart';
 import '../../../../core/utils/formatters.dart';
 import '../../domain/entities/laundry_order.dart';
 import '../../domain/entities/order_status.dart';
 
-/// Plan §8.1 "تتبع الطلب": a fixed set of milestones (not every status —
-/// `awaitingPayment` is reflected by the invoice card instead, and
-/// `driverAssigned` is quick enough to fold into "Order placed").
+/// The order's history, read down the label.
+///
+/// A fixed set of milestones — not every status. `awaitingPayment` is carried
+/// by the invoice block instead, and `driverAssigned` is quick enough to fold
+/// into "Order placed".
 class OrderTimeline extends StatelessWidget {
   const OrderTimeline({super.key, required this.order});
 
@@ -38,30 +40,31 @@ class OrderTimeline extends StatelessWidget {
     final l10n = context.l10n;
     final format = AppFormat.of(context);
     final reachedIndex = _milestones.indexOf(order.status);
-    final isFailure = order.status.isFailure || order.status == OrderStatus.cancelled;
+    final isFailure =
+        order.status.isFailure || order.status == OrderStatus.cancelled;
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        _TimelineRow(
+        _Entry(
           label: l10n.timelineCreated,
           time: format.dayAndTime(order.createdAt),
-          state: _RowState.done,
+          state: _EntryState.done,
           isFirst: true,
         ),
         for (var i = 0; i < _milestones.length; i++)
-          _TimelineRow(
+          _Entry(
             label: _label(l10n, _milestones[i]),
             time: order.timeOf(_milestones[i]) != null
                 ? format.dayAndTime(order.timeOf(_milestones[i])!)
                 : null,
             state: isFailure && i >= reachedIndex
-                ? _RowState.upcoming
+                ? _EntryState.upcoming
                 : i < reachedIndex
-                ? _RowState.done
+                ? _EntryState.done
                 : i == reachedIndex
-                ? _RowState.current
-                : _RowState.upcoming,
+                ? _EntryState.current
+                : _EntryState.upcoming,
             isLast: i == _milestones.length - 1,
           ),
       ],
@@ -69,10 +72,12 @@ class OrderTimeline extends StatelessWidget {
   }
 }
 
-enum _RowState { done, current, upcoming }
+enum _EntryState { done, current, upcoming }
 
-class _TimelineRow extends StatelessWidget {
-  const _TimelineRow({
+/// One line of the record: a mark, a rule running to the next, the label and
+/// the time in its own tabular slot.
+class _Entry extends StatelessWidget {
+  const _Entry({
     required this.label,
     required this.time,
     required this.state,
@@ -82,60 +87,113 @@ class _TimelineRow extends StatelessWidget {
 
   final String label;
   final String? time;
-  final _RowState state;
+  final _EntryState state;
   final bool isFirst;
   final bool isLast;
 
   @override
   Widget build(BuildContext context) {
-    final color = switch (state) {
-      _RowState.done => AppColors.success,
-      _RowState.current => AppColors.teal,
-      _RowState.upcoming => AppColors.line,
-    };
-    final textColor = state == _RowState.upcoming ? AppColors.faint : AppColors.ink;
+    final colors = context.colors;
+    final text = Theme.of(context).textTheme;
+    final reached = state != _EntryState.upcoming;
+    final ink = reached ? colors.ink : colors.inkTertiary;
+
     return IntrinsicHeight(
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Column(
-            children: [
-              if (!isFirst) SizedBox(height: 2, child: Container(width: 2, color: color)),
-              Container(
-                width: 14,
-                height: 14,
-                margin: const EdgeInsets.symmetric(vertical: 2),
-                decoration: BoxDecoration(
-                  shape: BoxShape.circle,
-                  color: state == _RowState.upcoming ? Colors.white : color,
-                  border: Border.all(color: color, width: 2),
+          SizedBox(
+            width: 18,
+            child: Column(
+              children: [
+                SizedBox(
+                  height: 9,
+                  child: isFirst
+                      ? null
+                      : VerticalDivider(
+                          color: reached ? colors.ink : colors.rule,
+                          thickness: DesignRule.medium,
+                          width: 18,
+                        ),
                 ),
-                child: state == _RowState.done
-                    ? const Icon(Icons.check, size: 9, color: Colors.white)
-                    : null,
-              ),
-              if (!isLast) Expanded(child: Container(width: 2, color: color)),
-            ],
+                _Mark(state: state),
+                if (!isLast)
+                  Expanded(
+                    child: VerticalDivider(
+                      color: state == _EntryState.done
+                          ? colors.ink
+                          : colors.rule,
+                      thickness: DesignRule.medium,
+                      width: 18,
+                    ),
+                  ),
+              ],
+            ),
           ),
-          const SizedBox(width: 14),
+          const SizedBox(width: DesignSpace.md),
           Expanded(
             child: Padding(
-              padding: const EdgeInsets.only(bottom: 24),
+              padding: const EdgeInsets.only(bottom: DesignSpace.xxl),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
                     label,
-                    style: TextStyle(fontWeight: FontWeight.w700, color: textColor),
+                    style: text.bodyLarge?.copyWith(
+                      color: ink,
+                      fontWeight: state == _EntryState.current
+                          ? FontWeight.w700
+                          : FontWeight.w500,
+                    ),
                   ),
-                  if (time != null) ...[
-                    const SizedBox(height: 2),
-                    Text(time!, style: const TextStyle(color: AppColors.muted, fontSize: 12)),
+                  if (time case final stamped?) ...[
+                    const SizedBox(height: DesignSpace.xxs),
+                    Text(
+                      stamped,
+                      style: DesignTypography.fibreLine(colors.inkTertiary),
+                    ),
                   ],
                 ],
               ),
             ),
           ),
+        ],
+      ),
+    );
+  }
+}
+
+/// Done is a filled square with a bar under it; current is a filled square;
+/// upcoming is an open one. State reads by form before it reads by colour.
+class _Mark extends StatelessWidget {
+  const _Mark({required this.state});
+
+  final _EntryState state;
+
+  @override
+  Widget build(BuildContext context) {
+    final colors = context.colors;
+    final filled = state != _EntryState.upcoming;
+    return SizedBox(
+      width: 14,
+      height: 16,
+      child: Column(
+        children: [
+          Container(
+            width: 11,
+            height: 11,
+            decoration: BoxDecoration(
+              color: filled ? colors.ink : const Color(0x00000000),
+              border: Border.all(
+                color: filled ? colors.ink : colors.ruleStrong,
+                width: DesignRule.medium,
+              ),
+            ),
+          ),
+          if (state == _EntryState.done) ...[
+            const SizedBox(height: 2),
+            Container(width: 11, height: DesignRule.medium, color: colors.ink),
+          ],
         ],
       ),
     );

@@ -6,8 +6,7 @@ import '../entities/sub_service.dart';
 import '../entities/time_slot.dart';
 import '../repositories/catalog_repository.dart';
 
-class GetServiceCategories
-    implements UseCase<List<ServiceCategory>, NoParams> {
+class GetServiceCategories implements UseCase<List<ServiceCategory>, NoParams> {
   const GetServiceCategories(this._repo);
   final CatalogRepository _repo;
 

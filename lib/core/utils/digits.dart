@@ -23,9 +23,8 @@ class DigitsInputFormatter extends TextInputFormatter {
     TextEditingValue oldValue,
     TextEditingValue newValue,
   ) {
-    final digits = normalizeDigits(
-      newValue.text,
-    ).replaceAll(RegExp('[^0-9]'), '');
+    final digits = normalizeDigits(newValue.text)
+        .replaceAll(RegExp('[^0-9]'), '');
     return TextEditingValue(
       text: digits,
       selection: TextSelection.collapsed(offset: digits.length),

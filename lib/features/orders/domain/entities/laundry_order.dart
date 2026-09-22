@@ -2,11 +2,10 @@ import 'package:equatable/equatable.dart';
 
 import '../../../addresses/domain/entities/address.dart';
 import 'invoice.dart';
+import 'order_line.dart';
 import 'order_status.dart';
 import 'order_timeline_event.dart';
-import 'service_category.dart';
 import 'service_tier.dart';
-import 'sub_service.dart';
 import 'time_slot.dart';
 
 /// A customer order (plan §3 `Order`), from creation through delivery.
@@ -14,8 +13,7 @@ class LaundryOrder extends Equatable {
   const LaundryOrder({
     required this.id,
     required this.number,
-    required this.category,
-    required this.subService,
+    required this.lines,
     required this.tier,
     required this.pickupSlot,
     required this.deliverySlot,
@@ -31,8 +29,11 @@ class LaundryOrder extends Equatable {
 
   final String id;
   final int number;
-  final ServiceCategory category;
-  final SubService subService;
+
+  /// One entry per category in this collection, each with its own service.
+  /// Never empty.
+  final List<OrderLine> lines;
+
   final ServiceTier tier;
   final TimeSlot pickupSlot;
   final TimeSlot deliverySlot;
@@ -48,6 +49,15 @@ class LaundryOrder extends Equatable {
   final String? driverName;
   final Invoice? invoice;
 
+  /// `Clothes · Wash & Iron` for one line, `Clothes, Curtains` for several —
+  /// the fibre line has no room to spell out a service per category.
+  String get servicesLabel => lines.length == 1
+      ? lines.single.label
+      : lines.map((l) => l.category.name).join(', ');
+
+  /// The glyph the order is represented by when only one mark fits.
+  String get leadCategoryId => lines.first.category.id;
+
   DateTime? timeOf(OrderStatus status) => timeline
       .cast<OrderTimelineEvent?>()
       .lastWhere((e) => e?.status == status, orElse: () => null)
@@ -57,8 +67,7 @@ class LaundryOrder extends Equatable {
   List<Object?> get props => [
     id,
     number,
-    category,
-    subService,
+    lines,
     tier,
     pickupSlot,
     deliverySlot,

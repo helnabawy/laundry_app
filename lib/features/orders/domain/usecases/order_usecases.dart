@@ -33,8 +33,7 @@ class GetOrder implements UseCase<LaundryOrder, String> {
 }
 
 class ChoosePaymentMethod
-    implements
-        UseCase<LaundryOrder, ({String orderId, PaymentMethod method})> {
+    implements UseCase<LaundryOrder, ({String orderId, PaymentMethod method})> {
   const ChoosePaymentMethod(this._repo);
   final OrderRepository _repo;
 

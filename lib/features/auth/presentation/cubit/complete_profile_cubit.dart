@@ -7,7 +7,11 @@ import '../../domain/entities/app_user.dart';
 import '../../domain/usecases/complete_profile.dart';
 
 class CompleteProfileState extends Equatable {
-  const CompleteProfileState({this.submitting = false, this.failure, this.user});
+  const CompleteProfileState({
+    this.submitting = false,
+    this.failure,
+    this.user,
+  });
 
   final bool submitting;
   final Failure? failure;

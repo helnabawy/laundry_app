@@ -21,12 +21,18 @@ class CatalogMockDataSource implements CatalogRemoteDataSource {
     (
       id: 'cat-clothes',
       name: {'ar': 'ملابس', 'en': 'Clothes'},
-      description: {'ar': 'غسيل، كي، خدمة كاملة', 'en': 'Wash, iron, full service'},
+      description: {
+        'ar': 'غسيل، كي، خدمة كاملة',
+        'en': 'Wash, iron, full service',
+      },
     ),
     (
       id: 'cat-textiles',
       name: {'ar': 'مفروشات', 'en': 'Home Textiles'},
-      description: {'ar': 'مفارش، أغطية، وسائد', 'en': 'Sheets, covers, pillows'},
+      description: {
+        'ar': 'مفارش، أغطية، وسائد',
+        'en': 'Sheets, covers, pillows',
+      },
     ),
     (
       id: 'cat-carpets',
@@ -51,7 +57,10 @@ class CatalogMockDataSource implements CatalogRemoteDataSource {
       id: 'sub-wash-iron',
       categoryId: 'cat-clothes',
       name: {'ar': 'غسيل وكي', 'en': 'Wash & Iron'},
-      description: {'ar': 'غسيل وتجفيف وكي كامل', 'en': 'Wash, dry & full iron'},
+      description: {
+        'ar': 'غسيل وتجفيف وكي كامل',
+        'en': 'Wash, dry & full iron',
+      },
     ),
     (
       id: 'sub-iron-only',
@@ -72,7 +81,10 @@ class CatalogMockDataSource implements CatalogRemoteDataSource {
       id: 'sub-textiles-wash',
       categoryId: 'cat-textiles',
       name: {'ar': 'غسيل وكي', 'en': 'Wash & Iron'},
-      description: {'ar': 'مفارش وأغطية ووسائد', 'en': 'Sheets, covers & pillows'},
+      description: {
+        'ar': 'مفارش وأغطية ووسائد',
+        'en': 'Sheets, covers & pillows',
+      },
     ),
     (
       id: 'sub-carpet-deep',
@@ -159,7 +171,8 @@ class CatalogMockDataSource implements CatalogRemoteDataSource {
   SubService subServiceById(String id) =>
       _subService(_subServicesRaw.firstWhere((s) => s.id == id));
 
-  ServiceTier tierById(String id) => _tier(_tiersRaw.firstWhere((t) => t.id == id));
+  ServiceTier tierById(String id) =>
+      _tier(_tiersRaw.firstWhere((t) => t.id == id));
 
   /// Slot ids encode their day + window index, so a booked slot can be
   /// resolved again without a slots table.
@@ -185,7 +198,14 @@ class CatalogMockDataSource implements CatalogRemoteDataSource {
       final end = DateTime(day.year, day.month, day.day, endHour);
       if (start.isBefore(now)) continue;
       if (notBefore != null && start.isBefore(notBefore)) continue;
-      slots.add(TimeSlot(id: _slotId(day, i), start: start, end: end, isFull: _isFull(day, i)));
+      slots.add(
+        TimeSlot(
+          id: _slotId(day, i),
+          start: start,
+          end: end,
+          isFull: _isFull(day, i),
+        ),
+      );
     }
     return slots;
   }

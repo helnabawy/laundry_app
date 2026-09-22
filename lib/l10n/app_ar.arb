@@ -190,5 +190,13 @@
   "reportSubmitted": "تم إرسال البلاغ",
   "collectCashFirst": "أكّد تحصيل المبلغ أولًا",
   "listSeparator": "، ",
-  "staffMustUsePortal": "حسابات الموظفين يجب أن تستخدم لوحة التحكم على الويب."
+  "staffMustUsePortal": "حسابات الموظفين يجب أن تستخدم لوحة التحكم على الويب.",
+  "stageCollect": "الاستلام",
+  "stageCustody": "تم الاستلام",
+  "stageInspect": "الفحص",
+  "stageTreat": "التنظيف",
+  "stageDeliver": "الإرجاع",
+  "nothingInCustody": "لا توجد أغراض لدينا",
+  "nothingInCustodyNote": "اطلب استلامًا وسنأتي إلى بابك.",
+  "chooseAnyThatApply": "اختر ما ينطبق"
 }

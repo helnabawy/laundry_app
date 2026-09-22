@@ -9,9 +9,8 @@ class GetTodayTasks implements UseCase<List<DriverTask>, NoParams> {
   final DriverTaskRepository _repo;
 
   @override
-  Future<Result<List<DriverTask>>> call([
-    NoParams params = const NoParams(),
-  ]) => _repo.getTodayTasks();
+  Future<Result<List<DriverTask>>> call([NoParams params = const NoParams()]) =>
+      _repo.getTodayTasks();
 }
 
 class GetCompletedTasks implements UseCase<List<DriverTask>, NoParams> {
@@ -19,9 +18,8 @@ class GetCompletedTasks implements UseCase<List<DriverTask>, NoParams> {
   final DriverTaskRepository _repo;
 
   @override
-  Future<Result<List<DriverTask>>> call([
-    NoParams params = const NoParams(),
-  ]) => _repo.getCompletedTasks();
+  Future<Result<List<DriverTask>>> call([NoParams params = const NoParams()]) =>
+      _repo.getCompletedTasks();
 }
 
 class SetAvailability implements UseCase<bool, bool> {

@@ -16,7 +16,10 @@ class AddressApiDataSource implements AddressRemoteDataSource {
   @override
   Future<List<Address>> getAddresses() async {
     final json = await _api.get(ApiEndpoints.addresses) as List<dynamic>;
-    return json.cast<Map<String, dynamic>>().map(AddressModel.fromJson).toList();
+    return json
+        .cast<Map<String, dynamic>>()
+        .map(AddressModel.fromJson)
+        .toList();
   }
 
   @override

@@ -17,7 +17,8 @@ class CatalogApiDataSource implements CatalogRemoteDataSource {
 
   @override
   Future<List<ServiceCategory>> getCategories() async {
-    final json = await _api.get(ApiEndpoints.serviceCategories) as List<dynamic>;
+    final json =
+        await _api.get(ApiEndpoints.serviceCategories) as List<dynamic>;
     return json
         .cast<Map<String, dynamic>>()
         .map(ServiceCategoryModel.fromJson)
@@ -28,13 +29,19 @@ class CatalogApiDataSource implements CatalogRemoteDataSource {
   Future<List<SubService>> getSubServices(String categoryId) async {
     final json =
         await _api.get(ApiEndpoints.subServices(categoryId)) as List<dynamic>;
-    return json.cast<Map<String, dynamic>>().map(SubServiceModel.fromJson).toList();
+    return json
+        .cast<Map<String, dynamic>>()
+        .map(SubServiceModel.fromJson)
+        .toList();
   }
 
   @override
   Future<List<ServiceTier>> getTiers() async {
     final json = await _api.get(ApiEndpoints.serviceTiers) as List<dynamic>;
-    return json.cast<Map<String, dynamic>>().map(ServiceTierModel.fromJson).toList();
+    return json
+        .cast<Map<String, dynamic>>()
+        .map(ServiceTierModel.fromJson)
+        .toList();
   }
 
   @override
@@ -54,18 +61,19 @@ class CatalogApiDataSource implements CatalogRemoteDataSource {
     required String type,
     DateTime? notBefore,
   }) async {
-    final json =
-        await _api.get(
-              ApiEndpoints.timeSlots,
-              query: {
-                'date': _dateOnly(day),
-                'tier': tierId,
-                'type': type,
-                if (notBefore != null) 'notBefore': notBefore.toIso8601String(),
-              },
-            )
-            as List<dynamic>;
-    return json.cast<Map<String, dynamic>>().map(TimeSlotModel.fromJson).toList();
+    final json = await _api.get(
+      ApiEndpoints.timeSlots,
+      query: {
+        'date': _dateOnly(day),
+        'tier': tierId,
+        'type': type,
+        if (notBefore != null) 'notBefore': notBefore.toIso8601String(),
+      },
+    ) as List<dynamic>;
+    return json
+        .cast<Map<String, dynamic>>()
+        .map(TimeSlotModel.fromJson)
+        .toList();
   }
 
   String _dateOnly(DateTime d) =>

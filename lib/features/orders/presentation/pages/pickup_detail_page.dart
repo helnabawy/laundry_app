@@ -2,23 +2,18 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../../../core/design/design.dart';
 import '../../../../core/di/injection.dart';
 import '../../../../core/l10n/l10n.dart';
-import '../../../../core/theme/app_colors.dart';
 import '../../../../core/utils/formatters.dart';
-import '../../../../core/utils/phone_format.dart';
-import '../../../../core/widgets/app_buttons.dart';
-import '../../../../core/widgets/app_card.dart';
-import '../../../../core/widgets/flow_header.dart';
-import '../../../../core/widgets/info_banner.dart';
-import '../../../../core/widgets/state_views.dart';
 import '../../domain/entities/order_status.dart';
 import '../cubit/task_detail_cubit.dart';
-import '../utils/launchers.dart';
+import '../utils/category_icons.dart';
 import '../widgets/failure_reason_sheet.dart';
 import '../widgets/map_placeholder.dart';
+import '../widgets/stop_contact.dart';
 
-/// Plan §8.2 "تفاصيل الاستلام" / §9 Stage 3.
+/// One pickup stop, printed on the routing tag.
 class PickupDetailPage extends StatelessWidget {
   const PickupDetailPage({super.key, required this.orderId});
 
@@ -39,148 +34,48 @@ class _PickupDetailView extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final l10n = context.l10n;
+    final colors = context.colors;
+
     return BlocConsumer<TaskDetailCubit, TaskDetailState>(
       listenWhen: (prev, curr) =>
-          (curr.done && !prev.done) || (curr.failure != null && curr.failure != prev.failure),
+          (curr.done && !prev.done) ||
+          (curr.failure != null && curr.failure != prev.failure),
       listener: (context, state) {
         if (state.done) {
-          ScaffoldMessenger.of(
-            context,
-          ).showSnackBar(SnackBar(content: Text(l10n.pickupConfirmed)));
+          ScaffoldMessenger.of(context)
+              .showSnackBar(SnackBar(content: Text(l10n.pickupConfirmed)));
           context.pop(true);
           return;
         }
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(state.failure!.localized(l10n))),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text(state.failure!.localized(l10n))));
       },
       builder: (context, state) {
         final order = state.order;
-        return Scaffold(
-          body: Column(
-            children: [
-              FlowHeader(
-                title: order != null ? l10n.pickupTitle(order.number.toString()) : '',
-                subtitle: order != null
-                    ? AppFormat.of(context).timeRange(
-                        order.pickupSlot.start,
-                        order.pickupSlot.end,
-                      )
-                    : null,
-              ),
-              Expanded(
-                child: order == null
-                    ? (state.loading
-                          ? const LoadingView()
-                          : ErrorView(
-                              message: state.failure?.localized(l10n) ?? l10n.genericError,
-                              onRetry: () => context.read<TaskDetailCubit>().load(),
-                            ))
-                    : ListView(
-                        padding: const EdgeInsets.all(20),
-                        children: [
-                          MapPlaceholder(address: order.address),
-                          const SizedBox(height: 16),
-                          AppCard(
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.stretch,
-                              children: [
-                                Row(
-                                  children: [
-                                    const CircleAvatar(
-                                      backgroundColor: AppColors.tealSoft,
-                                      child: Icon(Icons.person, color: AppColors.tealDark),
-                                    ),
-                                    const SizedBox(width: 12),
-                                    Expanded(
-                                      child: Column(
-                                        crossAxisAlignment: CrossAxisAlignment.start,
-                                        children: [
-                                          Text(
-                                            order.customerName,
-                                            style: const TextStyle(fontWeight: FontWeight.w800),
-                                          ),
-                                          Text(
-                                            formatUaePhone(order.customerPhone),
-                                            style: const TextStyle(color: AppColors.muted),
-                                          ),
-                                        ],
-                                      ),
-                                    ),
-                                  ],
-                                ),
-                                const Padding(
-                                  padding: EdgeInsets.symmetric(vertical: 12),
-                                  child: Divider(height: 1),
-                                ),
-                                Row(
-                                  children: [
-                                    Expanded(
-                                      child: OutlinedButton.icon(
-                                        onPressed: () => launchTel(order.customerPhone),
-                                        icon: const Icon(Icons.call_outlined, size: 18),
-                                        label: Text(l10n.call),
-                                      ),
-                                    ),
-                                    const SizedBox(width: 12),
-                                    Expanded(
-                                      child: OutlinedButton.icon(
-                                        onPressed: () => launchSms(order.customerPhone),
-                                        icon: const Icon(Icons.sms_outlined, size: 18),
-                                        label: Text(l10n.message),
-                                      ),
-                                    ),
-                                  ],
-                                ),
-                              ],
-                            ),
-                          ),
-                          const SizedBox(height: 16),
-                          AppCard(
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Text(
-                                  '${order.address.area}، ${order.address.city}',
-                                  style: const TextStyle(fontWeight: FontWeight.w800),
-                                ),
-                                const SizedBox(height: 2),
-                                Text(
-                                  l10n.buildingApartment(
-                                    order.address.building,
-                                    order.address.apartment,
-                                  ),
-                                  style: const TextStyle(color: AppColors.muted),
-                                ),
-                                const SizedBox(height: 10),
-                                Text(
-                                  '${order.category.name} · ${order.subService.name} · ${order.tier.name}',
-                                ),
-                              ],
-                            ),
-                          ),
-                          const SizedBox(height: 16),
-                          InfoBanner(
-                            title: l10n.countAtLaundryTitle,
-                            message: l10n.countAtLaundryBody,
-                          ),
-                        ],
-                      ),
-              ),
-            ],
-          ),
-          bottomNavigationBar: order == null || order.status != OrderStatus.driverAssigned
+        return DetailPage(
+          title: order != null
+              ? l10n.pickupTitle(order.number.toString())
+              : l10n.navTasks,
+          subtitle: order != null
+              ? AppFormat.of(context)
+                    .timeRange(order.pickupSlot.start, order.pickupSlot.end)
+              : null,
+          bottomBar: order == null || order.status != OrderStatus.driverAssigned
               ? null
-              : BottomActions(
+              : ActionBar(
+                  note: l10n.countAtLaundryBody,
                   children: [
-                    PrimaryButton(
+                    ActionButton(
                       label: l10n.confirmPickup,
-                      tone: ButtonTone.accent,
+                      tone: ActionTone.field,
                       loading: state.submitting,
-                      onPressed: () => context.read<TaskDetailCubit>().confirmPickup(),
+                      onPressed: () =>
+                          context.read<TaskDetailCubit>().confirmPickup(),
                     ),
-                    SecondaryButton(
+                    ActionButton(
                       label: l10n.pickupFailed,
+                      tone: ActionTone.danger,
                       onPressed: state.submitting
                           ? null
                           : () async {
@@ -189,12 +84,89 @@ class _PickupDetailView extends StatelessWidget {
                                 title: l10n.pickupFailed,
                               );
                               if (result != null && context.mounted) {
-                                context.read<TaskDetailCubit>().reportPickupFailed(
-                                  result.reason,
-                                  result.note,
-                                );
+                                context
+                                    .read<TaskDetailCubit>()
+                                    .reportPickupFailed(
+                                      result.reason,
+                                      result.note,
+                                    );
                               }
                             },
+                    ),
+                  ],
+                ),
+          child: order == null
+              ? (state.loading
+                    ? const LoadingView()
+                    : ErrorView(
+                        message:
+                            state.failure?.localized(l10n) ?? l10n.genericError,
+                        retryLabel: l10n.retry,
+                        onRetry: () => context.read<TaskDetailCubit>().load(),
+                      ))
+              : ListView(
+                  padding: EdgeInsets.zero,
+                  children: [
+                    TagPanel(
+                      padding: const EdgeInsets.fromLTRB(
+                        DesignSpace.gutter,
+                        DesignSpace.lg,
+                        DesignSpace.gutter,
+                        DesignSpace.lg,
+                      ),
+                      child: Row(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          CareGlyphIcon(
+                            categoryGlyph(order.leadCategoryId),
+                            color: colors.onTag,
+                            size: 34,
+                            dots: order.tier.isVip ? 2 : 1,
+                          ),
+                          const SizedBox(width: DesignSpace.lg),
+                          Expanded(
+                            child: SerialBlock(
+                              serial: order.number.toString(),
+                              size: 34,
+                              color: colors.onTag,
+                              caption:
+                                  '${order.servicesLabel} · '
+                                  '${order.tier.name}',
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                    Padding(
+                      padding: const EdgeInsets.fromLTRB(
+                        DesignSpace.gutter,
+                        DesignSpace.xl,
+                        DesignSpace.gutter,
+                        0,
+                      ),
+                      child: MapPlaceholder(address: order.address),
+                    ),
+                    const SizedBox(height: DesignSpace.xl),
+                    StopContact(
+                      name: order.customerName,
+                      phone: order.customerPhone,
+                    ),
+                    Padding(
+                      padding: const EdgeInsets.fromLTRB(
+                        DesignSpace.gutter,
+                        DesignSpace.xxl,
+                        DesignSpace.gutter,
+                        DesignSpace.huge,
+                      ),
+                      child: NoticeBlock(
+                        title: l10n.countAtLaundryTitle,
+                        message: l10n.countAtLaundryBody,
+                        glyph: CareGlyphIcon(
+                          CareGlyph.inspect,
+                          color: colors.ink,
+                          size: 22,
+                        ),
+                      ),
                     ),
                   ],
                 ),

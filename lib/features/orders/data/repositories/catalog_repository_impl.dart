@@ -13,7 +13,8 @@ class CatalogRepositoryImpl implements CatalogRepository {
   final CatalogRemoteDataSource _remote;
 
   @override
-  Future<Result<List<ServiceCategory>>> getCategories() => guard(_remote.getCategories);
+  Future<Result<List<ServiceCategory>>> getCategories() =>
+      guard(_remote.getCategories);
 
   @override
   Future<Result<List<SubService>>> getSubServices(String categoryId) =>
