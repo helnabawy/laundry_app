@@ -4,10 +4,14 @@ import '../../core/config/app_config.dart';
 import 'data/datasources/address_mock_data_source.dart';
 import 'data/datasources/address_remote_data_source.dart';
 import 'data/repositories/address_repository_impl.dart';
+import 'domain/entities/address.dart';
 import 'domain/repositories/address_repository.dart';
 import 'domain/usecases/add_address.dart';
+import 'domain/usecases/delete_address.dart';
 import 'domain/usecases/get_addresses.dart';
-import 'presentation/cubit/add_address_cubit.dart';
+import 'domain/usecases/update_address.dart';
+import 'presentation/cubit/address_form_cubit.dart';
+import 'presentation/cubit/addresses_cubit.dart';
 
 void registerAddressesFeature(GetIt sl) {
   sl
@@ -21,5 +25,10 @@ void registerAddressesFeature(GetIt sl) {
     )
     ..registerFactory(() => GetAddresses(sl()))
     ..registerFactory(() => AddAddress(sl()))
-    ..registerFactory(() => AddAddressCubit(sl()));
+    ..registerFactory(() => UpdateAddress(sl()))
+    ..registerFactory(() => DeleteAddress(sl()))
+    ..registerFactory(() => AddressesCubit(sl()))
+    ..registerFactoryParam<AddressFormCubit, Address?, void>(
+      (editing, _) => AddressFormCubit(sl(), sl(), sl(), editing: editing),
+    );
 }

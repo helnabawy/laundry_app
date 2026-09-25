@@ -5,6 +5,7 @@ import '../../../../core/design/design.dart';
 import '../../../../core/l10n/l10n.dart';
 import '../../../../core/utils/formatters.dart';
 import '../../domain/entities/driver_task.dart';
+import '../../domain/entities/order_status.dart';
 import '../cubit/driver_tasks_cubit.dart';
 import '../widgets/status_pill.dart';
 
@@ -71,7 +72,13 @@ class _CompletedRow extends StatelessWidget {
       ),
       title: l10n.orderNumber(order.number.toString()),
       subtitle: format.dayAndTime(task.slot.start),
-      trailing: OrderStatusStamp(order.status, compact: true),
+      // The customer sees "Cancelled"; the driver's record is the failed stop.
+      trailing: OrderStatusStamp(
+        order.pickupFailedAndCancelled
+            ? OrderStatus.pickupFailed
+            : order.status,
+        compact: true,
+      ),
     );
   }
 }

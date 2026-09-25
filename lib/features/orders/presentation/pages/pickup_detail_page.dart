@@ -42,8 +42,14 @@ class _PickupDetailView extends StatelessWidget {
           (curr.failure != null && curr.failure != prev.failure),
       listener: (context, state) {
         if (state.done) {
-          ScaffoldMessenger.of(context)
-              .showSnackBar(SnackBar(content: Text(l10n.pickupConfirmed)));
+          final reported = state.order?.pickupFailedAndCancelled ?? false;
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text(
+                reported ? l10n.pickupFailedReported : l10n.pickupConfirmed,
+              ),
+            ),
+          );
           context.pop(true);
           return;
         }
@@ -82,6 +88,7 @@ class _PickupDetailView extends StatelessWidget {
                               final result = await showFailureReasonSheet(
                                 context,
                                 title: l10n.pickupFailed,
+                                requirePhoto: true,
                               );
                               if (result != null && context.mounted) {
                                 context
@@ -89,6 +96,7 @@ class _PickupDetailView extends StatelessWidget {
                                     .reportPickupFailed(
                                       result.reason,
                                       result.note,
+                                      hasPhoto: result.hasPhoto,
                                     );
                               }
                             },

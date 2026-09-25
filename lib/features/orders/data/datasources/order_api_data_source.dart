@@ -44,11 +44,28 @@ class OrderApiDataSource implements OrderRemoteDataSource {
   @override
   Future<LaundryOrder> choosePaymentMethod(
     String orderId,
-    PaymentMethod method,
-  ) async {
+    PaymentMethod method, {
+    required bool conditionsAcknowledged,
+  }) async {
     final json = await _api.post(
       ApiEndpoints.orderPaymentMethod(orderId),
-      data: {'method': method.name},
+      data: {
+        'method': method.name,
+        'conditionsAcknowledged': conditionsAcknowledged,
+      },
+    );
+    return LaundryOrderModel.fromJson(json as Map<String, dynamic>);
+  }
+
+  @override
+  Future<LaundryOrder> rateOrder(
+    String orderId, {
+    required int stars,
+    String? comment,
+  }) async {
+    final json = await _api.post(
+      ApiEndpoints.orderRating(orderId),
+      data: {'stars': stars, 'comment': ?comment},
     );
     return LaundryOrderModel.fromJson(json as Map<String, dynamic>);
   }

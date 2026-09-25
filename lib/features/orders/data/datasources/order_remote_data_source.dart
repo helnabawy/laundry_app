@@ -8,6 +8,12 @@ abstract interface class OrderRemoteDataSource {
   Future<LaundryOrder> getOrder(String id);
   Future<LaundryOrder> choosePaymentMethod(
     String orderId,
-    PaymentMethod method,
-  );
+    PaymentMethod method, {
+    required bool conditionsAcknowledged,
+  });
+  Future<LaundryOrder> rateOrder(
+    String orderId, {
+    required int stars,
+    String? comment,
+  });
 }

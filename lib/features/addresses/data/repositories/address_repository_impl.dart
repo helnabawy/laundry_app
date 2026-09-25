@@ -15,4 +15,12 @@ class AddressRepositoryImpl implements AddressRepository {
   @override
   Future<Result<Address>> addAddress(NewAddress address) =>
       guard(() => _remote.addAddress(address));
+
+  @override
+  Future<Result<Address>> updateAddress(String id, NewAddress address) =>
+      guard(() => _remote.updateAddress(id, address));
+
+  @override
+  Future<Result<void>> deleteAddress(String id) =>
+      guard(() => _remote.deleteAddress(id));
 }

@@ -23,6 +23,14 @@ class OrdersState extends Equatable {
   List<LaundryOrder> get past => orders.where((o) => o.status.isPast).toList();
   LaundryOrder? get current => active.isEmpty ? null : active.first;
 
+  /// The customer's latest order was cancelled because the driver couldn't
+  /// collect it, and nothing has been booked since — so home asks them to
+  /// pick a new time. Orders arrive newest first.
+  LaundryOrder? get failedPickupToReschedule => switch (orders) {
+    [final latest, ...] when latest.pickupFailedAndCancelled => latest,
+    _ => null,
+  };
+
   @override
   List<Object?> get props => [orders, loading, failure];
 }

@@ -8,12 +8,17 @@ abstract final class Routes {
   static const otp = '$login/$otpSegment';
 
   static const completeProfile = '/complete-profile';
-  static const addAddress = '/addresses/new';
+  static const addresses = '/addresses';
+  static const addAddress = '$addresses/new';
+  static String editAddress(String id) => '$addresses/$id/edit';
 
   static const customerHome = '/customer';
   static const orderNew = '/orders/new';
   static String orderDetail(String id) => '/orders/$id';
   static String orderInvoice(String id) => '/orders/$id/invoice';
+  static String orderInvoiceHelp(String id) => '/orders/$id/invoice/help';
+  static String orderAssistant(String id) =>
+      '/orders/$id/invoice/help/assistant';
 
   static const driverHome = '/driver';
   static String driverPickup(String orderId) => '/driver/pickup/$orderId';

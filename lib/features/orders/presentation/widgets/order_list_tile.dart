@@ -8,10 +8,19 @@ import '../../domain/entities/laundry_order.dart';
 
 /// A compact order row, in the one label anatomy: serial, service, window.
 class OrderListTile extends StatelessWidget {
-  const OrderListTile({super.key, required this.order, required this.onTap});
+  const OrderListTile({
+    super.key,
+    required this.order,
+    required this.onTap,
+    this.onReorder,
+  });
 
   final LaundryOrder order;
   final VoidCallback onTap;
+
+  /// Given on past orders: the row then ends in a one-tap "Reorder" in place
+  /// of the chevron, while tapping anywhere else still opens the order.
+  final VoidCallback? onReorder;
 
   @override
   Widget build(BuildContext context) {
@@ -22,7 +31,14 @@ class OrderListTile extends StatelessWidget {
       title: l10n.orderNumber(order.number.toString()),
       subtitle: '${order.servicesLabel} · ${order.tier.name}',
       value: order.invoice != null ? format.money(order.invoice!.total) : null,
-      trailing: Icon(CupertinoIcons.chevron_forward, color: colors.inkTertiary),
+      trailing: switch (onReorder) {
+        final reorder? => TintAction(
+          label: l10n.reorder,
+          dense: true,
+          onPressed: reorder,
+        ),
+        null => Icon(CupertinoIcons.chevron_forward, color: colors.inkTertiary),
+      },
       onTap: onTap,
     );
   }

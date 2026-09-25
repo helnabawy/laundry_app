@@ -4,6 +4,7 @@ import '../../domain/entities/address.dart';
 abstract final class AddressModel {
   static Address fromJson(Map<String, dynamic> json) => Address(
     id: json['id'] as String,
+    kind: _kindFromJson(json['kind'] as String?),
     label: json['label'] as String?,
     city: json['city'] as String,
     area: json['area'] as String,
@@ -16,6 +17,7 @@ abstract final class AddressModel {
   );
 
   static Map<String, dynamic> toJson(NewAddress address) => {
+    'kind': address.kind.name,
     'label': address.label,
     'city': address.city,
     'area': address.area,
@@ -24,4 +26,7 @@ abstract final class AddressModel {
     'apartment': address.apartment,
     'alternatePhone': address.alternatePhone,
   };
+
+  static AddressKind _kindFromJson(String? value) =>
+      AddressKind.values.asNameMap()[value] ?? AddressKind.other;
 }

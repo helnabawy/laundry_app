@@ -7,8 +7,10 @@ import '../../../addresses/domain/entities/address.dart';
 import '../../../auth/data/datasources/auth_mock_data_source.dart';
 import '../../domain/entities/driver_task.dart';
 import '../../domain/entities/invoice.dart';
+import '../../domain/entities/item_condition.dart';
 import '../../domain/entities/laundry_order.dart';
 import '../../domain/entities/order_line.dart';
+import '../../domain/entities/order_rating.dart';
 import '../../domain/entities/new_order_params.dart';
 import '../../domain/entities/order_item.dart';
 import '../../domain/entities/order_status.dart';
@@ -16,6 +18,7 @@ import '../../domain/entities/order_timeline_event.dart';
 import '../../domain/entities/service_category.dart';
 import '../../domain/entities/service_tier.dart';
 import '../../domain/entities/sub_service.dart';
+import '../../domain/entities/task_failure.dart';
 import '../../domain/entities/time_slot.dart';
 import '../../domain/repositories/driver_task_repository.dart';
 import 'catalog_mock_data_source.dart';
@@ -112,18 +115,19 @@ class OrderMockDataSource
   @override
   Future<LaundryOrder> choosePaymentMethod(
     String orderId,
-    PaymentMethod method,
-  ) async {
+    PaymentMethod method, {
+    required bool conditionsAcknowledged,
+  }) async {
     await _db.delay();
     final row = _findOrder(orderId);
     if (row['status'] != OrderStatus.awaitingPayment) {
       _db.badRequest('Order is not awaiting payment');
     }
     final invoice = row['invoice'] as Invoice;
-    row['invoice'] = Invoice(
-      id: invoice.id,
-      items: invoice.items,
-      note: invoice.note,
+    if (invoice.hasConditions && !conditionsAcknowledged) {
+      _db.badRequest('Condition report must be acknowledged first');
+    }
+    row['invoice'] = invoice.copyWith(
       paymentMethod: method,
       // Card payment is simulated as an instant successful charge; cash is
       // collected by the driver on delivery.
@@ -137,6 +141,31 @@ class OrderMockDataSource
       row,
       OrderStatus.outForDelivery,
       now.add(const Duration(seconds: 1)),
+    );
+    return _toOrder(row);
+  }
+
+  @override
+  Future<LaundryOrder> rateOrder(
+    String orderId, {
+    required int stars,
+    String? comment,
+  }) async {
+    await _db.delay();
+    final userId = _db.requireUserId();
+    final row = _findOrder(orderId);
+    if (row['userId'] != userId) _db.notFound('Order not found');
+    if (row['status'] != OrderStatus.delivered) {
+      _db.badRequest('Only a delivered order can be rated');
+    }
+    if (row['rating'] != null) _db.badRequest('Order already rated');
+    if (stars < 1 || stars > OrderRating.maxStars) {
+      _db.badRequest('Stars must be 1–${OrderRating.maxStars}');
+    }
+    row['rating'] = OrderRating(
+      stars: stars,
+      comment: comment,
+      ratedAt: DateTime.now(),
     );
     return _toOrder(row);
   }
@@ -181,13 +210,15 @@ class OrderMockDataSource
             .table(_table)
             .where((r) => r['driverId'] == driverId)
             .map(_toOrder)
-            .where((o) => done.contains(o.status))
+            .where((o) => done.contains(o.status) || o.pickupFailedAndCancelled)
             .toList()
           ..sort((a, b) => b.createdAt.compareTo(a.createdAt));
     return orders
         .map(
           (o) => DriverTask(
-            type: o.status == OrderStatus.pickupFailed
+            type:
+                o.status == OrderStatus.pickupFailed ||
+                    o.pickupFailedAndCancelled
                 ? TaskType.pickup
                 : TaskType.delivery,
             order: o,
@@ -237,13 +268,22 @@ class OrderMockDataSource
   Future<LaundryOrder> reportPickupFailed(
     String orderId,
     TaskFailureReason reason,
-    String? note,
-  ) async {
+    String? note, {
+    required bool hasPhoto,
+  }) async {
     await _db.delay();
+    if (!hasPhoto) _db.badRequest('A photo of the pickup stop is required');
     final row = _requireDriverOrder(orderId, OrderStatus.driverAssigned);
-    _appendStatus(row, OrderStatus.pickupFailed, DateTime.now());
-    row['failureReason'] = reason;
-    row['failureNote'] = note;
+    final now = DateTime.now();
+    _appendStatus(row, OrderStatus.pickupFailed, now);
+    row['failure'] = TaskFailure(reason: reason, note: note, hasPhoto: true);
+    // The backend cancels the order and pushes a "book a new pickup time"
+    // notification; the customer re-books as a fresh order.
+    _appendStatus(
+      row,
+      OrderStatus.cancelled,
+      now.add(const Duration(seconds: 1)),
+    );
     return _toOrder(row);
   }
 
@@ -262,13 +302,7 @@ class OrderMockDataSource
       if (!cashCollected) {
         _db.badRequest('Cash must be collected before confirming delivery');
       }
-      row['invoice'] = Invoice(
-        id: invoice.id,
-        items: invoice.items,
-        note: invoice.note,
-        paymentMethod: invoice.paymentMethod,
-        paid: true,
-      );
+      row['invoice'] = invoice.copyWith(paid: true);
     }
     _appendStatus(row, OrderStatus.delivered, DateTime.now());
     return _toOrder(row);
@@ -283,8 +317,7 @@ class OrderMockDataSource
     await _db.delay();
     final row = _requireDriverOrder(orderId, OrderStatus.outForDelivery);
     _appendStatus(row, OrderStatus.deliveryFailed, DateTime.now());
-    row['failureReason'] = reason;
-    row['failureNote'] = note;
+    row['failure'] = TaskFailure(reason: reason, note: note);
     return _toOrder(row);
   }
 
@@ -349,15 +382,48 @@ class OrderMockDataSource
     return Invoice(
       id: 'inv-$orderNumber',
       items: items,
-      note: random.nextBool()
-          ? _db.tr({
-              'ar': 'بقعة على أحد القطع تحتاج معالجة خاصة',
-              'en': 'A stain on one item needs special treatment',
-            })
-          : null,
+      conditions: _sortingFindings(random, items),
       paymentMethod: null,
       paid: false,
     );
+  }
+
+  /// What sorting turned up (step 4.2). Roughly half of all invoices carry
+  /// at least one finding so both paths of the invoice can be demoed.
+  List<ItemCondition> _sortingFindings(Random random, List<OrderItem> items) {
+    if (random.nextBool()) return const [];
+    const findings = [
+      (
+        ConditionKind.stain,
+        {
+          'ar': 'بقعة قديمة على الياقة، قد لا تزول بالكامل',
+          'en': 'Set-in stain on the collar; it may not come out fully',
+        },
+      ),
+      (
+        ConditionKind.damage,
+        {
+          'ar': 'زر مفقود قبل الاستلام',
+          'en': 'A button was already missing on arrival',
+        },
+      ),
+      (
+        ConditionKind.stain,
+        {
+          'ar': 'بقعة زيت صغيرة على الأمام',
+          'en': 'Small oil stain on the front',
+        },
+      ),
+    ];
+    final count = 1 + random.nextInt(2);
+    return [
+      for (var i = 0; i < count; i++)
+        ItemCondition(
+          itemName: items[random.nextInt(items.length)].name,
+          kind: findings[i].$1,
+          note: _db.tr(findings[i].$2),
+        ),
+    ];
   }
 
   String? _driverName(String? driverId) {
@@ -391,5 +457,7 @@ class OrderMockDataSource
     timeline: List<OrderTimelineEvent>.from(row['timeline'] as List),
     driverName: _driverName(row['driverId'] as String?),
     invoice: row['invoice'] as Invoice?,
+    failure: row['failure'] as TaskFailure?,
+    rating: row['rating'] as OrderRating?,
   );
 }

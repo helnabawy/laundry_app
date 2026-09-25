@@ -30,8 +30,11 @@ class DriverTaskRepositoryImpl implements DriverTaskRepository {
   Future<Result<LaundryOrder>> reportPickupFailed(
     String orderId,
     TaskFailureReason reason,
-    String? note,
-  ) => guard(() => _remote.reportPickupFailed(orderId, reason, note));
+    String? note, {
+    required bool hasPhoto,
+  }) => guard(
+    () => _remote.reportPickupFailed(orderId, reason, note, hasPhoto: hasPhoto),
+  );
 
   @override
   Future<Result<LaundryOrder>> confirmDelivery(

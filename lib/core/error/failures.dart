@@ -43,6 +43,11 @@ final class UnsupportedRoleFailure extends Failure {
   const UnsupportedRoleFailure();
 }
 
+/// A customer must keep at least one pickup address.
+final class LastAddressFailure extends Failure {
+  const LastAddressFailure();
+}
+
 /// Client-side validation errors raised by use cases before hitting the API.
 enum InputError { invalidPhone, invalidOtp, requiredField }
 

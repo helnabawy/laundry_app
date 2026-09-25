@@ -1,11 +1,14 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:go_router/go_router.dart';
 
 import '../../../../core/design/design.dart';
 import '../../../../core/l10n/l10n.dart';
 import '../../../../core/locale/locale_cubit.dart';
+import '../../../../core/router/routes.dart';
 import '../../../../core/utils/phone_format.dart';
+import '../../domain/entities/app_user.dart';
 import '../cubit/session_cubit.dart';
 
 /// The account tab, shared by the customer and driver shells.
@@ -63,6 +66,20 @@ class AccountPage extends StatelessWidget {
             ),
           ),
         ),
+        if (user?.role == UserRole.customer)
+          SliverToBoxAdapter(
+            child: LabelGroup(
+              heading: l10n.addressesHeading,
+              children: [
+                LabelRow(
+                  leading: Icon(CupertinoIcons.placemark, color: colors.ink),
+                  title: l10n.savedAddresses,
+                  trailing: const Icon(CupertinoIcons.chevron_forward),
+                  onTap: () => context.push(Routes.addresses),
+                ),
+              ],
+            ),
+          ),
         SliverToBoxAdapter(
           child: LabelGroup(
             heading: l10n.language,

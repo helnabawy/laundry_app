@@ -3,17 +3,29 @@ import 'package:flutter/material.dart';
 import '../../../../core/design/design.dart';
 import '../../../../core/l10n/l10n.dart';
 import '../../domain/entities/address.dart';
+import 'address_tile.dart';
 
-/// Owns the text controllers for an address form. The parent owns the
-/// [Form] and disposes this.
+/// Owns the controllers for an address form, optionally pre-filled from
+/// [initial]. The parent owns the [Form] and disposes this.
 class AddressFormData {
-  final label = TextEditingController();
-  final city = TextEditingController();
-  final area = TextEditingController();
-  final building = TextEditingController();
-  final floor = TextEditingController();
-  final apartment = TextEditingController();
-  final alternatePhone = TextEditingController();
+  AddressFormData([NewAddress? initial])
+    : kind = ValueNotifier(initial?.kind ?? AddressKind.home),
+      label = TextEditingController(text: initial?.label),
+      city = TextEditingController(text: initial?.city),
+      area = TextEditingController(text: initial?.area),
+      building = TextEditingController(text: initial?.building),
+      floor = TextEditingController(text: initial?.floor),
+      apartment = TextEditingController(text: initial?.apartment),
+      alternatePhone = TextEditingController(text: initial?.alternatePhone);
+
+  final ValueNotifier<AddressKind> kind;
+  final TextEditingController label;
+  final TextEditingController city;
+  final TextEditingController area;
+  final TextEditingController building;
+  final TextEditingController floor;
+  final TextEditingController apartment;
+  final TextEditingController alternatePhone;
 
   List<TextEditingController> get _all => [
     label,
@@ -26,7 +38,9 @@ class AddressFormData {
   ];
 
   NewAddress toNewAddress() => NewAddress(
-    label: _optional(label),
+    kind: kind.value,
+    // Only an "other" address carries its own name.
+    label: kind.value == AddressKind.other ? _optional(label) : null,
     city: city.text.trim(),
     area: area.text.trim(),
     building: building.text.trim(),
@@ -36,6 +50,7 @@ class AddressFormData {
   );
 
   void dispose() {
+    kind.dispose();
     for (final c in _all) {
       c.dispose();
     }
@@ -109,6 +124,7 @@ class AddressFormFields extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
+        _KindField(data: data),
         LabelField(
           controller: data.city,
           label: l10n.city,
@@ -144,14 +160,44 @@ class AddressFormFields extends StatelessWidget {
           controller: data.alternatePhone,
           label: l10n.alternatePhone,
           keyboardType: TextInputType.phone,
+          textInputAction: TextInputAction.done,
           textDirection: TextDirection.ltr,
         ),
-        LabelField(
-          controller: data.label,
-          label: l10n.addressLabel,
-          textInputAction: TextInputAction.done,
-        ),
       ],
+    );
+  }
+}
+
+/// Home / Work / Other, and a name of the customer's own for "Other".
+class _KindField extends StatelessWidget {
+  const _KindField({required this.data});
+
+  final AddressFormData data;
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = context.l10n;
+    final colors = context.colors;
+    return ValueListenableBuilder(
+      valueListenable: data.kind,
+      builder: (context, kind, _) => Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          Text(
+            l10n.addressType.toUpperCase(),
+            style: DesignTypography.stamp(colors.inkSecondary),
+          ),
+          const SizedBox(height: DesignSpace.sm),
+          SegmentedStrip(
+            labels: [for (final k in AddressKind.values) k.localized(l10n)],
+            index: kind.index,
+            onChanged: (i) => data.kind.value = AddressKind.values[i],
+          ),
+          const SizedBox(height: DesignSpace.xl),
+          if (kind == AddressKind.other)
+            LabelField(controller: data.label, label: l10n.addressName),
+        ],
+      ),
     );
   }
 }

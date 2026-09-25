@@ -73,5 +73,16 @@ void main() {
       redirect(SessionAuthenticated(user(UserRole.driver)), '/driver/x'),
       isNull,
     );
+    expect(
+      redirect(SessionAuthenticated(user(UserRole.driver)), Routes.addresses),
+      Routes.driverHome,
+    );
+    expect(
+      redirect(
+        SessionAuthenticated(user(UserRole.customer)),
+        Routes.addAddress,
+      ),
+      isNull,
+    );
   });
 }

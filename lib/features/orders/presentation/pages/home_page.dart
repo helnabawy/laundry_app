@@ -5,10 +5,12 @@ import 'package:go_router/go_router.dart';
 import '../../../../core/design/design.dart';
 import '../../../../core/l10n/l10n.dart';
 import '../../../../core/router/routes.dart';
+import '../../domain/entities/laundry_order.dart';
 import '../cubit/orders_cubit.dart';
 import '../utils/category_icons.dart';
 import '../widgets/hero_custody.dart';
 import '../widgets/order_list_tile.dart';
+import '../widgets/pickup_failed_notice.dart';
 
 /// The customer's first viewport.
 ///
@@ -22,10 +24,11 @@ class HomePage extends StatelessWidget {
   final VoidCallback onViewAllOrders;
 
   /// Opens the order flow and refreshes on the way back, so a just-placed
-  /// order appears in the hero instead of a stale empty state.
-  Future<void> _startOrder(BuildContext context) async {
+  /// order appears in the hero instead of a stale empty state. Given [from],
+  /// the flow opens filled from that past order (one-tap reorder).
+  Future<void> _startOrder(BuildContext context, {LaundryOrder? from}) async {
     final cubit = context.read<OrdersCubit>();
-    await context.push(Routes.orderNew);
+    await context.push(Routes.orderNew, extra: from);
     await cubit.load();
   }
 
@@ -43,6 +46,7 @@ class HomePage extends StatelessWidget {
     final l10n = context.l10n;
     final state = context.watch<OrdersCubit>().state;
     final current = state.current;
+    final failedPickup = state.failedPickupToReschedule;
 
     return LargeTitlePage(
       title: l10n.navHome,
@@ -66,21 +70,38 @@ class HomePage extends StatelessWidget {
             ),
         ],
 
-        SliverToBoxAdapter(
-          child: Padding(
-            padding: const EdgeInsets.fromLTRB(
-              DesignSpace.gutter,
-              DesignSpace.xxl,
-              DesignSpace.gutter,
-              0,
+        if (failedPickup != null)
+          SliverToBoxAdapter(
+            child: Padding(
+              padding: const EdgeInsets.fromLTRB(
+                DesignSpace.gutter,
+                DesignSpace.xxl,
+                DesignSpace.gutter,
+                0,
+              ),
+              child: PickupFailedNotice(
+                order: failedPickup,
+                showNumber: true,
+                onReschedule: () => _startOrder(context, from: failedPickup),
+              ),
             ),
-            child: ActionButton(
-              label: l10n.orderNow,
-              icon: const Icon(CupertinoIcons.add),
-              onPressed: () => _startOrder(context),
+          )
+        else
+          SliverToBoxAdapter(
+            child: Padding(
+              padding: const EdgeInsets.fromLTRB(
+                DesignSpace.gutter,
+                DesignSpace.xxl,
+                DesignSpace.gutter,
+                0,
+              ),
+              child: ActionButton(
+                label: l10n.orderNow,
+                icon: const Icon(CupertinoIcons.add),
+                onPressed: () => _startOrder(context),
+              ),
             ),
           ),
-        ),
 
         SliverToBoxAdapter(
           child: LabelGroup(
@@ -106,6 +127,29 @@ class HomePage extends StatelessWidget {
           ),
         ),
 
+        // The latest delivered order is still waiting on its stars.
+        if (state.past.firstOrNull case final last? when last.canRate)
+          SliverToBoxAdapter(
+            child: LabelGroup(
+              children: [
+                LabelRow(
+                  leading: Icon(
+                    CupertinoIcons.star,
+                    color: context.colors.ink,
+                    size: 24,
+                  ),
+                  title: l10n.rateOrderNudge(last.number.toString()),
+                  subtitle: l10n.rateOrderBody,
+                  trailing: Icon(
+                    CupertinoIcons.chevron_forward,
+                    color: context.colors.inkTertiary,
+                  ),
+                  onTap: () => _openOrder(context, last.id),
+                ),
+              ],
+            ),
+          ),
+
         if (state.past.isNotEmpty)
           SliverToBoxAdapter(
             child: LabelGroup(
@@ -120,6 +164,7 @@ class HomePage extends StatelessWidget {
                   OrderListTile(
                     order: order,
                     onTap: () => _openOrder(context, order.id),
+                    onReorder: () => _startOrder(context, from: order),
                   ),
               ],
             ),

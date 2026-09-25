@@ -81,7 +81,17 @@
   "completeProfileSubtitle": "Tell us your name and where to pick up your items",
   "fullName": "Full name",
   "addressTitle": "Pickup address",
-  "addressLabel": "Label (e.g. Home, Work)",
+  "addressName": "Address name (optional)",
+  "addressType": "Address type",
+  "addressKindHome": "Home",
+  "addressKindWork": "Work",
+  "addressKindOther": "Other",
+  "addressesHeading": "Addresses",
+  "editAddress": "Edit address",
+  "deleteAddress": "Delete address",
+  "deleteAddressConfirm": "Delete this address?",
+  "deleteAddressConfirmBody": "Orders you've already placed keep their address.",
+  "lastAddressError": "Keep at least one address for pickups",
   "city": "City",
   "area": "Area",
   "building": "Building",
@@ -385,5 +395,104 @@
   "stageDeliver": "Return",
   "nothingInCustody": "No items in custody",
   "nothingInCustodyNote": "Book a collection and we'll pick up from your door.",
-  "chooseAnyThatApply": "Choose any that apply"
+  "chooseAnyThatApply": "Choose any that apply",
+  "takePhotoOfStop": "Photograph the pickup location",
+  "photoRequiredFirst": "Take a photo of the location first",
+  "pickupFailedReported": "Reported. The order is cancelled and the customer has been asked to rebook",
+  "pickupFailedCustomerTitle": "We couldn't collect your order",
+  "pickupFailedHomeTitle": "We couldn't collect order {number}",
+  "@pickupFailedHomeTitle": {
+    "placeholders": {
+      "number": {
+        "type": "String"
+      }
+    }
+  },
+  "pickupFailedCustomerBody": "{reason}. This order has been cancelled. Book a new pickup time and we'll come back.",
+  "@pickupFailedCustomerBody": {
+    "placeholders": {
+      "reason": {
+        "type": "String"
+      }
+    }
+  },
+  "customerReasonAbsent": "Our driver couldn't reach you at the pickup time",
+  "customerReasonWrongAddress": "Our driver couldn't find the address",
+  "customerReasonRescheduled": "You asked to change the pickup time",
+  "customerReasonOther": "Our driver couldn't complete the pickup",
+  "reschedulePickup": "Book a new pickup time",
+  "conditionReport": "Condition report",
+  "conditionStain": "Stain",
+  "conditionDamage": "Damage",
+  "conditionsFoundTitle": "Stains or damage found",
+  "conditionsFoundBody": "The laundry noted stains or damage while sorting your items. Review them below — cleaning starts only after you confirm.",
+  "conditionsNoticeBody": "Review the condition report on your invoice. Cleaning starts only after you confirm.",
+  "noConditionsTitle": "Checked at sorting",
+  "noConditionsBody": "No stains or damage were found on your items.",
+  "acknowledgeConditions": "I've reviewed the condition report",
+  "acknowledgeConditionsFirst": "Review the condition report above to continue",
+  "invoiceInquiry": "Question about this invoice?",
+  "invoiceInquiryNote": "Common answers and our assistant",
+  "invoiceHelpTitle": "Invoice inquiry",
+  "commonQuestions": "Common questions",
+  "askAssistant": "Ask the assistant",
+  "askAssistantNote": "The assistant answers first. If it can't help, you can ask for a team member.",
+  "assistantTitle": "Assistant",
+  "assistantGreeting": "Hi! Ask me anything about this invoice — the items, the count, the price, or the condition report.",
+  "assistantInputHint": "Type your question",
+  "assistantTyping": "The assistant is typing",
+  "send": "Send",
+  "assistantDidThisHelp": "Did this answer your question?",
+  "yesThanks": "Yes, thanks",
+  "stillNeedHelp": "No, I still need help",
+  "assistantGlad": "Glad that helped. You can ask another question any time.",
+  "assistantOfferAgent": "I can pass this conversation to a team member, or you can rephrase your question.",
+  "talkToTeam": "Talk to a team member",
+  "agentRequestedTitle": "Passed to our team",
+  "agentRequestedBody": "Request {reference}. A team member will contact you about this invoice and can see this conversation.",
+  "@agentRequestedBody": {
+    "placeholders": {
+      "reference": {
+        "type": "String"
+      }
+    }
+  },
+  "rateOrderTitle": "How did we do?",
+  "rateOrderBody": "Rate the cleaning and the delivery of this order.",
+  "ratingNoteHint": "Anything we should know? (optional)",
+  "submitRating": "Send rating",
+  "ratingThanks": "Thanks for your rating",
+  "yourRating": "Your rating",
+  "ratingStarsOf": "{count} out of 5",
+  "@ratingStarsOf": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "ratingPoor": "Poor",
+  "ratingFair": "Fair",
+  "ratingGood": "Good",
+  "ratingVeryGood": "Very good",
+  "ratingExcellent": "Excellent",
+  "rateOrderNudge": "Rate order {number}",
+  "@rateOrderNudge": {
+    "placeholders": {
+      "number": {
+        "type": "String"
+      }
+    }
+  },
+  "rate": "Rate",
+  "reorder": "Reorder",
+  "reorderNoticeTitle": "Same as order {number}",
+  "@reorderNoticeTitle": {
+    "placeholders": {
+      "number": {
+        "type": "String"
+      }
+    }
+  },
+  "reorderNoticeBody": "Items, service, level and address are filled in. We picked the soonest open times; change them if they don't suit you."
 }

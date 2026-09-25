@@ -32,13 +32,38 @@ class GetOrder implements UseCase<LaundryOrder, String> {
   Future<Result<LaundryOrder>> call(String id) => _repo.getOrder(id);
 }
 
+typedef ChoosePaymentParams = ({
+  String orderId,
+  PaymentMethod method,
+  bool conditionsAcknowledged,
+});
+
 class ChoosePaymentMethod
-    implements UseCase<LaundryOrder, ({String orderId, PaymentMethod method})> {
+    implements UseCase<LaundryOrder, ChoosePaymentParams> {
   const ChoosePaymentMethod(this._repo);
   final OrderRepository _repo;
 
   @override
+  Future<Result<LaundryOrder>> call(ChoosePaymentParams params) =>
+      _repo.choosePaymentMethod(
+        params.orderId,
+        params.method,
+        conditionsAcknowledged: params.conditionsAcknowledged,
+      );
+}
+
+class RateOrder
+    implements
+        UseCase<LaundryOrder, ({String orderId, int stars, String? comment})> {
+  const RateOrder(this._repo);
+  final OrderRepository _repo;
+
+  @override
   Future<Result<LaundryOrder>> call(
-    ({String orderId, PaymentMethod method}) params,
-  ) => _repo.choosePaymentMethod(params.orderId, params.method);
+    ({String orderId, int stars, String? comment}) params,
+  ) => _repo.rateOrder(
+    params.orderId,
+    stars: params.stars,
+    comment: params.comment,
+  );
 }

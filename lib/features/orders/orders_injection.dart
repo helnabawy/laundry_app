@@ -12,6 +12,7 @@ import 'data/datasources/order_remote_data_source.dart';
 import 'data/repositories/catalog_repository_impl.dart';
 import 'data/repositories/driver_task_repository_impl.dart';
 import 'data/repositories/order_repository_impl.dart';
+import 'domain/entities/laundry_order.dart';
 import 'domain/repositories/catalog_repository.dart';
 import 'domain/repositories/driver_task_repository.dart';
 import 'domain/repositories/order_repository.dart';
@@ -72,6 +73,7 @@ void registerOrdersFeature(GetIt sl) {
     ..registerFactory(() => GetOrders(sl()))
     ..registerFactory(() => GetOrder(sl()))
     ..registerFactory(() => ChoosePaymentMethod(sl()))
+    ..registerFactory(() => RateOrder(sl()))
     // Driver tasks
     ..registerFactory(() => GetTodayTasks(sl()))
     ..registerFactory(() => GetCompletedTasks(sl()))
@@ -82,8 +84,9 @@ void registerOrdersFeature(GetIt sl) {
     ..registerFactory(() => ReportDeliveryFailed(sl()))
     // Cubits
     ..registerFactory(() => OrdersCubit(sl()))
-    ..registerFactory(
-      () => OrderWizardCubit(
+    // param1: the past order to repeat, or null for a fresh order.
+    ..registerFactoryParam<OrderWizardCubit, LaundryOrder?, void>(
+      (reorderFrom, _) => OrderWizardCubit(
         getCategories: sl(),
         getSubServices: sl(),
         getTiers: sl(),
@@ -91,10 +94,11 @@ void registerOrdersFeature(GetIt sl) {
         getDeliverySlots: sl(),
         getAddresses: sl(),
         createOrder: sl(),
+        reorderFrom: reorderFrom,
       ),
     )
     ..registerFactoryParam<OrderTrackingCubit, String, void>(
-      (orderId, _) => OrderTrackingCubit(orderId, sl(), sl()),
+      (orderId, _) => OrderTrackingCubit(orderId, sl(), sl(), sl()),
     )
     ..registerFactory(() => DriverTasksCubit(sl(), sl(), sl()))
     ..registerFactoryParam<TaskDetailCubit, String, void>(

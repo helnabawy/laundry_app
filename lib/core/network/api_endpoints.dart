@@ -19,12 +19,18 @@ abstract final class ApiEndpoints {
   static const me = '/api/me';
   static const profile = '/api/me/profile';
   static const addresses = '/api/me/addresses';
+  static String address(String addressId) => '/api/me/addresses/$addressId';
 
   static String orderInvoice(String orderId) => '/api/orders/$orderId/invoice';
   static String invoicePayment(String invoiceId) =>
       '/api/invoices/$invoiceId/payment';
   static String orderPaymentMethod(String orderId) =>
       '/api/orders/$orderId/payment-method';
+  static String orderRating(String orderId) => '/api/orders/$orderId/rating';
+
+  static const supportInvoiceFaqs = '/api/support/faqs/invoice';
+  static const supportAssistant = '/api/support/assistant';
+  static const supportRequests = '/api/support/requests';
 
   static const driverMe = '/api/driver/me';
   static const driverAvailability = '/api/driver/availability';

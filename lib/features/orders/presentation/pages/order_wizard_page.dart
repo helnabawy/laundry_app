@@ -12,6 +12,7 @@ import '../../../../core/utils/formatters.dart';
 import '../../../addresses/domain/entities/address.dart';
 import '../../../addresses/presentation/widgets/address_picker_sheet.dart';
 import '../../../addresses/presentation/widgets/address_tile.dart';
+import '../../domain/entities/laundry_order.dart';
 import '../../domain/entities/sub_service.dart';
 import '../../domain/entities/time_slot.dart';
 import '../cubit/order_wizard_cubit.dart';
@@ -23,12 +24,15 @@ import 'order_confirmation_view.dart';
 /// A single route hosts all four steps plus the confirmation, so the cubit's
 /// state survives the whole flow.
 class OrderWizardPage extends StatelessWidget {
-  const OrderWizardPage({super.key});
+  const OrderWizardPage({super.key, this.reorderFrom});
+
+  /// A past order to repeat: the wizard opens filled from it.
+  final LaundryOrder? reorderFrom;
 
   @override
   Widget build(BuildContext context) {
     return BlocProvider(
-      create: (_) => sl<OrderWizardCubit>(),
+      create: (_) => sl<OrderWizardCubit>(param1: reorderFrom),
       child: const _OrderWizardView(),
     );
   }
@@ -378,6 +382,20 @@ class _ScheduleStep extends StatelessWidget {
     return ListView(
       padding: const EdgeInsets.only(bottom: DesignSpace.huge),
       children: [
+        if (state.reorderOf case final number?)
+          Padding(
+            padding: const EdgeInsets.fromLTRB(
+              DesignSpace.gutter,
+              DesignSpace.lg,
+              DesignSpace.gutter,
+              0,
+            ),
+            child: NoticeBlock(
+              glyph: const Icon(CupertinoIcons.arrow_clockwise),
+              title: l10n.reorderNoticeTitle(number.toString()),
+              message: l10n.reorderNoticeBody,
+            ),
+          ),
         Padding(
           padding: const EdgeInsets.symmetric(horizontal: DesignSpace.gutter),
           child: StampHeading(
@@ -468,7 +486,10 @@ class _DaySelector extends StatelessWidget {
   Widget build(BuildContext context) {
     final format = AppFormat.of(context);
     final start = DateUtils.dateOnly(minDay ?? DateTime.now());
-    final days = List.generate(6, (i) => start.add(Duration(days: i)));
+    final days = List.generate(
+      OrderWizardCubit.scheduleDays,
+      (i) => DateUtils.addDaysToDate(start, i),
+    );
     return SizedBox(
       height: 62,
       child: ListView.separated(

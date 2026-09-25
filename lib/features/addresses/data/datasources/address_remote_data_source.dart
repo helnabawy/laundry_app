@@ -6,6 +6,8 @@ import '../models/address_model.dart';
 abstract interface class AddressRemoteDataSource {
   Future<List<Address>> getAddresses();
   Future<Address> addAddress(NewAddress address);
+  Future<Address> updateAddress(String id, NewAddress address);
+  Future<void> deleteAddress(String id);
 }
 
 class AddressApiDataSource implements AddressRemoteDataSource {
@@ -30,4 +32,17 @@ class AddressApiDataSource implements AddressRemoteDataSource {
     );
     return AddressModel.fromJson(json as Map<String, dynamic>);
   }
+
+  @override
+  Future<Address> updateAddress(String id, NewAddress address) async {
+    final json = await _api.put(
+      ApiEndpoints.address(id),
+      data: AddressModel.toJson(address),
+    );
+    return AddressModel.fromJson(json as Map<String, dynamic>);
+  }
+
+  @override
+  Future<void> deleteAddress(String id) =>
+      _api.delete(ApiEndpoints.address(id));
 }

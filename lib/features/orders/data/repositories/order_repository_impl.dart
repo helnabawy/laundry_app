@@ -25,6 +25,20 @@ class OrderRepositoryImpl implements OrderRepository {
   @override
   Future<Result<LaundryOrder>> choosePaymentMethod(
     String orderId,
-    PaymentMethod method,
-  ) => guard(() => _remote.choosePaymentMethod(orderId, method));
+    PaymentMethod method, {
+    required bool conditionsAcknowledged,
+  }) => guard(
+    () => _remote.choosePaymentMethod(
+      orderId,
+      method,
+      conditionsAcknowledged: conditionsAcknowledged,
+    ),
+  );
+
+  @override
+  Future<Result<LaundryOrder>> rateOrder(
+    String orderId, {
+    required int stars,
+    String? comment,
+  }) => guard(() => _remote.rateOrder(orderId, stars: stars, comment: comment));
 }

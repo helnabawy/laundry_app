@@ -12,6 +12,7 @@ import '../../domain/entities/order_status.dart';
 import '../cubit/task_detail_cubit.dart';
 import '../widgets/failure_reason_sheet.dart';
 import '../widgets/map_placeholder.dart';
+import '../widgets/proof_photo_field.dart';
 import '../widgets/stop_contact.dart';
 
 /// One delivery stop: hand the items over, collect what is owed, confirm.
@@ -51,8 +52,14 @@ class _DeliveryDetailViewState extends State<_DeliveryDetailView> {
           (curr.failure != null && curr.failure != prev.failure),
       listener: (context, state) {
         if (state.done) {
-          ScaffoldMessenger.of(context)
-              .showSnackBar(SnackBar(content: Text(l10n.deliveryConfirmed)));
+          final reported = state.order?.status == OrderStatus.deliveryFailed;
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text(
+                reported ? l10n.reportSubmitted : l10n.deliveryConfirmed,
+              ),
+            ),
+          );
           context.pop(true);
           return;
         }
@@ -181,7 +188,45 @@ class _DeliveryDetailViewState extends State<_DeliveryDetailView> {
                             value: format.money(invoice.total),
                             emphasised: true,
                           ),
-                          const SizedBox(height: DesignSpace.lg),
+                        ],
+                      ),
+                    ),
+                    // Payment is always settled one of two ways: online (already
+                    // charged) or in cash at the door. The customer's choice
+                    // decides which applies; the driver sees it, never guesses.
+                    LabelGroup(
+                      heading: l10n.paymentMethod,
+                      children: [
+                        LabelRow(
+                          title: l10n.card,
+                          selected: invoice.paymentMethod == PaymentMethod.card,
+                          trailing: invoice.paymentMethod == PaymentMethod.card
+                              ? const Icon(CupertinoIcons.checkmark_alt)
+                              : null,
+                        ),
+                        LabelRow(
+                          title: l10n.cashOnDelivery,
+                          selected:
+                              invoice.paymentMethod ==
+                              PaymentMethod.cashOnDelivery,
+                          trailing:
+                              invoice.paymentMethod ==
+                                  PaymentMethod.cashOnDelivery
+                              ? const Icon(CupertinoIcons.checkmark_alt)
+                              : null,
+                        ),
+                      ],
+                    ),
+                    Padding(
+                      padding: const EdgeInsets.fromLTRB(
+                        DesignSpace.gutter,
+                        DesignSpace.lg,
+                        DesignSpace.gutter,
+                        0,
+                      ),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.stretch,
+                        children: [
                           if (needsCollection)
                             _CollectCash(
                               amount: format.money(invoice.total),
@@ -212,8 +257,9 @@ class _DeliveryDetailViewState extends State<_DeliveryDetailView> {
                         DesignSpace.gutter,
                         DesignSpace.huge,
                       ),
-                      child: _ProofPhotoField(
+                      child: ProofPhotoField(
                         hasPhoto: _hasProofPhoto,
+                        prompt: l10n.takePhotoOptional,
                         onTap: () =>
                             setState(() => _hasProofPhoto = !_hasProofPhoto),
                       ),
@@ -282,52 +328,6 @@ class _CollectCash extends StatelessWidget {
             onPressed: () => onToggle(!collected),
           ),
         ],
-      ),
-    );
-  }
-}
-
-class _ProofPhotoField extends StatelessWidget {
-  const _ProofPhotoField({required this.hasPhoto, required this.onTap});
-
-  final bool hasPhoto;
-  final VoidCallback onTap;
-
-  @override
-  Widget build(BuildContext context) {
-    final l10n = context.l10n;
-    final colors = context.colors;
-
-    return Semantics(
-      button: true,
-      label: hasPhoto ? l10n.retakePhoto : l10n.takePhotoOptional,
-      excludeSemantics: true,
-      child: GestureDetector(
-        behavior: HitTestBehavior.opaque,
-        onTap: onTap,
-        child: Container(
-          padding: const EdgeInsets.symmetric(vertical: DesignSpace.xxl),
-          decoration: BoxDecoration(
-            color: hasPhoto ? colors.tapeRecessed : null,
-            border: Border.all(color: colors.rule),
-            borderRadius: BorderRadius.circular(DesignRadius.panel),
-          ),
-          child: Column(
-            children: [
-              Icon(
-                hasPhoto ? CupertinoIcons.checkmark_alt : CupertinoIcons.camera,
-                color: hasPhoto ? colors.ink : colors.inkTertiary,
-                size: 26,
-              ),
-              const SizedBox(height: DesignSpace.sm),
-              Text(
-                (hasPhoto ? l10n.retakePhoto : l10n.takePhotoOptional)
-                    .toUpperCase(),
-                style: DesignTypography.stamp(colors.inkSecondary),
-              ),
-            ],
-          ),
-        ),
       ),
     );
   }

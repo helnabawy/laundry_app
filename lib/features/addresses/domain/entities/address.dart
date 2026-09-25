@@ -1,5 +1,8 @@
 import 'package:equatable/equatable.dart';
 
+/// What an address is to the customer. A customer can keep several (step 1.4).
+enum AddressKind { home, work, other }
+
 /// Pickup / delivery address (step 1.4: area, building, apartment,
 /// alternate phone).
 class Address extends Equatable {
@@ -9,6 +12,7 @@ class Address extends Equatable {
     required this.area,
     required this.building,
     required this.apartment,
+    this.kind = AddressKind.home,
     this.label,
     this.floor,
     this.alternatePhone,
@@ -17,6 +21,9 @@ class Address extends Equatable {
   });
 
   final String id;
+  final AddressKind kind;
+
+  /// The customer's own name for an [AddressKind.other] address.
   final String? label;
   final String city;
   final String area;
@@ -29,9 +36,22 @@ class Address extends Equatable {
 
   bool get hasCoordinates => latitude != null && longitude != null;
 
+  /// The editable fields, for pre-filling an edit form.
+  NewAddress toNewAddress() => NewAddress(
+    kind: kind,
+    label: label,
+    city: city,
+    area: area,
+    building: building,
+    floor: floor,
+    apartment: apartment,
+    alternatePhone: alternatePhone,
+  );
+
   @override
   List<Object?> get props => [
     id,
+    kind,
     label,
     city,
     area,
@@ -44,18 +64,20 @@ class Address extends Equatable {
   ];
 }
 
-/// Input for creating an [Address].
+/// Input for creating or editing an [Address].
 class NewAddress extends Equatable {
   const NewAddress({
     required this.city,
     required this.area,
     required this.building,
     required this.apartment,
+    this.kind = AddressKind.home,
     this.label,
     this.floor,
     this.alternatePhone,
   });
 
+  final AddressKind kind;
   final String? label;
   final String city;
   final String area;
@@ -73,6 +95,7 @@ class NewAddress extends Equatable {
 
   @override
   List<Object?> get props => [
+    kind,
     label,
     city,
     area,

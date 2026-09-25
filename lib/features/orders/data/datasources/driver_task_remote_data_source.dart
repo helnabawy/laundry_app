@@ -11,8 +11,9 @@ abstract interface class DriverTaskRemoteDataSource {
   Future<LaundryOrder> reportPickupFailed(
     String orderId,
     TaskFailureReason reason,
-    String? note,
-  );
+    String? note, {
+    required bool hasPhoto,
+  });
 
   Future<LaundryOrder> confirmDelivery(
     String orderId, {

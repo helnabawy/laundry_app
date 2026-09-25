@@ -56,6 +56,17 @@ not about an estimate.
 - **Customer flow:** Home → 4-step order wizard (what to clean → service type →
   service level → pickup & delivery slots) → confirmation → tracking timeline →
   invoice → payment (bank card via external browser, or cash on delivery) → delivered.
+- **Condition report (client decision):** stains or damage found while sorting
+  are *always* reported to the customer after sorting and before processing.
+  They appear first on the invoice (plus a notice on tracking), and the
+  customer must tick "I've reviewed the condition report" before choosing a
+  payment method — the step that starts processing. When nothing is found,
+  the invoice says so.
+- **Invoice inquiries (client decision):** there is no direct contact line.
+  "Question about this invoice?" opens common answers first, then an
+  electronic assistant; a team member is the last step, offered only after
+  the assistant has not helped, and only if the customer chooses it (the
+  transcript goes with the hand-off).
 - **Driver flow:** today's tasks split into Pickup and Delivery tabs → task detail
   with map, call/message, and navigation hand-off → confirm pickup (items are
   counted at the laundry, not on the doorstep) → hand over to laundry; or confirm

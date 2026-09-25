@@ -43,15 +43,26 @@ class ReportPickupFailed
     implements
         UseCase<
           LaundryOrder,
-          ({String orderId, TaskFailureReason reason, String? note})
+          ({
+            String orderId,
+            TaskFailureReason reason,
+            String? note,
+            bool hasPhoto,
+          })
         > {
   const ReportPickupFailed(this._repo);
   final DriverTaskRepository _repo;
 
   @override
   Future<Result<LaundryOrder>> call(
-    ({String orderId, TaskFailureReason reason, String? note}) params,
-  ) => _repo.reportPickupFailed(params.orderId, params.reason, params.note);
+    ({String orderId, TaskFailureReason reason, String? note, bool hasPhoto})
+    params,
+  ) => _repo.reportPickupFailed(
+    params.orderId,
+    params.reason,
+    params.note,
+    hasPhoto: params.hasPhoto,
+  );
 }
 
 class ConfirmDelivery

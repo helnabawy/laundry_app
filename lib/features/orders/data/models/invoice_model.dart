@@ -1,4 +1,5 @@
 import '../../domain/entities/invoice.dart';
+import 'item_condition_model.dart';
 import 'order_item_model.dart';
 
 abstract final class InvoiceModel {
@@ -7,6 +8,10 @@ abstract final class InvoiceModel {
     items: (json['items'] as List<dynamic>)
         .cast<Map<String, dynamic>>()
         .map(OrderItemModel.fromJson)
+        .toList(),
+    conditions: ((json['conditions'] as List<dynamic>?) ?? const [])
+        .cast<Map<String, dynamic>>()
+        .map(ItemConditionModel.fromJson)
         .toList(),
     note: json['note'] as String?,
     paymentMethod: (json['paymentMethod'] as String?) != null

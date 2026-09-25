@@ -1,8 +1,10 @@
 import '../../../addresses/data/models/address_model.dart';
 import '../../domain/entities/laundry_order.dart';
 import '../../domain/entities/order_line.dart';
+import '../../domain/entities/order_rating.dart';
 import '../../domain/entities/order_status.dart';
 import '../../domain/entities/order_timeline_event.dart';
+import '../../domain/entities/task_failure.dart';
 import 'invoice_model.dart';
 import 'service_category_model.dart';
 import 'service_tier_model.dart';
@@ -39,6 +41,22 @@ abstract final class LaundryOrderModel {
     invoice: (json['invoice'] as Map<String, dynamic>?) != null
         ? InvoiceModel.fromJson(json['invoice'] as Map<String, dynamic>)
         : null,
+    failure: switch (json['failure']) {
+      final Map<String, dynamic> f => TaskFailure(
+        reason: TaskFailureReason.fromJson(f['reason'] as String),
+        note: f['note'] as String?,
+        hasPhoto: f['hasPhoto'] as bool? ?? false,
+      ),
+      _ => null,
+    },
+    rating: switch (json['rating']) {
+      final Map<String, dynamic> r => OrderRating(
+        stars: r['stars'] as int,
+        comment: r['comment'] as String?,
+        ratedAt: DateTime.parse(r['ratedAt'] as String),
+      ),
+      _ => null,
+    },
   );
 
   /// Reads the multi-line shape, falling back to the single `category` /

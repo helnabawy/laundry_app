@@ -41,7 +41,7 @@ class _MyOrdersPageState extends State<MyOrdersPage> {
                   DesignSpace.gutter,
                   DesignSpace.lg,
                 ),
-                child: _Segmented(
+                child: SegmentedStrip(
                   labels: [
                     '${l10n.activeOrders} (${state.active.length})',
                     '${l10n.pastOrders} (${state.past.length})',
@@ -84,6 +84,16 @@ class _MyOrdersPageState extends State<MyOrdersPage> {
                             await context.push(Routes.orderDetail(order.id));
                             await cubit.load();
                           },
+                          onReorder: order.status.isPast
+                              ? () async {
+                                  final cubit = context.read<OrdersCubit>();
+                                  await context.push(
+                                    Routes.orderNew,
+                                    extra: order,
+                                  );
+                                  await cubit.load();
+                                }
+                              : null,
                         ),
                     ],
                   ),
@@ -92,59 +102,6 @@ class _MyOrdersPageState extends State<MyOrdersPage> {
           ],
         );
       },
-    );
-  }
-}
-
-/// Two fields on one strip; the chosen one inverts.
-class _Segmented extends StatelessWidget {
-  const _Segmented({
-    required this.labels,
-    required this.index,
-    required this.onChanged,
-  });
-
-  final List<String> labels;
-  final int index;
-  final ValueChanged<int> onChanged;
-
-  @override
-  Widget build(BuildContext context) {
-    final colors = context.colors;
-    return DecoratedBox(
-      decoration: BoxDecoration(
-        border: Border.all(color: colors.ruleStrong),
-        borderRadius: BorderRadius.circular(DesignRadius.slot),
-      ),
-      child: Row(
-        children: [
-          for (var i = 0; i < labels.length; i++)
-            Expanded(
-              child: Semantics(
-                button: true,
-                selected: i == index,
-                child: GestureDetector(
-                  behavior: HitTestBehavior.opaque,
-                  onTap: () => onChanged(i),
-                  child: AnimatedContainer(
-                    duration: DesignMotion.quick,
-                    height: 40,
-                    alignment: Alignment.center,
-                    color: i == index ? colors.ink : const Color(0x00000000),
-                    child: Text(
-                      labels[i].toUpperCase(),
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                      style: DesignTypography.stamp(
-                        i == index ? colors.onInk : colors.inkSecondary,
-                      ),
-                    ),
-                  ),
-                ),
-              ),
-            ),
-        ],
-      ),
     );
   }
 }

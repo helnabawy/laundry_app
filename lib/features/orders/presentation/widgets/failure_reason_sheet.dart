@@ -4,26 +4,37 @@ import 'package:flutter/material.dart';
 import '../../../../core/design/design.dart';
 import '../../../../core/l10n/l10n.dart';
 import '../../../addresses/presentation/widgets/address_form_fields.dart';
-import '../../domain/repositories/driver_task_repository.dart';
+import '../../domain/entities/task_failure.dart';
+import 'proof_photo_field.dart';
+
+typedef FailureReport = ({
+  TaskFailureReason reason,
+  String? note,
+  bool hasPhoto,
+});
 
 /// "Couldn't pick up" / "Couldn't deliver": pick a reason, optionally add a
-/// note. The cross modifier is the system's mark for a refusal, so the sheet
-/// wears it.
-Future<({TaskFailureReason reason, String? note})?> showFailureReasonSheet(
+/// note. With [requirePhoto] the driver must also photograph the stop before
+/// submitting — it is the evidence if the customer disputes the report. The
+/// cross modifier is the system's mark for a refusal, so the sheet wears it.
+Future<FailureReport?> showFailureReasonSheet(
   BuildContext context, {
   required String title,
+  bool requirePhoto = false,
 }) {
-  return showModalBottomSheet<({TaskFailureReason reason, String? note})>(
+  return showModalBottomSheet<FailureReport>(
     context: context,
     isScrollControlled: true,
-    builder: (context) => _FailureReasonSheet(title: title),
+    builder: (context) =>
+        _FailureReasonSheet(title: title, requirePhoto: requirePhoto),
   );
 }
 
 class _FailureReasonSheet extends StatefulWidget {
-  const _FailureReasonSheet({required this.title});
+  const _FailureReasonSheet({required this.title, required this.requirePhoto});
 
   final String title;
+  final bool requirePhoto;
 
   @override
   State<_FailureReasonSheet> createState() => _FailureReasonSheetState();
@@ -32,6 +43,11 @@ class _FailureReasonSheet extends StatefulWidget {
 class _FailureReasonSheetState extends State<_FailureReasonSheet> {
   TaskFailureReason _reason = TaskFailureReason.customerAbsent;
   final _noteController = TextEditingController();
+
+  // TODO(camera): capture a real image and upload it with the report; until
+  // the upload endpoint exists this marks the photo as taken, like proof of
+  // delivery does.
+  var _hasPhoto = false;
 
   @override
   void dispose() {
@@ -123,17 +139,37 @@ class _FailureReasonSheetState extends State<_FailureReasonSheet> {
                 textInputAction: TextInputAction.done,
               ),
             ),
+            if (widget.requirePhoto)
+              Padding(
+                padding: const EdgeInsets.fromLTRB(
+                  DesignSpace.gutter,
+                  DesignSpace.xl,
+                  DesignSpace.gutter,
+                  0,
+                ),
+                child: ProofPhotoField(
+                  hasPhoto: _hasPhoto,
+                  prompt: l10n.takePhotoOfStop,
+                  onTap: () => setState(() => _hasPhoto = !_hasPhoto),
+                ),
+              ),
             ActionBar(
+              note: widget.requirePhoto && !_hasPhoto
+                  ? l10n.photoRequiredFirst
+                  : null,
               children: [
                 ActionButton(
                   label: l10n.submit,
                   tone: ActionTone.danger,
-                  onPressed: () => Navigator.pop(context, (
-                    reason: _reason,
-                    note: _noteController.text.trim().isEmpty
-                        ? null
-                        : _noteController.text.trim(),
-                  )),
+                  onPressed: widget.requirePhoto && !_hasPhoto
+                      ? null
+                      : () => Navigator.pop(context, (
+                          reason: _reason,
+                          note: _noteController.text.trim().isEmpty
+                              ? null
+                              : _noteController.text.trim(),
+                          hasPhoto: _hasPhoto,
+                        )),
                 ),
               ],
             ),

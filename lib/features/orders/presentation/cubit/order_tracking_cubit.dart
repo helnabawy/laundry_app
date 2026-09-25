@@ -13,27 +13,36 @@ class OrderTrackingState extends Equatable {
     this.order,
     this.loading = true,
     this.paying = false,
+    this.rating = false,
     this.failure,
   });
 
   final LaundryOrder? order;
   final bool loading;
   final bool paying;
+
+  /// The customer's stars are being sent.
+  final bool rating;
   final Failure? failure;
 
   @override
-  List<Object?> get props => [order, loading, paying, failure];
+  List<Object?> get props => [order, loading, paying, rating, failure];
 }
 
 class OrderTrackingCubit extends Cubit<OrderTrackingState> {
-  OrderTrackingCubit(this._orderId, this._getOrder, this._choosePaymentMethod)
-    : super(const OrderTrackingState()) {
+  OrderTrackingCubit(
+    this._orderId,
+    this._getOrder,
+    this._choosePaymentMethod,
+    this._rateOrder,
+  ) : super(const OrderTrackingState()) {
     load();
   }
 
   final String _orderId;
   final GetOrder _getOrder;
   final ChoosePaymentMethod _choosePaymentMethod;
+  final RateOrder _rateOrder;
 
   Future<void> load() async {
     emit(OrderTrackingState(order: state.order, loading: true));
@@ -47,11 +56,32 @@ class OrderTrackingCubit extends Cubit<OrderTrackingState> {
     );
   }
 
-  Future<void> choosePaymentMethod(PaymentMethod method) async {
+  Future<void> choosePaymentMethod(
+    PaymentMethod method, {
+    required bool conditionsAcknowledged,
+  }) async {
     emit(OrderTrackingState(order: state.order, loading: false, paying: true));
     final result = await _choosePaymentMethod((
       orderId: _orderId,
       method: method,
+      conditionsAcknowledged: conditionsAcknowledged,
+    ));
+    emit(
+      result.fold(
+        onErr: (f) =>
+            OrderTrackingState(order: state.order, loading: false, failure: f),
+        onOk: (order) => OrderTrackingState(order: order, loading: false),
+      ),
+    );
+  }
+
+  Future<void> rate(int stars, {String? comment}) async {
+    if (state.rating) return;
+    emit(OrderTrackingState(order: state.order, loading: false, rating: true));
+    final result = await _rateOrder((
+      orderId: _orderId,
+      stars: stars,
+      comment: comment,
     ));
     emit(
       result.fold(

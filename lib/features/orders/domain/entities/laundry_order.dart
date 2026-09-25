@@ -3,9 +3,11 @@ import 'package:equatable/equatable.dart';
 import '../../../addresses/domain/entities/address.dart';
 import 'invoice.dart';
 import 'order_line.dart';
+import 'order_rating.dart';
 import 'order_status.dart';
 import 'order_timeline_event.dart';
 import 'service_tier.dart';
+import 'task_failure.dart';
 import 'time_slot.dart';
 
 /// A customer order (plan §3 `Order`), from creation through delivery.
@@ -25,6 +27,8 @@ class LaundryOrder extends Equatable {
     required this.timeline,
     this.driverName,
     this.invoice,
+    this.failure,
+    this.rating,
   });
 
   final String id;
@@ -48,6 +52,21 @@ class LaundryOrder extends Equatable {
   final List<OrderTimelineEvent> timeline;
   final String? driverName;
   final Invoice? invoice;
+
+  /// Set once the customer rates the delivered order.
+  final OrderRating? rating;
+
+  /// Only a delivered order can be rated, and only once.
+  bool get canRate => status == OrderStatus.delivered && rating == null;
+
+  /// The driver's report when a pickup or delivery couldn't happen.
+  final TaskFailure? failure;
+
+  /// The driver couldn't collect, so the order was cancelled and the customer
+  /// has to book a new pickup time.
+  bool get pickupFailedAndCancelled =>
+      status == OrderStatus.cancelled &&
+      timeOf(OrderStatus.pickupFailed) != null;
 
   /// `Clothes · Wash & Iron` for one line, `Clothes, Curtains` for several —
   /// the fibre line has no room to spell out a service per category.
@@ -79,5 +98,7 @@ class LaundryOrder extends Equatable {
     timeline,
     driverName,
     invoice,
+    failure,
+    rating,
   ];
 }

@@ -1,6 +1,8 @@
 import 'package:go_router/go_router.dart';
 
-import '../../features/addresses/presentation/pages/add_address_page.dart';
+import '../../features/addresses/domain/entities/address.dart';
+import '../../features/addresses/presentation/pages/address_form_page.dart';
+import '../../features/addresses/presentation/pages/addresses_page.dart';
 import '../../features/auth/domain/entities/app_user.dart';
 import '../../features/auth/domain/entities/phone_number.dart';
 import '../../features/auth/presentation/cubit/session_cubit.dart';
@@ -9,6 +11,7 @@ import '../../features/auth/presentation/pages/language_page.dart';
 import '../../features/auth/presentation/pages/login_page.dart';
 import '../../features/auth/presentation/pages/otp_page.dart';
 import '../../features/auth/presentation/pages/splash_page.dart';
+import '../../features/orders/domain/entities/laundry_order.dart';
 import '../../features/orders/presentation/pages/customer_home_shell.dart';
 import '../../features/orders/presentation/pages/delivery_detail_page.dart';
 import '../../features/orders/presentation/pages/driver_home_shell.dart';
@@ -16,6 +19,8 @@ import '../../features/orders/presentation/pages/invoice_page.dart';
 import '../../features/orders/presentation/pages/order_tracking_page.dart';
 import '../../features/orders/presentation/pages/order_wizard_page.dart';
 import '../../features/orders/presentation/pages/pickup_detail_page.dart';
+import '../../features/support/presentation/pages/assistant_page.dart';
+import '../../features/support/presentation/pages/invoice_help_page.dart';
 import '../locale/locale_cubit.dart';
 import 'refresh_listenable.dart';
 import 'routes.dart';
@@ -52,8 +57,18 @@ GoRouter createRouter({
         builder: (_, _) => const CompleteProfilePage(),
       ),
       GoRoute(
-        path: Routes.addAddress,
-        builder: (_, _) => const AddAddressPage(),
+        path: Routes.addresses,
+        builder: (_, _) => const AddressesPage(),
+        routes: [
+          GoRoute(path: 'new', builder: (_, _) => const AddressFormPage()),
+          GoRoute(
+            path: ':id/edit',
+            redirect: (_, state) =>
+                state.extra is Address ? null : Routes.addresses,
+            builder: (_, state) =>
+                AddressFormPage(editing: state.extra! as Address),
+          ),
+        ],
       ),
       GoRoute(
         path: Routes.customerHome,
@@ -61,7 +76,13 @@ GoRouter createRouter({
       ),
       GoRoute(
         path: Routes.orderNew,
-        builder: (_, _) => const OrderWizardPage(),
+        // `extra` is the past order being repeated, when reordering.
+        builder: (_, state) => OrderWizardPage(
+          reorderFrom: switch (state.extra) {
+            final LaundryOrder order => order,
+            _ => null,
+          },
+        ),
       ),
       GoRoute(
         path: '/orders/:id',
@@ -72,6 +93,20 @@ GoRouter createRouter({
             path: 'invoice',
             builder: (_, state) =>
                 InvoicePage(orderId: state.pathParameters['id']!),
+            routes: [
+              GoRoute(
+                path: 'help',
+                builder: (_, state) =>
+                    InvoiceHelpPage(orderId: state.pathParameters['id']!),
+                routes: [
+                  GoRoute(
+                    path: 'assistant',
+                    builder: (_, state) =>
+                        AssistantPage(orderId: state.pathParameters['id']!),
+                  ),
+                ],
+              ),
+            ],
           ),
         ],
       ),
@@ -128,9 +163,13 @@ String? resolveRedirect({
         Routes.completeProfile,
       };
       if (entryPoints.contains(location)) return home;
-      // Keep each role inside its own area (order screens are customer-only;
-      // `/driver/...` is driver-only).
-      const customerAreaPrefixes = [Routes.customerHome, '/orders'];
+      // Keep each role inside its own area (order and address screens are
+      // customer-only; `/driver/...` is driver-only).
+      const customerAreaPrefixes = [
+        Routes.customerHome,
+        '/orders',
+        Routes.addresses,
+      ];
       final inCustomerArea = customerAreaPrefixes.any(location.startsWith);
       final inDriverArea = location.startsWith(Routes.driverHome);
       if (isDriver && inCustomerArea) return home;

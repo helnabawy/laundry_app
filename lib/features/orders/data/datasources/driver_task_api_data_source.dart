@@ -53,11 +53,12 @@ class DriverTaskApiDataSource implements DriverTaskRemoteDataSource {
   Future<LaundryOrder> reportPickupFailed(
     String orderId,
     TaskFailureReason reason,
-    String? note,
-  ) => _action(
+    String? note, {
+    required bool hasPhoto,
+  }) => _action(
     orderId,
     'report-pickup-failed',
-    data: {'reason': reason.name, 'note': note},
+    data: {'reason': reason.name, 'note': note, 'hasPhoto': hasPhoto},
   );
 
   @override

@@ -1,12 +1,15 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:go_router/go_router.dart';
 
 import '../../../../core/design/design.dart';
 import '../../../../core/di/injection.dart';
 import '../../../../core/l10n/l10n.dart';
+import '../../../../core/router/routes.dart';
 import '../../../../core/utils/formatters.dart';
 import '../../domain/entities/invoice.dart';
+import '../../domain/entities/item_condition.dart';
 import '../../domain/entities/laundry_order.dart';
 import '../cubit/order_tracking_cubit.dart';
 import '../utils/treatment_symbols.dart';
@@ -37,6 +40,10 @@ class _InvoiceView extends StatefulWidget {
 class _InvoiceViewState extends State<_InvoiceView> {
   PaymentMethod _method = PaymentMethod.card;
 
+  /// Stains and damage must be seen before processing starts, and choosing a
+  /// payment method is what starts it.
+  var _acknowledged = false;
+
   @override
   Widget build(BuildContext context) {
     final l10n = context.l10n;
@@ -50,6 +57,8 @@ class _InvoiceViewState extends State<_InvoiceView> {
       builder: (context, state) {
         final order = state.order;
         final invoice = order?.invoice;
+        final mustAcknowledge =
+            invoice != null && invoice.hasConditions && !_acknowledged;
 
         return DetailPage(
           title: l10n.invoiceTitle,
@@ -57,15 +66,23 @@ class _InvoiceViewState extends State<_InvoiceView> {
           bottomBar: invoice == null || invoice.paymentMethod != null
               ? null
               : ActionBar(
+                  note: mustAcknowledge
+                      ? l10n.acknowledgeConditionsFirst
+                      : null,
                   children: [
                     ActionButton(
                       label: l10n.payAmount(
                         AppFormat.of(context).money(invoice.total),
                       ),
                       loading: state.paying,
-                      onPressed: () => context
-                          .read<OrderTrackingCubit>()
-                          .choosePaymentMethod(_method),
+                      onPressed: mustAcknowledge
+                          ? null
+                          : () => context
+                                .read<OrderTrackingCubit>()
+                                .choosePaymentMethod(
+                                  _method,
+                                  conditionsAcknowledged: _acknowledged,
+                                ),
                     ),
                   ],
                 ),
@@ -84,6 +101,8 @@ class _InvoiceViewState extends State<_InvoiceView> {
                   invoice: invoice,
                   method: _method,
                   onMethod: (m) => setState(() => _method = m),
+                  acknowledged: _acknowledged,
+                  onAcknowledged: (v) => setState(() => _acknowledged = v),
                 ),
         );
       },
@@ -97,12 +116,16 @@ class _InvoiceBody extends StatelessWidget {
     required this.invoice,
     required this.method,
     required this.onMethod,
+    required this.acknowledged,
+    required this.onAcknowledged,
   });
 
   final LaundryOrder order;
   final Invoice invoice;
   final PaymentMethod method;
   final ValueChanged<PaymentMethod> onMethod;
+  final bool acknowledged;
+  final ValueChanged<bool> onAcknowledged;
 
   @override
   Widget build(BuildContext context) {
@@ -113,6 +136,12 @@ class _InvoiceBody extends StatelessWidget {
     return ListView(
       padding: EdgeInsets.zero,
       children: [
+        _ConditionReport(
+          invoice: invoice,
+          acknowledged: acknowledged,
+          onAcknowledged: onAcknowledged,
+        ),
+
         // The one honest place for the standardised care symbols: what the
         // facility actually did, derived from the service bought for each
         // category. A line with no mapped service shows no symbols rather
@@ -199,6 +228,29 @@ class _InvoiceBody extends StatelessWidget {
             child: NoticeBlock(title: l10n.laundryNote, message: note),
           ),
 
+        // Not a direct line: FAQs, then the assistant, then — only if the
+        // customer asks — a person.
+        Padding(
+          padding: const EdgeInsets.only(top: DesignSpace.xl),
+          child: LabelGroup(
+            children: [
+              LabelRow(
+                leading: Icon(
+                  CupertinoIcons.question_circle,
+                  color: colors.ink,
+                ),
+                title: l10n.invoiceInquiry,
+                subtitle: l10n.invoiceInquiryNote,
+                trailing: Icon(
+                  CupertinoIcons.chevron_forward,
+                  color: colors.inkTertiary,
+                ),
+                onTap: () => context.push(Routes.orderInvoiceHelp(order.id)),
+              ),
+            ],
+          ),
+        ),
+
         Padding(
           padding: const EdgeInsets.symmetric(horizontal: DesignSpace.gutter),
           child: StampHeading(l10n.paymentMethod),
@@ -239,6 +291,138 @@ class _InvoiceBody extends StatelessWidget {
             ],
           ),
         const SizedBox(height: DesignSpace.huge),
+      ],
+    );
+  }
+}
+
+/// What sorting turned up, shown before anything else on the invoice. The
+/// customer is told in every case — including when nothing was found — and
+/// must tick through any finding before choosing how to pay.
+class _ConditionReport extends StatelessWidget {
+  const _ConditionReport({
+    required this.invoice,
+    required this.acknowledged,
+    required this.onAcknowledged,
+  });
+
+  final Invoice invoice;
+  final bool acknowledged;
+  final ValueChanged<bool> onAcknowledged;
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = context.l10n;
+    final colors = context.colors;
+    final awaitingDecision = invoice.paymentMethod == null;
+
+    if (!invoice.hasConditions) {
+      return Padding(
+        padding: const EdgeInsets.fromLTRB(
+          DesignSpace.gutter,
+          DesignSpace.xl,
+          DesignSpace.gutter,
+          0,
+        ),
+        child: NoticeBlock(
+          tone: NoticeTone.done,
+          glyph: const Icon(CupertinoIcons.checkmark_seal),
+          title: l10n.noConditionsTitle,
+          message: l10n.noConditionsBody,
+        ),
+      );
+    }
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        if (awaitingDecision)
+          Padding(
+            padding: const EdgeInsets.fromLTRB(
+              DesignSpace.gutter,
+              DesignSpace.xl,
+              DesignSpace.gutter,
+              0,
+            ),
+            child: NoticeBlock(
+              tone: NoticeTone.caution,
+              glyph: const Icon(CupertinoIcons.exclamationmark_triangle),
+              title: l10n.conditionsFoundTitle,
+              message: l10n.conditionsFoundBody,
+            ),
+          ),
+        LabelGroup(
+          heading: l10n.conditionReport,
+          children: [
+            for (final condition in invoice.conditions)
+              _ConditionRow(condition: condition),
+            if (awaitingDecision)
+              LabelRow(
+                leading: Icon(
+                  acknowledged
+                      ? CupertinoIcons.checkmark_square_fill
+                      : CupertinoIcons.square,
+                  color: acknowledged ? colors.onInk : colors.ink,
+                ),
+                title: l10n.acknowledgeConditions,
+                selected: acknowledged,
+                onTap: () => onAcknowledged(!acknowledged),
+              ),
+          ],
+        ),
+      ],
+    );
+  }
+}
+
+class _ConditionRow extends StatelessWidget {
+  const _ConditionRow({required this.condition});
+
+  final ItemCondition condition;
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = context.l10n;
+    final colors = context.colors;
+    final kind = switch (condition.kind) {
+      ConditionKind.stain => l10n.conditionStain,
+      ConditionKind.damage => l10n.conditionDamage,
+    };
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        LabelRow(
+          // Shape and word both carry the kind; colour never does alone.
+          leading: Icon(switch (condition.kind) {
+            ConditionKind.stain => CupertinoIcons.drop,
+            ConditionKind.damage => CupertinoIcons.bandage,
+          }, color: colors.signal),
+          title: condition.itemName,
+          subtitle: [kind, ?condition.note].join(' · '),
+        ),
+        if (condition.photoUrl case final url?)
+          Padding(
+            padding: const EdgeInsetsDirectional.fromSTEB(
+              DesignSpace.gutter,
+              0,
+              DesignSpace.gutter,
+              DesignSpace.md,
+            ),
+            child: ClipRRect(
+              borderRadius: BorderRadius.circular(DesignRadius.panel),
+              child: AspectRatio(
+                aspectRatio: 4 / 3,
+                child: Image.network(
+                  url,
+                  fit: BoxFit.cover,
+                  semanticLabel: condition.itemName,
+                  errorBuilder: (_, _, _) =>
+                      ColoredBox(color: colors.tapeSunken),
+                ),
+              ),
+            ),
+          ),
       ],
     );
   }

@@ -64,14 +64,18 @@ class TaskDetailCubit extends Cubit<TaskDetailState> {
 
   Future<void> confirmPickup() => _run(() => _confirmPickup(_orderId));
 
-  Future<void> reportPickupFailed(TaskFailureReason reason, String? note) =>
-      _run(
-        () => _reportPickupFailed((
-          orderId: _orderId,
-          reason: reason,
-          note: note,
-        )),
-      );
+  Future<void> reportPickupFailed(
+    TaskFailureReason reason,
+    String? note, {
+    required bool hasPhoto,
+  }) => _run(
+    () => _reportPickupFailed((
+      orderId: _orderId,
+      reason: reason,
+      note: note,
+      hasPhoto: hasPhoto,
+    )),
+  );
 
   Future<void> confirmDelivery({
     required bool cashCollected,

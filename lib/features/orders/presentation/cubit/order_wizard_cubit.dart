@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:equatable/equatable.dart';
 import 'package:flutter/material.dart' show DateUtils;
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -44,6 +46,7 @@ class OrderWizardState extends Equatable {
     this.submitting = false,
     this.failure,
     this.created,
+    this.reorderOf,
   }) : pickupDay = pickupDay ?? DateUtils.dateOnly(DateTime.now()),
        deliveryDay = deliveryDay ?? DateUtils.dateOnly(DateTime.now());
 
@@ -87,6 +90,10 @@ class OrderWizardState extends Equatable {
   final bool submitting;
   final Failure? failure;
   final LaundryOrder? created;
+
+  /// The past order's number when the wizard was opened to repeat it, so the
+  /// schedule step can say what it was filled from.
+  final int? reorderOf;
 
   /// Every chosen category has a service picked for it.
   bool get everyCategoryServiced =>
@@ -159,6 +166,7 @@ class OrderWizardState extends Equatable {
       created: identical(created, _unset)
           ? this.created
           : created as LaundryOrder?,
+      reorderOf: reorderOf,
     );
   }
 
@@ -188,6 +196,7 @@ class OrderWizardState extends Equatable {
     submitting,
     failure,
     created,
+    reorderOf,
   ];
 }
 
@@ -200,6 +209,7 @@ class OrderWizardCubit extends Cubit<OrderWizardState> {
     required GetDeliverySlots getDeliverySlots,
     required GetAddresses getAddresses,
     required CreateOrder createOrder,
+    LaundryOrder? reorderFrom,
   }) : _getCategories = getCategories,
        _getSubServices = getSubServices,
        _getTiers = getTiers,
@@ -207,9 +217,16 @@ class OrderWizardCubit extends Cubit<OrderWizardState> {
        _getDeliverySlots = getDeliverySlots,
        _getAddresses = getAddresses,
        _createOrder = createOrder,
-       super(OrderWizardState()) {
-    _loadCategories();
+       super(OrderWizardState(reorderOf: reorderFrom?.number)) {
+    if (reorderFrom case final source?) {
+      _prefillFrom(source);
+    } else {
+      _loadCategories();
+    }
   }
+
+  /// How many days the pickup and delivery strips offer.
+  static const scheduleDays = 6;
 
   final GetServiceCategories _getCategories;
   final GetSubServices _getSubServices;
@@ -359,6 +376,148 @@ class OrderWizardCubit extends Cubit<OrderWizardState> {
           if (state.addresses.isEmpty) _loadAddresses(),
           if (state.pickupSlots.isEmpty) _loadPickupSlots(),
         ]);
+    }
+  }
+
+  /// Reorder (plan §9 Stage 5): one tap on a past order lands here with its
+  /// categories, services, level and address already chosen and the soonest
+  /// open windows picked, so confirming is all that is left.
+  ///
+  /// Everything is matched against today's catalog by id: whatever it no
+  /// longer offers is left unchosen and the wizard opens on that step instead.
+  Future<void> _prefillFrom(LaundryOrder source) async {
+    final categoryIds = [for (final line in source.lines) line.category.id];
+    final (
+      categoriesResult,
+      tiersResult,
+      addressesResult,
+      servicesResults,
+    ) = await (
+      _getCategories(),
+      _getTiers(),
+      _getAddresses(),
+      Future.wait([for (final id in categoryIds) _getSubServices(id)]),
+    ).wait;
+    if (isClosed) return;
+
+    final failure =
+        categoriesResult.failureOrNull ??
+        tiersResult.failureOrNull ??
+        addressesResult.failureOrNull ??
+        servicesResults.map((r) => r.failureOrNull).nonNulls.firstOrNull;
+    final categories = categoriesResult.valueOrNull ?? const [];
+    final tiers = tiersResult.valueOrNull ?? const [];
+    final addresses = addressesResult.valueOrNull ?? const [];
+    final servicesByCategory = {
+      for (final (i, id) in categoryIds.indexed)
+        id: ?servicesResults[i].valueOrNull,
+    };
+
+    final selected = [
+      for (final line in source.lines)
+        ?categories.where((c) => c.id == line.category.id).firstOrNull,
+    ];
+    final chosenServices = {
+      for (final line in source.lines)
+        line.category.id: ?servicesByCategory[line.category.id]
+            ?.where((s) => s.id == line.subService.id)
+            .firstOrNull,
+    };
+    final tier = tiers.where((t) => t.id == source.tier.id).firstOrNull;
+    final address =
+        addresses.where((a) => a.id == source.address.id).firstOrNull ??
+        addresses.firstOrNull;
+
+    final allCategories =
+        selected.isNotEmpty && selected.length == source.lines.length;
+    final step = switch ((allCategories, chosenServices.length)) {
+      (false, _) => 1,
+      (_, final n) when n < selected.length => 2,
+      _ when tier == null => 3,
+      _ => 4,
+    };
+
+    emit(
+      state.copyWith(
+        step: step,
+        categories: categories,
+        loadingCategories: false,
+        selectedCategories: selected,
+        subServicesByCategory: servicesByCategory,
+        subServiceByCategory: chosenServices,
+        tiers: tiers,
+        tier: tier,
+        addresses: addresses,
+        address: address,
+        failure: failure,
+      ),
+    );
+    if (step == 4) await _preselectEarliestSlots();
+  }
+
+  /// Picks the first open pickup window within the strip, then the first open
+  /// delivery window the level allows after it. Either can still be changed;
+  /// if nothing is open the customer is left to choose as usual.
+  Future<void> _preselectEarliestSlots() async {
+    final tier = state.tier;
+    if (tier == null) return;
+    emit(state.copyWith(loadingPickupSlots: true));
+    final today = DateUtils.dateOnly(DateTime.now());
+
+    for (var i = 0; i < scheduleDays; i++) {
+      final day = DateUtils.addDaysToDate(today, i);
+      final result = await _getPickupSlots((day: day, tierId: tier.id));
+      if (isClosed) return;
+      if (result.failureOrNull case final f?) {
+        emit(state.copyWith(loadingPickupSlots: false, failure: f));
+        return;
+      }
+      final slots = result.valueOrNull!;
+      final pickup = slots.where((s) => !s.isFull).firstOrNull;
+      if (pickup == null) continue;
+
+      emit(
+        state.copyWith(
+          pickupDay: day,
+          pickupSlots: slots,
+          loadingPickupSlots: false,
+        ),
+      );
+      await selectPickupSlot(pickup);
+      await _preselectEarliestDelivery(pickup, tier);
+      return;
+    }
+    // Nothing open this week: show today's strip and let the customer look.
+    await _loadPickupSlots();
+  }
+
+  Future<void> _preselectEarliestDelivery(
+    TimeSlot pickup,
+    ServiceTier tier,
+  ) async {
+    final notBefore = pickup.start.add(Duration(hours: tier.deliveryHours));
+    final firstDay = DateUtils.dateOnly(notBefore);
+    final lastDay = DateUtils.addDaysToDate(
+      DateUtils.dateOnly(pickup.start),
+      scheduleDays - 1,
+    );
+    for (
+      var day = firstDay;
+      !day.isAfter(lastDay);
+      day = DateUtils.addDaysToDate(day, 1)
+    ) {
+      if (isClosed) return;
+      if (day != state.deliveryDay) await selectDeliveryDay(day);
+      if (isClosed || state.loadingDeliverySlots) return;
+      if (state.deliverySlots.where((s) => !s.isFull).firstOrNull
+          case final slot?) {
+        selectDeliverySlot(slot);
+        return;
+      }
+    }
+    // None open in the strip: go back to the earliest day, still unchosen.
+    if (!isClosed && state.deliveryDay != firstDay) {
+      await selectDeliveryDay(firstDay);
     }
   }
 
