@@ -4,13 +4,14 @@ import '../../features/addresses/domain/entities/address.dart';
 import '../../features/addresses/presentation/pages/address_form_page.dart';
 import '../../features/addresses/presentation/pages/addresses_page.dart';
 import '../../features/auth/domain/entities/app_user.dart';
-import '../../features/auth/domain/entities/phone_number.dart';
+import '../../features/auth/domain/entities/sign_in_request.dart';
 import '../../features/auth/presentation/cubit/session_cubit.dart';
 import '../../features/auth/presentation/pages/complete_profile_page.dart';
 import '../../features/auth/presentation/pages/language_page.dart';
 import '../../features/auth/presentation/pages/login_page.dart';
 import '../../features/auth/presentation/pages/otp_page.dart';
 import '../../features/auth/presentation/pages/splash_page.dart';
+import '../../features/notifications/presentation/pages/notifications_page.dart';
 import '../../features/orders/domain/entities/laundry_order.dart';
 import '../../features/orders/presentation/pages/customer_home_shell.dart';
 import '../../features/orders/presentation/pages/delivery_detail_page.dart';
@@ -47,8 +48,9 @@ GoRouter createRouter({
           GoRoute(
             path: Routes.otpSegment,
             redirect: (_, state) =>
-                state.extra is PhoneNumber ? null : Routes.login,
-            builder: (_, state) => OtpPage(phone: state.extra! as PhoneNumber),
+                state.extra is SignInRequest ? null : Routes.login,
+            builder: (_, state) =>
+                OtpPage(request: state.extra! as SignInRequest),
           ),
         ],
       ),
@@ -76,13 +78,13 @@ GoRouter createRouter({
       ),
       GoRoute(
         path: Routes.orderNew,
-        // `extra` is the past order being repeated, when reordering.
-        builder: (_, state) => OrderWizardPage(
-          reorderFrom: switch (state.extra) {
-            final LaundryOrder order => order,
-            _ => null,
-          },
-        ),
+        // `extra` is the past order being repeated, when reordering, or
+        // `(category: id)` when a service was tapped on Home.
+        builder: (_, state) => switch (state.extra) {
+          final LaundryOrder order => OrderWizardPage(reorderFrom: order),
+          (category: final String id) => OrderWizardPage(startWithCategory: id),
+          _ => const OrderWizardPage(),
+        },
       ),
       GoRoute(
         path: '/orders/:id',
@@ -109,6 +111,10 @@ GoRouter createRouter({
             ],
           ),
         ],
+      ),
+      GoRoute(
+        path: Routes.notifications,
+        builder: (_, _) => const NotificationsPage(),
       ),
       GoRoute(
         path: Routes.driverHome,

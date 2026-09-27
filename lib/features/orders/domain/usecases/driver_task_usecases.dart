@@ -47,7 +47,7 @@ class ReportPickupFailed
             String orderId,
             TaskFailureReason reason,
             String? note,
-            bool hasPhoto,
+            String photoPath,
           })
         > {
   const ReportPickupFailed(this._repo);
@@ -55,13 +55,13 @@ class ReportPickupFailed
 
   @override
   Future<Result<LaundryOrder>> call(
-    ({String orderId, TaskFailureReason reason, String? note, bool hasPhoto})
+    ({String orderId, TaskFailureReason reason, String? note, String photoPath})
     params,
   ) => _repo.reportPickupFailed(
     params.orderId,
     params.reason,
     params.note,
-    hasPhoto: params.hasPhoto,
+    photoPath: params.photoPath,
   );
 }
 
@@ -69,18 +69,18 @@ class ConfirmDelivery
     implements
         UseCase<
           LaundryOrder,
-          ({String orderId, bool cashCollected, bool hasProofPhoto})
+          ({String orderId, bool cashCollected, String? proofPhotoPath})
         > {
   const ConfirmDelivery(this._repo);
   final DriverTaskRepository _repo;
 
   @override
   Future<Result<LaundryOrder>> call(
-    ({String orderId, bool cashCollected, bool hasProofPhoto}) params,
+    ({String orderId, bool cashCollected, String? proofPhotoPath}) params,
   ) => _repo.confirmDelivery(
     params.orderId,
     cashCollected: params.cashCollected,
-    hasProofPhoto: params.hasProofPhoto,
+    proofPhotoPath: params.proofPhotoPath,
   );
 }
 

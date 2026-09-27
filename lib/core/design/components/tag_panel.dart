@@ -4,6 +4,7 @@ import '../tokens/design_colors.dart';
 import '../tokens/design_metrics.dart';
 import '../tokens/design_typography.dart';
 import 'stitch.dart';
+import 'woven_label.dart';
 
 /// The routing tag: the driver's side of the same label.
 ///
@@ -149,6 +150,7 @@ class TagRow extends StatelessWidget {
     this.leading,
     this.onTap,
     this.stamp,
+    this.twinStitched = false,
   });
 
   final String serial;
@@ -158,6 +160,10 @@ class TagRow extends StatelessWidget {
   final Widget? leading;
   final VoidCallback? onTap;
   final Widget? stamp;
+
+  /// Premium service: the row closes on a twin-needle hem instead of the
+  /// single stitch.
+  final bool twinStitched;
 
   @override
   Widget build(BuildContext context) {
@@ -237,7 +243,7 @@ class TagRow extends StatelessWidget {
                   ],
                 ),
               ),
-              const StitchRule(),
+              if (twinStitched) const TwinStitch() else const StitchRule(),
             ],
           ),
         ),

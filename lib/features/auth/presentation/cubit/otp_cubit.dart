@@ -8,6 +8,7 @@ import '../../../../core/config/app_config.dart';
 import '../../../../core/error/failures.dart';
 import '../../domain/entities/app_user.dart';
 import '../../domain/entities/phone_number.dart';
+import '../../domain/entities/sign_in_request.dart';
 import '../../domain/usecases/request_otp.dart';
 import '../../domain/usecases/verify_otp.dart';
 
@@ -71,7 +72,7 @@ class OtpState extends Equatable {
 
 class OtpCubit extends Cubit<OtpState> {
   OtpCubit({
-    required this.phone,
+    required this.request,
     required VerifyOtp verifyOtp,
     required RequestOtp requestOtp,
   }) : _verifyOtp = verifyOtp,
@@ -80,10 +81,12 @@ class OtpCubit extends Cubit<OtpState> {
     _startCountdown();
   }
 
-  final PhoneNumber phone;
+  final SignInRequest request;
   final VerifyOtp _verifyOtp;
   final RequestOtp _requestOtp;
   Timer? _timer;
+
+  PhoneNumber get phone => request.phone;
 
   void codeChanged(String code) {
     emit(state.copyWith(code: code, failure: () => null));
@@ -94,7 +97,11 @@ class OtpCubit extends Cubit<OtpState> {
     if (state.verifying || !state.isComplete) return;
     emit(state.copyWith(verifying: true, failure: () => null));
     final result = await _verifyOtp(
-      VerifyOtpParams(phone: phone, code: state.code),
+      VerifyOtpParams(
+        phone: phone,
+        code: state.code,
+        fullName: request.fullName,
+      ),
     );
     result.fold(
       onErr: (failure) =>

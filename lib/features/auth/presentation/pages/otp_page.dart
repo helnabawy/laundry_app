@@ -6,21 +6,22 @@ import '../../../../core/design/design.dart';
 import '../../../../core/di/injection.dart';
 import '../../../../core/l10n/l10n.dart';
 import '../../../../core/mock/mock_database.dart';
-import '../../domain/entities/phone_number.dart';
+import '../../domain/entities/sign_in_request.dart';
 import '../cubit/otp_cubit.dart';
 import '../cubit/session_cubit.dart';
 import '../widgets/otp_input.dart';
 
 /// 4-digit SMS code with a resend countdown (step 1.3).
 class OtpPage extends StatelessWidget {
-  const OtpPage({super.key, required this.phone});
+  const OtpPage({super.key, required this.request});
 
-  final PhoneNumber phone;
+  final SignInRequest request;
 
   @override
   Widget build(BuildContext context) {
     return BlocProvider(
-      create: (_) => OtpCubit(phone: phone, verifyOtp: sl(), requestOtp: sl()),
+      create: (_) =>
+          OtpCubit(request: request, verifyOtp: sl(), requestOtp: sl()),
       child: const _OtpView(),
     );
   }

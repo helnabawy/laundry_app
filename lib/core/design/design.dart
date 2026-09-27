@@ -8,6 +8,7 @@ library;
 
 export 'components/app_buttons.dart';
 export 'components/app_mark.dart';
+export 'components/confirm_sheet.dart';
 export 'components/custody_strip.dart';
 export 'components/label_rows.dart';
 export 'components/page_scaffold.dart';
@@ -18,6 +19,7 @@ export 'components/state_views.dart';
 export 'components/stitch.dart';
 export 'components/tag_panel.dart';
 export 'components/tape_tab_bar.dart';
+export 'components/woven_label.dart';
 export 'glyphs/care_glyph.dart';
 export 'theme/app_theme.dart';
 export 'tokens/design_colors.dart';

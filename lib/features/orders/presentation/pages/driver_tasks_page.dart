@@ -7,6 +7,7 @@ import '../../../../core/design/design.dart';
 import '../../../../core/l10n/l10n.dart';
 import '../../../../core/router/routes.dart';
 import '../../../../core/utils/formatters.dart';
+import '../../../notifications/presentation/widgets/notification_bell.dart';
 import '../../domain/entities/driver_task.dart';
 import '../cubit/driver_tasks_cubit.dart';
 import '../widgets/task_card.dart';
@@ -51,6 +52,15 @@ class _DriverTasksPageState extends State<DriverTasksPage> {
                         '${format.relativeDay(today)} ${today.day} ${format.month(today)}',
                     count: '${state.pickups.length + state.deliveries.length}',
                     countLabel: l10n.navTasks,
+                    trailing: Padding(
+                      padding: const EdgeInsetsDirectional.only(
+                        start: DesignSpace.sm,
+                      ),
+                      child: OpenNotificationsBell(
+                        color: colors.onTag,
+                        ground: colors.tag,
+                      ),
+                    ),
                   ),
                 ),
                 SliverToBoxAdapter(

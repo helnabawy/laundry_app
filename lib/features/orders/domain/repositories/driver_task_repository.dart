@@ -12,19 +12,20 @@ abstract interface class DriverTaskRepository {
 
   Future<Result<LaundryOrder>> confirmPickup(String orderId);
 
-  /// The driver couldn't collect. A photo of the stop is required; the order
-  /// is cancelled and the customer is notified to book a new pickup time.
+  /// The driver couldn't collect. A photo of the stop ([photoPath], a local
+  /// file) is required; the order is cancelled and the customer is notified to
+  /// book a new pickup time.
   Future<Result<LaundryOrder>> reportPickupFailed(
     String orderId,
     TaskFailureReason reason,
     String? note, {
-    required bool hasPhoto,
+    required String photoPath,
   });
 
   Future<Result<LaundryOrder>> confirmDelivery(
     String orderId, {
     required bool cashCollected,
-    bool hasProofPhoto,
+    String? proofPhotoPath,
   });
   Future<Result<LaundryOrder>> reportDeliveryFailed(
     String orderId,

@@ -20,6 +20,9 @@ abstract final class Routes {
   static String orderAssistant(String id) =>
       '/orders/$id/invoice/help/assistant';
 
+  /// Shared by both roles, so it sits outside either role's area.
+  static const notifications = '/notifications';
+
   static const driverHome = '/driver';
   static String driverPickup(String orderId) => '/driver/pickup/$orderId';
   static String driverDelivery(String orderId) => '/driver/delivery/$orderId';

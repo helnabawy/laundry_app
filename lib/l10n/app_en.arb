@@ -80,6 +80,17 @@
   "completeProfile": "Complete your profile",
   "completeProfileSubtitle": "Tell us your name and where to pick up your items",
   "fullName": "Full name",
+  "completeProfileAddressSubtitle": "Where should we pick up your items?",
+  "welcomeBack": "Welcome back",
+  "useAnotherNumber": "Use another number",
+  "continueAs": "Continue as {name}",
+  "@continueAs": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
   "addressTitle": "Pickup address",
   "addressName": "Address name (optional)",
   "addressType": "Address type",
@@ -289,6 +300,15 @@
   "noPastOrders": "You have no past orders",
   "account": "Account",
   "logout": "Log out",
+  "logoutConfirmTitle": "Log out?",
+  "logoutConfirmBody": "To sign back in, we'll text a code to {phone}.",
+  "@logoutConfirmBody": {
+    "placeholders": {
+      "phone": {
+        "type": "String"
+      }
+    }
+  },
   "todaysTasks": "Today's tasks",
   "shift": "Shift {from} - {to}",
   "@shift": {
@@ -494,5 +514,167 @@
       }
     }
   },
-  "reorderNoticeBody": "Items, service, level and address are filled in. We picked the soonest open times; change them if they don't suit you."
+  "reorderNoticeBody": "Items, service, level and address are filled in from that order. Check the times and confirm.",
+  "placingReorder": "Placing your order…",
+  "cameraAccessDenied": "Allow camera access in Settings to take the photo",
+  "cameraUnavailable": "The camera isn't available right now",
+  "undo": "Undo",
+  "changeTimes": "Change times",
+  "reorderCountdownLead": "Placing your order in",
+  "reorderUndoHint": "Nothing is sent until the count runs out.",
+  "reorderUndone": "Reorder undone. Nothing was sent.",
+  "notifications": "Notifications",
+  "noNotifications": "No notifications yet",
+  "noNotificationsNote": "Every update about your orders lands here, so you can read it again later.",
+  "yesterday": "Yesterday",
+  "unread": "Unread",
+  "notificationsUnreadLabel": "Notifications, {count, plural, =1{1 unread} other{{count} unread}}",
+  "@notificationsUnreadLabel": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "notifDriverAssignedTitle": "Driver assigned",
+  "notifDriverAssignedBody": "A driver will collect order {number} in your pickup window.",
+  "@notifDriverAssignedBody": {
+    "placeholders": {
+      "number": {
+        "type": "String"
+      }
+    }
+  },
+  "notifPickedUpTitle": "Items collected",
+  "notifPickedUpBody": "Order {number} is on its way to the laundry.",
+  "@notifPickedUpBody": {
+    "placeholders": {
+      "number": {
+        "type": "String"
+      }
+    }
+  },
+  "notifInvoiceReadyTitle": "Invoice ready",
+  "notifInvoiceReadyBody": "Your items for order {number} were counted and priced. Review the invoice and pay to start cleaning.",
+  "@notifInvoiceReadyBody": {
+    "placeholders": {
+      "number": {
+        "type": "String"
+      }
+    }
+  },
+  "notifProcessingTitle": "Cleaning started",
+  "notifProcessingBody": "Payment for order {number} is settled and your items are being cleaned.",
+  "@notifProcessingBody": {
+    "placeholders": {
+      "number": {
+        "type": "String"
+      }
+    }
+  },
+  "notifOutForDeliveryTitle": "Out for delivery",
+  "notifOutForDeliveryBody": "Order {number} is on its way back to you.",
+  "@notifOutForDeliveryBody": {
+    "placeholders": {
+      "number": {
+        "type": "String"
+      }
+    }
+  },
+  "notifDeliveredTitle": "Delivered",
+  "notifDeliveredBody": "Order {number} was handed over. Thank you.",
+  "@notifDeliveredBody": {
+    "placeholders": {
+      "number": {
+        "type": "String"
+      }
+    }
+  },
+  "notifPickupFailedBody": "Order {number} was cancelled. Book a new pickup time and we'll come back.",
+  "@notifPickupFailedBody": {
+    "placeholders": {
+      "number": {
+        "type": "String"
+      }
+    }
+  },
+  "notifDeliveryFailedTitle": "We couldn't deliver",
+  "notifDeliveryFailedBody": "Our driver couldn't hand over order {number}.",
+  "@notifDeliveryFailedBody": {
+    "placeholders": {
+      "number": {
+        "type": "String"
+      }
+    }
+  },
+  "notifCancelledTitle": "Order cancelled",
+  "notifCancelledBody": "Order {number} was cancelled.",
+  "@notifCancelledBody": {
+    "placeholders": {
+      "number": {
+        "type": "String"
+      }
+    }
+  },
+  "notifNewPickupTitle": "New pickup",
+  "notifNewPickupBody": "Order {number} was added to your pickups.",
+  "@notifNewPickupBody": {
+    "placeholders": {
+      "number": {
+        "type": "String"
+      }
+    }
+  },
+  "notifNewDeliveryTitle": "New delivery",
+  "notifNewDeliveryBody": "Order {number} is ready to deliver.",
+  "@notifNewDeliveryBody": {
+    "placeholders": {
+      "number": {
+        "type": "String"
+      }
+    }
+  },
+  "notifUpdateTitle": "Order update",
+  "notifUpdateBody": "Order {number} has a new status.",
+  "@notifUpdateBody": {
+    "placeholders": {
+      "number": {
+        "type": "String"
+      }
+    }
+  },
+  "locationOnMap": "Location on map",
+  "pinOnMap": "Pin your door on the map",
+  "pinOnMapNote": "Helps the driver find you without a call",
+  "editLocation": "Edit location",
+  "removeLocation": "Remove",
+  "pickLocationTitle": "Pin location",
+  "pickLocationHint": "Move the map until the pin sits on your door",
+  "confirmLocation": "Use this location",
+  "useMyLocation": "Use my current location",
+  "locationPermissionDenied": "Location access is off. You can still move the map to place the pin.",
+  "locationServiceOff": "Location services are off on this phone. Move the map to place the pin.",
+  "locationUnavailable": "Couldn't find your location. Move the map to place the pin.",
+  "openSettings": "Settings",
+  "mapPreviewSemantics": "Pinned location on the map",
+  "mapAttribution": "© OpenStreetMap contributors",
+  "hoursShort": "{hours}H",
+  "vipSemantics": "{tier} service, delivered within {hours} hours",
+  "@hoursShort": {
+    "placeholders": {
+      "hours": {
+        "type": "int"
+      }
+    }
+  },
+  "@vipSemantics": {
+    "placeholders": {
+      "tier": {
+        "type": "String"
+      },
+      "hours": {
+        "type": "int"
+      }
+    }
+  }
 }

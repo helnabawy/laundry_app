@@ -14,6 +14,7 @@ import '../widgets/failure_reason_sheet.dart';
 import '../widgets/map_placeholder.dart';
 import '../widgets/proof_photo_field.dart';
 import '../widgets/stop_contact.dart';
+import '../widgets/vip_mark.dart';
 
 /// One delivery stop: hand the items over, collect what is owed, confirm.
 class DeliveryDetailPage extends StatelessWidget {
@@ -39,7 +40,7 @@ class _DeliveryDetailView extends StatefulWidget {
 
 class _DeliveryDetailViewState extends State<_DeliveryDetailView> {
   var _cashCollected = false;
-  var _hasProofPhoto = false;
+  String? _proofPhotoPath;
 
   @override
   Widget build(BuildContext context) {
@@ -102,7 +103,7 @@ class _DeliveryDetailViewState extends State<_DeliveryDetailView> {
                           : () =>
                                 context.read<TaskDetailCubit>().confirmDelivery(
                                   cashCollected: _cashCollected,
-                                  hasProofPhoto: _hasProofPhoto,
+                                  proofPhotoPath: _proofPhotoPath,
                                 ),
                     ),
                     ActionButton(
@@ -140,16 +141,28 @@ class _DeliveryDetailViewState extends State<_DeliveryDetailView> {
                   padding: EdgeInsets.zero,
                   children: [
                     TagPanel(
-                      child: SerialBlock(
-                        serial: order.number.toString(),
-                        size: 34,
-                        color: colors.onTag,
-                        caption:
-                            '${order.customerName} · '
-                            '${order.address.area}${l10n.listSeparator}'
-                            '${order.address.city}',
+                      child: Row(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Expanded(
+                            child: SerialBlock(
+                              serial: order.number.toString(),
+                              size: 34,
+                              color: colors.onTag,
+                              caption:
+                                  '${order.customerName} · '
+                                  '${order.address.area}${l10n.listSeparator}'
+                                  '${order.address.city}',
+                            ),
+                          ),
+                          if (order.tier.isVip) ...[
+                            const SizedBox(width: DesignSpace.md),
+                            VipMark(tier: order.tier, compact: false),
+                          ],
+                        ],
                       ),
                     ),
+                    if (order.tier.isVip) const TwinStitch(),
                     Padding(
                       padding: const EdgeInsets.fromLTRB(
                         DesignSpace.gutter,
@@ -258,10 +271,10 @@ class _DeliveryDetailViewState extends State<_DeliveryDetailView> {
                         DesignSpace.huge,
                       ),
                       child: ProofPhotoField(
-                        hasPhoto: _hasProofPhoto,
+                        photoPath: _proofPhotoPath,
                         prompt: l10n.takePhotoOptional,
-                        onTap: () =>
-                            setState(() => _hasProofPhoto = !_hasProofPhoto),
+                        onChanged: (path) =>
+                            setState(() => _proofPhotoPath = path),
                       ),
                     ),
                   ],

@@ -5,6 +5,7 @@ import '../../../../core/design/design.dart';
 import '../../../../core/l10n/l10n.dart';
 import '../../../../core/utils/formatters.dart';
 import '../../domain/entities/laundry_order.dart';
+import 'vip_mark.dart';
 
 /// A compact order row, in the one label anatomy: serial, service, window.
 class OrderListTile extends StatelessWidget {
@@ -29,7 +30,10 @@ class OrderListTile extends StatelessWidget {
     final format = AppFormat.of(context);
     return LabelRow(
       title: l10n.orderNumber(order.number.toString()),
-      subtitle: '${order.servicesLabel} · ${order.tier.name}',
+      badge: order.tier.isVip ? VipMark(tier: order.tier) : null,
+      subtitle: order.tier.isVip
+          ? order.servicesLabel
+          : '${order.servicesLabel} · ${order.tier.name}',
       value: order.invoice != null ? format.money(order.invoice!.total) : null,
       trailing: switch (onReorder) {
         final reorder? => TintAction(

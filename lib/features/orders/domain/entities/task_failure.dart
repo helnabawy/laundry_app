@@ -7,7 +7,10 @@ enum TaskFailureReason {
   other;
 
   static TaskFailureReason fromJson(String value) =>
-      TaskFailureReason.values.firstWhere((r) => r.name == value, orElse: () => TaskFailureReason.other);
+      TaskFailureReason.values.firstWhere(
+        (r) => r.name == value,
+        orElse: () => TaskFailureReason.other,
+      );
 }
 
 /// What the driver reported when a pickup or delivery couldn't happen.
@@ -15,12 +18,16 @@ enum TaskFailureReason {
 /// Kept on the order so the customer sees why, and so support has the
 /// driver's photo when the customer disputes it.
 class TaskFailure extends Equatable {
-  const TaskFailure({required this.reason, this.note, this.hasPhoto = false});
+  const TaskFailure({required this.reason, this.note, this.photoUrl});
 
   final TaskFailureReason reason;
   final String? note;
-  final bool hasPhoto;
+
+  /// Where the driver's photo of the stop is stored.
+  final String? photoUrl;
+
+  bool get hasPhoto => photoUrl != null;
 
   @override
-  List<Object?> get props => [reason, note, hasPhoto];
+  List<Object?> get props => [reason, note, photoUrl];
 }

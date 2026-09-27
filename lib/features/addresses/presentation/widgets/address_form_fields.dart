@@ -1,9 +1,11 @@
 import 'package:flutter/material.dart';
+import 'package:latlong2/latlong.dart' show LatLng;
 
 import '../../../../core/design/design.dart';
 import '../../../../core/l10n/l10n.dart';
 import '../../domain/entities/address.dart';
 import 'address_tile.dart';
+import 'location_field.dart';
 
 /// Owns the controllers for an address form, optionally pre-filled from
 /// [initial]. The parent owns the [Form] and disposes this.
@@ -16,7 +18,12 @@ class AddressFormData {
       building = TextEditingController(text: initial?.building),
       floor = TextEditingController(text: initial?.floor),
       apartment = TextEditingController(text: initial?.apartment),
-      alternatePhone = TextEditingController(text: initial?.alternatePhone);
+      alternatePhone = TextEditingController(text: initial?.alternatePhone),
+      location = ValueNotifier(
+        initial != null && initial.hasCoordinates
+            ? LatLng(initial.latitude!, initial.longitude!)
+            : null,
+      );
 
   final ValueNotifier<AddressKind> kind;
   final TextEditingController label;
@@ -26,6 +33,9 @@ class AddressFormData {
   final TextEditingController floor;
   final TextEditingController apartment;
   final TextEditingController alternatePhone;
+
+  /// The map pin, if the customer has dropped one.
+  final ValueNotifier<LatLng?> location;
 
   List<TextEditingController> get _all => [
     label,
@@ -47,10 +57,13 @@ class AddressFormData {
     floor: _optional(floor),
     apartment: apartment.text.trim(),
     alternatePhone: _optional(alternatePhone),
+    latitude: location.value?.latitude,
+    longitude: location.value?.longitude,
   );
 
   void dispose() {
     kind.dispose();
+    location.dispose();
     for (final c in _all) {
       c.dispose();
     }
@@ -125,6 +138,7 @@ class AddressFormFields extends StatelessWidget {
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
         _KindField(data: data),
+        LocationField(location: data.location),
         LabelField(
           controller: data.city,
           label: l10n.city,

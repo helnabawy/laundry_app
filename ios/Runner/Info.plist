@@ -37,6 +37,12 @@
 	</array>
 	<key>LSRequiresIPhoneOS</key>
 	<true/>
+	<key>NSCameraUsageDescription</key>
+	<string>Drivers photograph the stop as proof of delivery, or when a pickup can't be completed.</string>
+	<key>NSPhotoLibraryUsageDescription</key>
+	<string>Used only in development builds, where the simulator has no camera.</string>
+	<key>NSLocationWhenInUseUsageDescription</key>
+	<string>Your location is used only when you tap “Use my current location”, to place the pin for a pickup address.</string>
 	<key>UIApplicationSceneManifest</key>
 	<dict>
 		<key>UIApplicationSupportsMultipleScenes</key>

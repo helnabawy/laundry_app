@@ -29,6 +29,7 @@ class AccountPage extends StatelessWidget {
 
     return LargeTitlePage(
       title: l10n.account,
+      trailing: _LogoutAction(phone: user?.phone),
       slivers: [
         SliverToBoxAdapter(
           child: Padding(
@@ -89,29 +90,6 @@ class AccountPage extends StatelessWidget {
                 subtitle: languageCode == 'ar' ? 'Arabic' : 'الإنجليزية',
                 trailing: const Icon(CupertinoIcons.chevron_forward),
                 onTap: () => _pickLanguage(context, languageCode),
-              ),
-            ],
-          ),
-        ),
-        // Log out belongs at the foot of the page, not floating in the middle
-        // of an empty field.
-        SliverFillRemaining(
-          hasScrollBody: false,
-          child: Column(
-            children: [
-              const Spacer(),
-              Padding(
-                padding: const EdgeInsets.fromLTRB(
-                  DesignSpace.gutter,
-                  DesignSpace.huge,
-                  DesignSpace.gutter,
-                  DesignSpace.lg,
-                ),
-                child: ActionButton(
-                  label: l10n.logout,
-                  tone: ActionTone.danger,
-                  onPressed: () => context.read<SessionCubit>().logout(),
-                ),
               ),
             ],
           ),
@@ -183,6 +161,44 @@ class _Initial extends StatelessWidget {
               letter!.toUpperCase(),
               style: DesignTypography.serial(colors.ink, size: 26),
             ),
+    );
+  }
+}
+
+/// Log out lives in the header, where iOS keeps account-level actions, out of
+/// the thumb's path through the list. It is set in the tint like any other
+/// action; the red is saved for the sheet's commit.
+class _LogoutAction extends StatelessWidget {
+  const _LogoutAction({this.phone});
+
+  final String? phone;
+
+  Future<void> _confirm(BuildContext context) async {
+    final l10n = context.l10n;
+    final session = context.read<SessionCubit>();
+    final number = formatUaePhone(phone ?? '');
+    final confirmed = await showConfirmSheet(
+      context,
+      title: l10n.logoutConfirmTitle,
+      // Isolated left-to-right so the number reads correctly in Arabic.
+      message: l10n.logoutConfirmBody('\u2066$number\u2069'),
+      confirmLabel: l10n.logout,
+      cancelLabel: l10n.cancel,
+    );
+    if (confirmed) await session.logout();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final rtl = Directionality.of(context) == TextDirection.rtl;
+    return TintAction(
+      label: context.l10n.logout,
+      // The door arrow points out of the page in reading direction.
+      trailing: Transform.flip(
+        flipX: rtl,
+        child: const Icon(CupertinoIcons.square_arrow_right),
+      ),
+      onPressed: () => _confirm(context),
     );
   }
 }

@@ -85,8 +85,9 @@ void registerOrdersFeature(GetIt sl) {
     // Cubits
     ..registerFactory(() => OrdersCubit(sl()))
     // param1: the past order to repeat, or null for a fresh order.
-    ..registerFactoryParam<OrderWizardCubit, LaundryOrder?, void>(
-      (reorderFrom, _) => OrderWizardCubit(
+    // param2: a category id already chosen on Home, or null.
+    ..registerFactoryParam<OrderWizardCubit, LaundryOrder?, String?>(
+      (reorderFrom, startWithCategory) => OrderWizardCubit(
         getCategories: sl(),
         getSubServices: sl(),
         getTiers: sl(),
@@ -95,6 +96,7 @@ void registerOrdersFeature(GetIt sl) {
         getAddresses: sl(),
         createOrder: sl(),
         reorderFrom: reorderFrom,
+        startWithCategory: startWithCategory,
       ),
     )
     ..registerFactoryParam<OrderTrackingCubit, String, void>(

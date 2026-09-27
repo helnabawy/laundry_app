@@ -8,19 +8,23 @@ import '../../../../core/design/design.dart';
 import '../../../../core/di/injection.dart';
 import '../../../../core/l10n/l10n.dart';
 import '../../../auth/presentation/widgets/account_page.dart';
+import '../../../notifications/presentation/cubit/notifications_cubit.dart';
 import '../cubit/driver_tasks_cubit.dart';
 import 'driver_history_page.dart';
 import 'driver_tasks_page.dart';
 
 /// Tab shell for the driver role. Tasks and history share one
-/// [DriverTasksCubit] loaded here.
+/// [DriverTasksCubit] loaded here, and the bell's [NotificationsCubit].
 class DriverHomeShell extends StatelessWidget {
   const DriverHomeShell({super.key});
 
   @override
   Widget build(BuildContext context) {
-    return BlocProvider(
-      create: (_) => sl<DriverTasksCubit>()..load(),
+    return MultiBlocProvider(
+      providers: [
+        BlocProvider(create: (_) => sl<DriverTasksCubit>()..load()),
+        BlocProvider(create: (_) => sl<NotificationsCubit>()..load()),
+      ],
       child: const _DriverHomeView(),
     );
   }
@@ -41,6 +45,7 @@ class _DriverHomeViewState extends State<_DriverHomeView> {
   void _select(int index) {
     setState(() => _index = index);
     if (index != 2) unawaited(context.read<DriverTasksCubit>().load());
+    unawaited(context.read<NotificationsCubit>().load());
   }
 
   @override

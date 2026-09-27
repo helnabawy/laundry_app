@@ -8,7 +8,8 @@ import '../../../addresses/presentation/widgets/address_form_fields.dart';
 import '../cubit/complete_profile_cubit.dart';
 import '../cubit/session_cubit.dart';
 
-/// First login only: name + first address (step 1.4).
+/// First login only: the first pickup address (step 1.4). The name was typed
+/// on the login screen; it is asked here only if that didn't save.
 class CompleteProfilePage extends StatelessWidget {
   const CompleteProfilePage({super.key});
 
@@ -40,10 +41,16 @@ class _CompleteProfileViewState extends State<_CompleteProfileView> {
     super.dispose();
   }
 
+  // Read once: the field shouldn't vanish mid-edit when the session updates.
+  late final _askName = switch (context.read<SessionCubit>().state) {
+    SessionAuthenticated(:final user) => user.fullName?.trim().isEmpty ?? true,
+    _ => true,
+  };
+
   void _submit() {
     if (!_formKey.currentState!.validate()) return;
     context.read<CompleteProfileCubit>().submit(
-      fullName: _name.text,
+      fullName: _askName ? _name.text : null,
       address: _address.toNewAddress(),
     );
   }
@@ -63,7 +70,9 @@ class _CompleteProfileViewState extends State<_CompleteProfileView> {
       },
       builder: (context, state) => FlowPage(
         title: l10n.completeProfile,
-        subtitle: l10n.completeProfileSubtitle,
+        subtitle: _askName
+            ? l10n.completeProfileSubtitle
+            : l10n.completeProfileAddressSubtitle,
         // Going back means using a different number.
         onBack: context.read<SessionCubit>().logout,
         bottomBar: ActionBar(
@@ -85,14 +94,17 @@ class _CompleteProfileViewState extends State<_CompleteProfileView> {
               DesignSpace.huge,
             ),
             children: [
-              LabelField(
-                controller: _name,
-                label: l10n.fullName,
-                validator: (v) =>
-                    (v == null || v.trim().isEmpty) ? l10n.requiredField : null,
-              ),
-              StampHeading(l10n.addressTitle),
-              const SizedBox(height: DesignSpace.sm),
+              if (_askName) ...[
+                LabelField(
+                  controller: _name,
+                  label: l10n.fullName,
+                  validator: (v) => (v == null || v.trim().isEmpty)
+                      ? l10n.requiredField
+                      : null,
+                ),
+                StampHeading(l10n.addressTitle),
+                const SizedBox(height: DesignSpace.sm),
+              ],
               AddressFormFields(data: _address),
             ],
           ),

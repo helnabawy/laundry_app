@@ -45,7 +45,7 @@ abstract final class LaundryOrderModel {
       final Map<String, dynamic> f => TaskFailure(
         reason: TaskFailureReason.fromJson(f['reason'] as String),
         note: f['note'] as String?,
-        hasPhoto: f['hasPhoto'] as bool? ?? false,
+        photoUrl: f['photoUrl'] as String?,
       ),
       _ => null,
     },

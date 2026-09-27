@@ -68,7 +68,7 @@ void main() {
         orderId,
         TaskFailureReason.customerAbsent,
         null,
-        hasPhoto: false,
+        photoPath: '',
       ),
       throwsA(isA<ServerException>()),
     );
@@ -80,7 +80,7 @@ void main() {
       orderId,
       TaskFailureReason.customerAbsent,
       'No answer at the door',
-      hasPhoto: true,
+      photoPath: '/tmp/stop.jpg',
     );
 
     expect(order.status, OrderStatus.cancelled);
@@ -90,7 +90,7 @@ void main() {
       const TaskFailure(
         reason: TaskFailureReason.customerAbsent,
         note: 'No answer at the door',
-        hasPhoto: true,
+        photoUrl: '/tmp/stop.jpg',
       ),
     );
 

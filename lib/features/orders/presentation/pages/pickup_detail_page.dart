@@ -12,6 +12,7 @@ import '../utils/category_icons.dart';
 import '../widgets/failure_reason_sheet.dart';
 import '../widgets/map_placeholder.dart';
 import '../widgets/stop_contact.dart';
+import '../widgets/vip_mark.dart';
 
 /// One pickup stop, printed on the routing tag.
 class PickupDetailPage extends StatelessWidget {
@@ -90,13 +91,19 @@ class _PickupDetailView extends StatelessWidget {
                                 title: l10n.pickupFailed,
                                 requirePhoto: true,
                               );
-                              if (result != null && context.mounted) {
+                              if (result
+                                  case (
+                                    :final reason,
+                                    :final note,
+                                    photoPath: final photo?,
+                                  )
+                                  when context.mounted) {
                                 context
                                     .read<TaskDetailCubit>()
                                     .reportPickupFailed(
-                                      result.reason,
-                                      result.note,
-                                      hasPhoto: result.hasPhoto,
+                                      reason,
+                                      note,
+                                      photoPath: photo,
                                     );
                               }
                             },
@@ -137,14 +144,20 @@ class _PickupDetailView extends StatelessWidget {
                               serial: order.number.toString(),
                               size: 34,
                               color: colors.onTag,
-                              caption:
-                                  '${order.servicesLabel} · '
-                                  '${order.tier.name}',
+                              caption: order.tier.isVip
+                                  ? order.servicesLabel
+                                  : '${order.servicesLabel} · '
+                                        '${order.tier.name}',
                             ),
                           ),
+                          if (order.tier.isVip) ...[
+                            const SizedBox(width: DesignSpace.md),
+                            VipMark(tier: order.tier, compact: false),
+                          ],
                         ],
                       ),
                     ),
+                    if (order.tier.isVip) const TwinStitch(),
                     Padding(
                       padding: const EdgeInsets.fromLTRB(
                         DesignSpace.gutter,

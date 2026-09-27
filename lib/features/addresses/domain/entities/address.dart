@@ -46,6 +46,8 @@ class Address extends Equatable {
     floor: floor,
     apartment: apartment,
     alternatePhone: alternatePhone,
+    latitude: latitude,
+    longitude: longitude,
   );
 
   @override
@@ -75,6 +77,8 @@ class NewAddress extends Equatable {
     this.label,
     this.floor,
     this.alternatePhone,
+    this.latitude,
+    this.longitude,
   });
 
   final AddressKind kind;
@@ -85,6 +89,13 @@ class NewAddress extends Equatable {
   final String? floor;
   final String apartment;
   final String? alternatePhone;
+
+  /// The pin the customer dropped on the map, so the driver navigates to the
+  /// door rather than to the middle of the area. Optional.
+  final double? latitude;
+  final double? longitude;
+
+  bool get hasCoordinates => latitude != null && longitude != null;
 
   bool get isComplete => [
     city,
@@ -103,5 +114,7 @@ class NewAddress extends Equatable {
     floor,
     apartment,
     alternatePhone,
+    latitude,
+    longitude,
   ];
 }

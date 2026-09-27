@@ -10,7 +10,7 @@ import 'proof_photo_field.dart';
 typedef FailureReport = ({
   TaskFailureReason reason,
   String? note,
-  bool hasPhoto,
+  String? photoPath,
 });
 
 /// "Couldn't pick up" / "Couldn't deliver": pick a reason, optionally add a
@@ -44,10 +44,7 @@ class _FailureReasonSheetState extends State<_FailureReasonSheet> {
   TaskFailureReason _reason = TaskFailureReason.customerAbsent;
   final _noteController = TextEditingController();
 
-  // TODO(camera): capture a real image and upload it with the report; until
-  // the upload endpoint exists this marks the photo as taken, like proof of
-  // delivery does.
-  var _hasPhoto = false;
+  String? _photoPath;
 
   @override
   void dispose() {
@@ -148,27 +145,27 @@ class _FailureReasonSheetState extends State<_FailureReasonSheet> {
                   0,
                 ),
                 child: ProofPhotoField(
-                  hasPhoto: _hasPhoto,
+                  photoPath: _photoPath,
                   prompt: l10n.takePhotoOfStop,
-                  onTap: () => setState(() => _hasPhoto = !_hasPhoto),
+                  onChanged: (path) => setState(() => _photoPath = path),
                 ),
               ),
             ActionBar(
-              note: widget.requirePhoto && !_hasPhoto
+              note: widget.requirePhoto && _photoPath == null
                   ? l10n.photoRequiredFirst
                   : null,
               children: [
                 ActionButton(
                   label: l10n.submit,
                   tone: ActionTone.danger,
-                  onPressed: widget.requirePhoto && !_hasPhoto
+                  onPressed: widget.requirePhoto && _photoPath == null
                       ? null
                       : () => Navigator.pop(context, (
                           reason: _reason,
                           note: _noteController.text.trim().isEmpty
                               ? null
                               : _noteController.text.trim(),
-                          hasPhoto: _hasPhoto,
+                          photoPath: _photoPath,
                         )),
                 ),
               ],

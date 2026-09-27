@@ -24,15 +24,19 @@ import 'order_confirmation_view.dart';
 /// A single route hosts all four steps plus the confirmation, so the cubit's
 /// state survives the whole flow.
 class OrderWizardPage extends StatelessWidget {
-  const OrderWizardPage({super.key, this.reorderFrom});
+  const OrderWizardPage({super.key, this.reorderFrom, this.startWithCategory});
 
   /// A past order to repeat: the wizard opens filled from it.
   final LaundryOrder? reorderFrom;
 
+  /// A category id already chosen on Home: the wizard opens on step 2.
+  final String? startWithCategory;
+
   @override
   Widget build(BuildContext context) {
     return BlocProvider(
-      create: (_) => sl<OrderWizardCubit>(param1: reorderFrom),
+      create: (_) =>
+          sl<OrderWizardCubit>(param1: reorderFrom, param2: startWithCategory),
       child: const _OrderWizardView(),
     );
   }
@@ -57,6 +61,36 @@ class _OrderWizardView extends StatelessWidget {
           return OrderConfirmationView(order: order);
         }
         final cubit = context.read<OrderWizardCubit>();
+        switch (state.reorderStage) {
+          // Until the order is sent, leaving the page by any route — Undo,
+          // the back button, the edge swipe — is the undo.
+          case ReorderStage.preparing || ReorderStage.countdown:
+            return PopScope(
+              onPopInvokedWithResult: (didPop, _) {
+                if (!didPop) return;
+                cubit.undoReorder();
+                ScaffoldMessenger.of(context)
+                    .showSnackBar(SnackBar(content: Text(l10n.reorderUndone)));
+              },
+              child: state.reorderStage == ReorderStage.countdown
+                  ? _ReorderCountdown(state: state, cubit: cubit)
+                  : DetailPage(
+                      title: l10n.reorder,
+                      child: LoadingView(label: l10n.placingReorder),
+                    ),
+            );
+          // Once sent there is nothing left to undo, so the page holds still.
+          case ReorderStage.sending || ReorderStage.undone:
+            return PopScope(
+              canPop: false,
+              child: DetailPage(
+                title: l10n.reorder,
+                child: LoadingView(label: l10n.placingReorder),
+              ),
+            );
+          case null:
+            break;
+        }
         final title = switch (state.step) {
           1 => l10n.whatToWash,
           2 => l10n.serviceType,
@@ -91,6 +125,131 @@ class _OrderWizardView extends StatelessWidget {
           ),
         );
       },
+    );
+  }
+}
+
+/// The undo window of a one-tap reorder: what is about to be ordered, a
+/// draining count, and the way out. Nothing has been sent while this shows.
+class _ReorderCountdown extends StatelessWidget {
+  const _ReorderCountdown({required this.state, required this.cubit});
+
+  final OrderWizardState state;
+  final OrderWizardCubit cubit;
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = context.l10n;
+    final colors = context.colors;
+    final format = AppFormat.of(context);
+    final pickup = state.pickupSlot!;
+    final delivery = state.deliverySlot!;
+    final address = state.address!;
+    final window = cubit.undoWindow;
+
+    return DetailPage(
+      title: l10n.reorderNoticeTitle(state.reorderOf.toString()),
+      bottomBar: ActionBar(
+        children: [
+          ActionButton(
+            label: l10n.undo,
+            icon: const Icon(CupertinoIcons.arrow_uturn_left),
+            onPressed: () => context.pop(),
+          ),
+        ],
+      ),
+      child: ListView(
+        padding: const EdgeInsets.only(bottom: DesignSpace.huge),
+        children: [
+          TapeBand(
+            padding: const EdgeInsets.symmetric(
+              horizontal: DesignSpace.gutter,
+              vertical: DesignSpace.xxl,
+            ),
+            child: TweenAnimationBuilder<double>(
+              tween: Tween(begin: 1, end: 0),
+              duration: window,
+              builder: (context, left, _) {
+                final seconds = (left * window.inMilliseconds / 1000).ceil();
+                return Column(
+                  children: [
+                    Text(
+                      l10n.reorderCountdownLead.toUpperCase(),
+                      textAlign: TextAlign.center,
+                      style: DesignTypography.stamp(colors.inkSecondary),
+                    ),
+                    const SizedBox(height: DesignSpace.sm),
+                    Semantics(
+                      liveRegion: true,
+                      child: Text(
+                        '$seconds',
+                        style: DesignTypography.serial(colors.ink, size: 56),
+                      ),
+                    ),
+                    const SizedBox(height: DesignSpace.lg),
+                    ClipRRect(
+                      borderRadius: BorderRadius.circular(DesignRadius.slot),
+                      child: LinearProgressIndicator(
+                        value: left,
+                        minHeight: 3,
+                        color: colors.ink,
+                        backgroundColor: colors.rule,
+                      ),
+                    ),
+                    const SizedBox(height: DesignSpace.md),
+                    Text(
+                      l10n.reorderUndoHint,
+                      textAlign: TextAlign.center,
+                      style: Theme.of(context).textTheme.bodySmall
+                          ?.copyWith(color: colors.inkSecondary),
+                    ),
+                  ],
+                );
+              },
+            ),
+          ),
+          LabelGroup(
+            children: [
+              for (final category in state.selectedCategories)
+                LabelRow(
+                  leading: CareGlyphIcon(
+                    categoryGlyph(category.id),
+                    color: colors.ink,
+                    size: 26,
+                  ),
+                  title: category.name,
+                  subtitle: state.subServiceByCategory[category.id]?.name,
+                  value: state.tier?.name,
+                ),
+              LabelRow(
+                title: l10n.pickupTime,
+                subtitle: format.slotRelative(pickup.start, pickup.end),
+              ),
+              LabelRow(
+                title: l10n.deliveryTime,
+                subtitle: format.slotRelative(delivery.start, delivery.end),
+              ),
+              LabelRow(
+                title: address.name(l10n),
+                subtitle: address.summary(l10n),
+              ),
+            ],
+          ),
+          Padding(
+            padding: const EdgeInsets.symmetric(
+              horizontal: DesignSpace.gutter,
+              vertical: DesignSpace.md,
+            ),
+            child: Align(
+              alignment: AlignmentDirectional.centerStart,
+              child: TintAction(
+                label: l10n.changeTimes,
+                onPressed: cubit.editReorder,
+              ),
+            ),
+          ),
+        ],
+      ),
     );
   }
 }

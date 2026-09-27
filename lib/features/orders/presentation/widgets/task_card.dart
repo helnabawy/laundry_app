@@ -5,6 +5,7 @@ import '../../../../core/l10n/l10n.dart';
 import '../../../../core/utils/formatters.dart';
 import '../../domain/entities/driver_task.dart';
 import '../utils/category_icons.dart';
+import 'vip_mark.dart';
 
 /// One stop in the driver's day, printed as a tag row.
 class TaskCard extends StatelessWidget {
@@ -32,13 +33,8 @@ class TaskCard extends StatelessWidget {
         // One dot standard, two VIP: the level is read off the modifier.
         dots: order.tier.isVip ? 2 : 1,
       ),
-      stamp: order.tier.isVip
-          ? const StatusStamp(
-              label: 'VIP',
-              tone: StampTone.field,
-              compact: true,
-            )
-          : null,
+      stamp: order.tier.isVip ? VipMark(tier: order.tier) : null,
+      twinStitched: order.tier.isVip,
       onTap: onTap,
     );
   }

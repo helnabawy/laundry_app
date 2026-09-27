@@ -1,3 +1,5 @@
+import 'package:dio/dio.dart';
+
 import '../../../../core/network/api_client.dart';
 import '../../../../core/network/api_endpoints.dart';
 import '../../domain/entities/driver_task.dart';
@@ -54,22 +56,30 @@ class DriverTaskApiDataSource implements DriverTaskRemoteDataSource {
     String orderId,
     TaskFailureReason reason,
     String? note, {
-    required bool hasPhoto,
-  }) => _action(
+    required String photoPath,
+  }) async => _action(
     orderId,
     'report-pickup-failed',
-    data: {'reason': reason.name, 'note': note, 'hasPhoto': hasPhoto},
+    data: FormData.fromMap({
+      'reason': reason.name,
+      'note': ?note,
+      'photo': await MultipartFile.fromFile(photoPath),
+    }),
   );
 
   @override
   Future<LaundryOrder> confirmDelivery(
     String orderId, {
     required bool cashCollected,
-    bool hasProofPhoto = false,
-  }) => _action(
+    String? proofPhotoPath,
+  }) async => _action(
     orderId,
     'confirm-delivery',
-    data: {'cashCollected': cashCollected, 'hasProofPhoto': hasProofPhoto},
+    data: FormData.fromMap({
+      'cashCollected': cashCollected,
+      if (proofPhotoPath != null)
+        'photo': await MultipartFile.fromFile(proofPhotoPath),
+    }),
   );
 
   @override

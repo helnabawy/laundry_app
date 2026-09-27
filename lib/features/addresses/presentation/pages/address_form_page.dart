@@ -51,8 +51,16 @@ class _AddressFormViewState extends State<_AddressFormView> {
   }
 
   Future<void> _delete() async {
+    final l10n = context.l10n;
     final cubit = context.read<AddressFormCubit>();
-    if (await _confirmDelete(context) ?? false) await cubit.delete();
+    final confirmed = await showConfirmSheet(
+      context,
+      title: l10n.deleteAddressConfirm,
+      message: l10n.deleteAddressConfirmBody,
+      confirmLabel: l10n.deleteAddress,
+      cancelLabel: l10n.cancel,
+    );
+    if (confirmed) await cubit.delete();
   }
 
   @override
@@ -110,54 +118,4 @@ class _AddressFormViewState extends State<_AddressFormView> {
       ),
     );
   }
-}
-
-Future<bool?> _confirmDelete(BuildContext context) {
-  return showModalBottomSheet<bool>(
-    context: context,
-    builder: (sheetContext) {
-      final l10n = sheetContext.l10n;
-      final colors = sheetContext.colors;
-      return SafeArea(
-        child: Padding(
-          padding: const EdgeInsets.fromLTRB(
-            DesignSpace.gutter,
-            DesignSpace.sm,
-            DesignSpace.gutter,
-            DesignSpace.lg,
-          ),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              Text(
-                l10n.deleteAddressConfirm,
-                textAlign: TextAlign.center,
-                style: Theme.of(sheetContext).textTheme.titleMedium,
-              ),
-              const SizedBox(height: DesignSpace.xs),
-              Text(
-                l10n.deleteAddressConfirmBody,
-                textAlign: TextAlign.center,
-                style: Theme.of(sheetContext).textTheme.bodySmall
-                    ?.copyWith(color: colors.inkSecondary),
-              ),
-              const SizedBox(height: DesignSpace.xxl),
-              ActionButton(
-                label: l10n.deleteAddress,
-                tone: ActionTone.danger,
-                onPressed: () => Navigator.pop(sheetContext, true),
-              ),
-              const SizedBox(height: DesignSpace.sm),
-              ActionButton(
-                label: l10n.cancel,
-                tone: ActionTone.secondary,
-                onPressed: () => Navigator.pop(sheetContext, false),
-              ),
-            ],
-          ),
-        ),
-      );
-    },
-  );
 }

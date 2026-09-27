@@ -269,14 +269,21 @@ class OrderMockDataSource
     String orderId,
     TaskFailureReason reason,
     String? note, {
-    required bool hasPhoto,
+    required String photoPath,
   }) async {
     await _db.delay();
-    if (!hasPhoto) _db.badRequest('A photo of the pickup stop is required');
+    if (photoPath.isEmpty) {
+      _db.badRequest('A photo of the pickup stop is required');
+    }
     final row = _requireDriverOrder(orderId, OrderStatus.driverAssigned);
     final now = DateTime.now();
     _appendStatus(row, OrderStatus.pickupFailed, now);
-    row['failure'] = TaskFailure(reason: reason, note: note, hasPhoto: true);
+    // The mock keeps the device path where the API would return a URL.
+    row['failure'] = TaskFailure(
+      reason: reason,
+      note: note,
+      photoUrl: photoPath,
+    );
     // The backend cancels the order and pushes a "book a new pickup time"
     // notification; the customer re-books as a fresh order.
     _appendStatus(
@@ -291,7 +298,7 @@ class OrderMockDataSource
   Future<LaundryOrder> confirmDelivery(
     String orderId, {
     required bool cashCollected,
-    bool hasProofPhoto = false,
+    String? proofPhotoPath,
   }) async {
     await _db.delay();
     final row = _requireDriverOrder(orderId, OrderStatus.outForDelivery);

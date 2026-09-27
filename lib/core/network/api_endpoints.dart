@@ -32,6 +32,9 @@ abstract final class ApiEndpoints {
   static const supportAssistant = '/api/support/assistant';
   static const supportRequests = '/api/support/requests';
 
+  static const notifications = '/api/me/notifications';
+  static const notificationsReadAll = '/api/me/notifications/read-all';
+
   static const driverMe = '/api/driver/me';
   static const driverAvailability = '/api/driver/availability';
   static const driverTasks = '/api/driver/tasks';

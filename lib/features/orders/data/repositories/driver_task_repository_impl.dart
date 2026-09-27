@@ -31,21 +31,22 @@ class DriverTaskRepositoryImpl implements DriverTaskRepository {
     String orderId,
     TaskFailureReason reason,
     String? note, {
-    required bool hasPhoto,
+    required String photoPath,
   }) => guard(
-    () => _remote.reportPickupFailed(orderId, reason, note, hasPhoto: hasPhoto),
+    () =>
+        _remote.reportPickupFailed(orderId, reason, note, photoPath: photoPath),
   );
 
   @override
   Future<Result<LaundryOrder>> confirmDelivery(
     String orderId, {
     required bool cashCollected,
-    bool hasProofPhoto = false,
+    String? proofPhotoPath,
   }) => guard(
     () => _remote.confirmDelivery(
       orderId,
       cashCollected: cashCollected,
-      hasProofPhoto: hasProofPhoto,
+      proofPhotoPath: proofPhotoPath,
     ),
   );
 

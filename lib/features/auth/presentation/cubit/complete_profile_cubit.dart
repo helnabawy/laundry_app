@@ -27,10 +27,7 @@ class CompleteProfileCubit extends Cubit<CompleteProfileState> {
 
   final CompleteProfile _completeProfile;
 
-  Future<void> submit({
-    required String fullName,
-    required NewAddress address,
-  }) async {
+  Future<void> submit({required NewAddress address, String? fullName}) async {
     if (state.submitting) return;
     emit(const CompleteProfileState(submitting: true));
     final result = await _completeProfile(

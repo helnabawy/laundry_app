@@ -8,19 +8,23 @@ import '../../../../core/design/design.dart';
 import '../../../../core/di/injection.dart';
 import '../../../../core/l10n/l10n.dart';
 import '../../../auth/presentation/widgets/account_page.dart';
+import '../../../notifications/presentation/cubit/notifications_cubit.dart';
 import '../cubit/orders_cubit.dart';
 import 'home_page.dart';
 import 'my_orders_page.dart';
 
 /// Tab shell for the customer role. All three tabs share one [OrdersCubit]
-/// loaded once here.
+/// loaded once here, and the bell's [NotificationsCubit] beside it.
 class CustomerHomeShell extends StatelessWidget {
   const CustomerHomeShell({super.key});
 
   @override
   Widget build(BuildContext context) {
-    return BlocProvider(
-      create: (_) => sl<OrdersCubit>()..load(),
+    return MultiBlocProvider(
+      providers: [
+        BlocProvider(create: (_) => sl<OrdersCubit>()..load()),
+        BlocProvider(create: (_) => sl<NotificationsCubit>()..load()),
+      ],
       child: const _CustomerHomeView(),
     );
   }
@@ -45,6 +49,7 @@ class _CustomerHomeViewState extends State<_CustomerHomeView> {
   void _select(int index) {
     setState(() => _index = index);
     if (index != 2) unawaited(context.read<OrdersCubit>().load());
+    unawaited(context.read<NotificationsCubit>().load());
   }
 
   @override

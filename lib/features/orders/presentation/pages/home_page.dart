@@ -5,6 +5,8 @@ import 'package:go_router/go_router.dart';
 import '../../../../core/design/design.dart';
 import '../../../../core/l10n/l10n.dart';
 import '../../../../core/router/routes.dart';
+import '../../../notifications/presentation/cubit/notifications_cubit.dart';
+import '../../../notifications/presentation/widgets/notification_bell.dart';
 import '../../domain/entities/laundry_order.dart';
 import '../cubit/orders_cubit.dart';
 import '../utils/category_icons.dart';
@@ -25,10 +27,18 @@ class HomePage extends StatelessWidget {
 
   /// Opens the order flow and refreshes on the way back, so a just-placed
   /// order appears in the hero instead of a stale empty state. Given [from],
-  /// the flow opens filled from that past order (one-tap reorder).
-  Future<void> _startOrder(BuildContext context, {LaundryOrder? from}) async {
+  /// the flow opens filled from that past order (one-tap reorder); given
+  /// [category], it opens past the category step with that one chosen.
+  Future<void> _startOrder(
+    BuildContext context, {
+    LaundryOrder? from,
+    String? category,
+  }) async {
     final cubit = context.read<OrdersCubit>();
-    await context.push(Routes.orderNew, extra: from);
+    await context.push(
+      Routes.orderNew,
+      extra: from ?? (category == null ? null : (category: category)),
+    );
     await cubit.load();
   }
 
@@ -50,7 +60,13 @@ class HomePage extends StatelessWidget {
 
     return LargeTitlePage(
       title: l10n.navHome,
-      onRefresh: () => context.read<OrdersCubit>().load(),
+      trailing: const OpenNotificationsBell(),
+      onRefresh: () async {
+        await Future.wait([
+          context.read<OrdersCubit>().load(),
+          context.read<NotificationsCubit>().load(),
+        ]);
+      },
       slivers: [
         if (state.loading && state.orders.isEmpty)
           const SliverToBoxAdapter(
@@ -121,7 +137,7 @@ class HomePage extends StatelessWidget {
                     CupertinoIcons.chevron_forward,
                     color: context.colors.inkTertiary,
                   ),
-                  onTap: () => _startOrder(context),
+                  onTap: () => _startOrder(context, category: id),
                 ),
             ],
           ),

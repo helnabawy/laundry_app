@@ -25,4 +25,20 @@ abstract final class AppConfig {
   static const int otpResendSeconds = 60;
 
   static const List<String> supportedLanguageCodes = ['ar', 'en'];
+
+  /// Map tiles for the address pin. OpenStreetMap's own servers are fine for
+  /// development but not for production traffic — point this at a paid tile
+  /// host (MapTiler, Mapbox, Stadia…) before launch.
+  static const String mapTileUrl = String.fromEnvironment(
+    'MAP_TILE_URL',
+    defaultValue: 'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
+  );
+
+  /// Sent as the tile request's User-Agent, as OSM's usage policy requires.
+  static const String mapUserAgentPackage = 'com.laundryapp.laundry_app';
+
+  /// Where the map opens when there is no pin and no GPS fix yet: central
+  /// Abu Dhabi, where the service operates today.
+  static const double mapDefaultLatitude = 24.4539;
+  static const double mapDefaultLongitude = 54.3773;
 }

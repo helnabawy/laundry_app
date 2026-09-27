@@ -12,13 +12,13 @@ abstract interface class DriverTaskRemoteDataSource {
     String orderId,
     TaskFailureReason reason,
     String? note, {
-    required bool hasPhoto,
+    required String photoPath,
   });
 
   Future<LaundryOrder> confirmDelivery(
     String orderId, {
     required bool cashCollected,
-    bool hasProofPhoto = false,
+    String? proofPhotoPath,
   });
   Future<LaundryOrder> reportDeliveryFailed(
     String orderId,

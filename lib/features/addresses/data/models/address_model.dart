@@ -25,6 +25,8 @@ abstract final class AddressModel {
     'floor': address.floor,
     'apartment': address.apartment,
     'alternatePhone': address.alternatePhone,
+    'latitude': address.latitude,
+    'longitude': address.longitude,
   };
 
   static AddressKind _kindFromJson(String? value) =>

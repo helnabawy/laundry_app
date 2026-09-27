@@ -14,6 +14,7 @@ class LabelRow extends StatefulWidget {
     super.key,
     this.leading,
     required this.title,
+    this.badge,
     this.subtitle,
     this.trailing,
     this.value,
@@ -28,6 +29,10 @@ class LabelRow extends StatefulWidget {
 
   final Widget? leading;
   final String title;
+
+  /// A mark set on the title's line, after it — the woven service label.
+  final Widget? badge;
+
   final String? subtitle;
 
   /// Sits at the end of the row, after [value].
@@ -105,12 +110,22 @@ class _LabelRowState extends State<LabelRow> {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    Text(
-                      widget.title,
-                      style: text.bodyLarge?.copyWith(
-                        color: ink,
-                        fontWeight: FontWeight.w600,
-                      ),
+                    Row(
+                      children: [
+                        Flexible(
+                          child: Text(
+                            widget.title,
+                            style: text.bodyLarge?.copyWith(
+                              color: ink,
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
+                        ),
+                        if (widget.badge case final mark?) ...[
+                          const SizedBox(width: DesignSpace.sm),
+                          mark,
+                        ],
+                      ],
                     ),
                     if (widget.subtitle case final sub?) ...[
                       const SizedBox(height: DesignSpace.xxs),

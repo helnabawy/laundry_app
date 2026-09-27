@@ -58,8 +58,6 @@ class AddressMockDataSource implements AddressRemoteDataSource {
       'id': 'adr-${_db.nextNumber()}',
       'userId': _db.requireUserId(),
       ...AddressModel.toJson(address),
-      'latitude': null,
-      'longitude': null,
     };
     _db.table(table).add(row);
     return AddressModel.fromJson(row);

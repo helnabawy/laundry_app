@@ -14,12 +14,8 @@ void main() {
   late VerifyOtp verifyOtp;
   final phone = PhoneNumber.tryParse('501234567')!;
 
-  AppUser user(UserRole role) => AppUser(
-    id: 'u1',
-    phone: phone.e164,
-    role: role,
-    profileCompleted: true,
-  );
+  AppUser user(UserRole role) =>
+      AppUser(id: 'u1', phone: phone.e164, role: role, profileCompleted: true);
 
   setUpAll(() => registerFallbackValue(phone));
 
@@ -36,26 +32,78 @@ void main() {
   });
 
   test('normalizes Arabic-Indic digits before verifying', () async {
-    when(
-      () => repository.verifyOtp(phone, '1234'),
-    ).thenAnswer((_) async => Ok(user(UserRole.customer)));
+    when(() => repository.verifyOtp(phone, '1234'))
+        .thenAnswer((_) async => Ok(user(UserRole.customer)));
 
-    final result = await verifyOtp(
-      VerifyOtpParams(phone: phone, code: '١٢٣٤'),
-    );
+    final result = await verifyOtp(VerifyOtpParams(phone: phone, code: '١٢٣٤'));
 
     expect(result.valueOrNull, user(UserRole.customer));
   });
 
   test('signs out staff accounts, which must use the web portal', () async {
-    when(
-      () => repository.verifyOtp(phone, '1234'),
-    ).thenAnswer((_) async => Ok(user(UserRole.staff)));
+    when(() => repository.verifyOtp(phone, '1234'))
+        .thenAnswer((_) async => Ok(user(UserRole.staff)));
     when(() => repository.logout()).thenAnswer((_) async => const Ok(null));
 
     final result = await verifyOtp(VerifyOtpParams(phone: phone, code: '1234'));
 
     expect(result.failureOrNull, isA<UnsupportedRoleFailure>());
     verify(() => repository.logout()).called(1);
+  });
+
+  group('name typed at login', () {
+    test('is given to a new account with no name', () async {
+      final named = AppUser(
+        id: 'u1',
+        phone: phone.e164,
+        role: UserRole.customer,
+        profileCompleted: false,
+        fullName: 'Khalid',
+      );
+      when(() => repository.verifyOtp(phone, '1234'))
+          .thenAnswer((_) async => Ok(user(UserRole.customer)));
+      when(() => repository.updateProfile(fullName: 'Khalid'))
+          .thenAnswer((_) async => Ok(named));
+
+      final result = await verifyOtp(
+        VerifyOtpParams(phone: phone, code: '1234', fullName: ' Khalid '),
+      );
+
+      expect(result.valueOrNull, named);
+    });
+
+    test('never overwrites the name an account already has', () async {
+      final existing = AppUser(
+        id: 'u1',
+        phone: phone.e164,
+        role: UserRole.customer,
+        profileCompleted: true,
+        fullName: 'Khalid Al Mansouri',
+      );
+      when(() => repository.verifyOtp(phone, '1234'))
+          .thenAnswer((_) async => Ok(existing));
+
+      final result = await verifyOtp(
+        VerifyOtpParams(phone: phone, code: '1234', fullName: 'K'),
+      );
+
+      expect(result.valueOrNull, existing);
+      verifyNever(
+        () => repository.updateProfile(fullName: any(named: 'fullName')),
+      );
+    });
+
+    test('still signs in if saving the name fails', () async {
+      when(() => repository.verifyOtp(phone, '1234'))
+          .thenAnswer((_) async => Ok(user(UserRole.customer)));
+      when(() => repository.updateProfile(fullName: 'Khalid'))
+          .thenAnswer((_) async => const Err(NetworkFailure()));
+
+      final result = await verifyOtp(
+        VerifyOtpParams(phone: phone, code: '1234', fullName: 'Khalid'),
+      );
+
+      expect(result.valueOrNull, user(UserRole.customer));
+    });
   });
 }

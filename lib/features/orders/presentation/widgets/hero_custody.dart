@@ -5,6 +5,7 @@ import '../../../../core/l10n/l10n.dart';
 import '../../../../core/utils/formatters.dart';
 import '../../domain/entities/laundry_order.dart';
 import '../utils/order_status_x.dart';
+import 'vip_mark.dart';
 
 /// The custody strip printed over cloth.
 ///
@@ -23,6 +24,7 @@ class HeroCustody extends StatelessWidget {
     final l10n = context.l10n;
     final format = AppFormat.of(context);
     final live = order;
+    final vip = live?.tier.isVip ?? false;
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -42,6 +44,16 @@ class HeroCustody extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               mainAxisAlignment: MainAxisAlignment.end,
               children: [
+                // A VIP order carries its woven label sewn onto the cloth,
+                // at the corner where a garment's own label would sit.
+                if (vip) ...[
+                  VipMark(
+                    tier: live!.tier,
+                    tone: WovenTone.tape,
+                    compact: false,
+                  ),
+                  const Spacer(),
+                ],
                 if (live == null)
                   Text(
                     l10n.nothingInCustody.toUpperCase(),
@@ -73,7 +85,9 @@ class HeroCustody extends StatelessWidget {
                   ),
                   const SizedBox(height: DesignSpace.xs),
                   Text(
-                    '${live.servicesLabel} · ${live.tier.name}',
+                    vip
+                        ? live.servicesLabel
+                        : '${live.servicesLabel} · ${live.tier.name}',
                     style: DesignTypography.fibreLine(
                       const Color(0xF2FFFFFF),
                       size: 12,
@@ -84,6 +98,7 @@ class HeroCustody extends StatelessWidget {
             ),
           ),
         ),
+        if (vip) const TwinStitch(),
         if (live == null)
           CustodyStrip.blank(
             stages: blankCustodyStages(l10n),

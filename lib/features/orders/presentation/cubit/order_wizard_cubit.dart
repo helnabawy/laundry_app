@@ -4,6 +4,7 @@ import 'package:equatable/equatable.dart';
 import 'package:flutter/material.dart' show DateUtils;
 import 'package:flutter_bloc/flutter_bloc.dart';
 
+import '../../../../core/design/tokens/design_metrics.dart';
 import '../../../../core/error/failures.dart';
 import '../../../addresses/domain/entities/address.dart';
 import '../../../addresses/domain/usecases/get_addresses.dart';
@@ -17,6 +18,23 @@ import '../../domain/usecases/catalog_usecases.dart';
 import '../../domain/usecases/order_usecases.dart';
 
 const _unset = Object();
+
+/// Where a one-tap reorder stands. Absent once it has fallen back to the
+/// steps (or for a fresh order).
+enum ReorderStage {
+  /// Loading the catalog and finding the soonest open windows.
+  preparing,
+
+  /// Everything is chosen and the order is held on the phone for the undo
+  /// window; nothing has been sent yet.
+  countdown,
+
+  /// The undo window ran out and the order is being sent.
+  sending,
+
+  /// The customer undid it; nothing will be sent.
+  undone,
+}
 
 /// Drives the 4-step order creation wizard (plan §8.1 / §9 Stage 2): service
 /// category → sub-service → tier → pickup & delivery schedule + address.
@@ -47,6 +65,7 @@ class OrderWizardState extends Equatable {
     this.failure,
     this.created,
     this.reorderOf,
+    this.reorderStage,
   }) : pickupDay = pickupDay ?? DateUtils.dateOnly(DateTime.now()),
        deliveryDay = deliveryDay ?? DateUtils.dateOnly(DateTime.now());
 
@@ -95,6 +114,10 @@ class OrderWizardState extends Equatable {
   /// schedule step can say what it was filled from.
   final int? reorderOf;
 
+  /// Set while a one-tap reorder is placing itself; the page shows its own
+  /// screen for each stage instead of the steps.
+  final ReorderStage? reorderStage;
+
   /// Every chosen category has a service picked for it.
   bool get everyCategoryServiced =>
       selectedCategories.isNotEmpty &&
@@ -133,6 +156,7 @@ class OrderWizardState extends Equatable {
     bool? submitting,
     Object? failure = _unset,
     Object? created = _unset,
+    Object? reorderStage = _unset,
   }) {
     return OrderWizardState(
       step: step ?? this.step,
@@ -167,6 +191,9 @@ class OrderWizardState extends Equatable {
           ? this.created
           : created as LaundryOrder?,
       reorderOf: reorderOf,
+      reorderStage: identical(reorderStage, _unset)
+          ? this.reorderStage
+          : reorderStage as ReorderStage?,
     );
   }
 
@@ -197,6 +224,7 @@ class OrderWizardState extends Equatable {
     failure,
     created,
     reorderOf,
+    reorderStage,
   ];
 }
 
@@ -210,6 +238,8 @@ class OrderWizardCubit extends Cubit<OrderWizardState> {
     required GetAddresses getAddresses,
     required CreateOrder createOrder,
     LaundryOrder? reorderFrom,
+    String? startWithCategory,
+    this.undoWindow = DesignMotion.undoWindow,
   }) : _getCategories = getCategories,
        _getSubServices = getSubServices,
        _getTiers = getTiers,
@@ -217,9 +247,20 @@ class OrderWizardCubit extends Cubit<OrderWizardState> {
        _getDeliverySlots = getDeliverySlots,
        _getAddresses = getAddresses,
        _createOrder = createOrder,
-       super(OrderWizardState(reorderOf: reorderFrom?.number)) {
+       super(
+         OrderWizardState(
+           // A category tapped on Home is already the answer to step 1, so
+           // the flow opens on the step that follows it.
+           step: startWithCategory == null ? 1 : 2,
+           loadingSubServices: startWithCategory != null,
+           reorderOf: reorderFrom?.number,
+           reorderStage: reorderFrom == null ? null : ReorderStage.preparing,
+         ),
+       ) {
     if (reorderFrom case final source?) {
       _prefillFrom(source);
+    } else if (startWithCategory case final categoryId?) {
+      _startWith(categoryId);
     } else {
       _loadCategories();
     }
@@ -227,6 +268,10 @@ class OrderWizardCubit extends Cubit<OrderWizardState> {
 
   /// How many days the pickup and delivery strips offer.
   static const scheduleDays = 6;
+
+  /// How long a one-tap reorder waits on the phone before it is sent.
+  final Duration undoWindow;
+  Timer? _undoTimer;
 
   final GetServiceCategories _getCategories;
   final GetSubServices _getSubServices;
@@ -379,12 +424,15 @@ class OrderWizardCubit extends Cubit<OrderWizardState> {
     }
   }
 
-  /// Reorder (plan §9 Stage 5): one tap on a past order lands here with its
-  /// categories, services, level and address already chosen and the soonest
-  /// open windows picked, so confirming is all that is left.
+  /// Reorder (plan §9 Stage 5): one tap on a past order places it again —
+  /// same categories, services, level and address, in the soonest open
+  /// windows — after an [undoWindow] in which it can still be undone or
+  /// changed, then lands on the confirmation.
   ///
-  /// Everything is matched against today's catalog by id: whatever it no
-  /// longer offers is left unchosen and the wizard opens on that step instead.
+  /// Everything is matched against today's catalog by id. When something is
+  /// no longer offered, no window is open, or the order is refused, nothing is
+  /// guessed: the wizard opens filled in as far as it got, on the step that
+  /// needs the customer.
   Future<void> _prefillFrom(LaundryOrder source) async {
     final categoryIds = [for (final line in source.lines) line.category.id];
     final (
@@ -453,6 +501,46 @@ class OrderWizardCubit extends Cubit<OrderWizardState> {
       ),
     );
     if (step == 4) await _preselectEarliestSlots();
+    if (isClosed || state.reorderStage == ReorderStage.undone) return;
+    if (state.step == 4 && state.canGoNext) {
+      // Held on the phone, not sent: undoing leaves nothing to cancel on the
+      // backend and no driver is ever assigned.
+      emit(state.copyWith(reorderStage: ReorderStage.countdown));
+      _undoTimer = Timer(undoWindow, _sendReorder);
+    } else {
+      emit(state.copyWith(reorderStage: null));
+    }
+  }
+
+  Future<void> _sendReorder() async {
+    if (isClosed || state.reorderStage != ReorderStage.countdown) return;
+    emit(state.copyWith(reorderStage: ReorderStage.sending));
+    await _submit();
+    // Landed (confirmation) or refused: either way the steps take over, with
+    // the schedule filled in so Confirm retries a refusal.
+    if (!isClosed) emit(state.copyWith(reorderStage: null));
+  }
+
+  /// Undo within the window: nothing is sent. The page leaves right after.
+  void undoReorder() {
+    _undoTimer?.cancel();
+    if (state.reorderStage
+        case ReorderStage.preparing || ReorderStage.countdown) {
+      emit(state.copyWith(reorderStage: ReorderStage.undone));
+    }
+  }
+
+  /// Stop the countdown and hand the filled-in schedule to the customer.
+  void editReorder() {
+    if (state.reorderStage != ReorderStage.countdown) return;
+    _undoTimer?.cancel();
+    emit(state.copyWith(reorderStage: null));
+  }
+
+  @override
+  Future<void> close() {
+    _undoTimer?.cancel();
+    return super.close();
   }
 
   /// Picks the first open pickup window within the strip, then the first open
@@ -519,6 +607,24 @@ class OrderWizardCubit extends Cubit<OrderWizardState> {
     if (!isClosed && state.deliveryDay != firstDay) {
       await selectDeliveryDay(firstDay);
     }
+  }
+
+  /// Opens on step 2 with [categoryId] already chosen. Step 1 still holds the
+  /// full list, so going back is how another category joins the collection.
+  Future<void> _startWith(String categoryId) async {
+    await _loadCategories();
+    if (isClosed) return;
+    final category = state.categories
+        .where((c) => c.id == categoryId)
+        .firstOrNull;
+    if (category == null) {
+      // Not in the catalog (or it did not load): the list itself is the
+      // honest place to choose from.
+      emit(state.copyWith(step: 1, loadingSubServices: false));
+      return;
+    }
+    emit(state.copyWith(selectedCategories: [category]));
+    await _loadSubServicesForSelection();
   }
 
   Future<void> _loadCategories() async {
@@ -640,6 +746,7 @@ class OrderWizardCubit extends Cubit<OrderWizardState> {
         addressId: address.id,
       ),
     );
+    if (isClosed) return;
     emit(
       result.fold(
         onErr: (f) => state.copyWith(submitting: false, failure: f),
