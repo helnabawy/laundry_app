@@ -1,5 +1,6 @@
 import '../../../../core/result/result.dart';
 import '../../../../core/usecase/usecase.dart';
+import '../entities/product.dart';
 import '../entities/service_category.dart';
 import '../entities/service_tier.dart';
 import '../entities/sub_service.dart';
@@ -23,6 +24,15 @@ class GetSubServices implements UseCase<List<SubService>, String> {
   @override
   Future<Result<List<SubService>>> call(String categoryId) =>
       _repo.getSubServices(categoryId);
+}
+
+class GetProducts implements UseCase<List<Product>, NoParams> {
+  const GetProducts(this._repo);
+  final CatalogRepository _repo;
+
+  @override
+  Future<Result<List<Product>>> call([NoParams params = const NoParams()]) =>
+      _repo.getProducts();
 }
 
 class GetServiceTiers implements UseCase<List<ServiceTier>, NoParams> {

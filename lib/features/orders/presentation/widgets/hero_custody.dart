@@ -106,7 +106,11 @@ class HeroCustody extends StatelessWidget {
           )
         else
           CustodyStrip(
-            stages: custodyStagesFor(live.status, l10n),
+            stages: custodyStagesFor(
+              live.status,
+              l10n,
+              isShopOrder: live.lines.isEmpty,
+            ),
             caption: live.status.isActive
                 ? l10n
                       .expectedDelivery(

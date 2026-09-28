@@ -7,6 +7,7 @@ import '../../../../core/design/design.dart';
 import '../../../../core/l10n/l10n.dart';
 import '../../../../core/locale/locale_cubit.dart';
 import '../../../../core/router/routes.dart';
+import '../../../../core/theme/theme_cubit.dart';
 import '../../../../core/utils/phone_format.dart';
 import '../../domain/entities/app_user.dart';
 import '../cubit/session_cubit.dart';
@@ -94,6 +95,7 @@ class AccountPage extends StatelessWidget {
             ],
           ),
         ),
+        const SliverToBoxAdapter(child: _AppearanceGroup()),
       ],
     );
   }
@@ -133,6 +135,34 @@ class AccountPage extends StatelessWidget {
   }
 }
 
+/// System, light or dark — applied the moment it is tapped.
+class _AppearanceGroup extends StatelessWidget {
+  const _AppearanceGroup();
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = context.l10n;
+    final mode = context.watch<ThemeCubit>().state;
+    const modes = [ThemeMode.system, ThemeMode.light, ThemeMode.dark];
+    return LabelGroup(
+      heading: l10n.appearance,
+      children: [
+        Padding(
+          padding: const EdgeInsets.symmetric(
+            horizontal: DesignSpace.gutter,
+            vertical: DesignSpace.md,
+          ),
+          child: SegmentedStrip(
+            labels: [l10n.themeSystem, l10n.themeLight, l10n.themeDark],
+            index: modes.indexOf(mode),
+            onChanged: (i) => context.read<ThemeCubit>().setThemeMode(modes[i]),
+          ),
+        ),
+      ],
+    );
+  }
+}
+
 /// The initial, stamped into a tape square.
 class _Initial extends StatelessWidget {
   const _Initial({this.letter});
@@ -166,8 +196,8 @@ class _Initial extends StatelessWidget {
 }
 
 /// Log out lives in the header, where iOS keeps account-level actions, out of
-/// the thumb's path through the list. It is set in the tint like any other
-/// action; the red is saved for the sheet's commit.
+/// the thumb's path through the list. It is a plain text action in the tint,
+/// like the system's own bar buttons; the red is saved for the sheet's commit.
 class _LogoutAction extends StatelessWidget {
   const _LogoutAction({this.phone});
 
@@ -176,11 +206,12 @@ class _LogoutAction extends StatelessWidget {
   Future<void> _confirm(BuildContext context) async {
     final l10n = context.l10n;
     final session = context.read<SessionCubit>();
-    final number = formatUaePhone(phone ?? '');
+    // Isolated left-to-right so it reads correctly in Arabic, and held on one
+    // line so it never breaks between its digit groups.
+    final number = formatUaePhone(phone ?? '').replaceAll(' ', '\u00A0');
     final confirmed = await showConfirmSheet(
       context,
       title: l10n.logoutConfirmTitle,
-      // Isolated left-to-right so the number reads correctly in Arabic.
       message: l10n.logoutConfirmBody('\u2066$number\u2069'),
       confirmLabel: l10n.logout,
       cancelLabel: l10n.cancel,
@@ -189,16 +220,8 @@ class _LogoutAction extends StatelessWidget {
   }
 
   @override
-  Widget build(BuildContext context) {
-    final rtl = Directionality.of(context) == TextDirection.rtl;
-    return TintAction(
-      label: context.l10n.logout,
-      // The door arrow points out of the page in reading direction.
-      trailing: Transform.flip(
-        flipX: rtl,
-        child: const Icon(CupertinoIcons.square_arrow_right),
-      ),
-      onPressed: () => _confirm(context),
-    );
-  }
+  Widget build(BuildContext context) => TintAction(
+    label: context.l10n.logout,
+    onPressed: () => _confirm(context),
+  );
 }

@@ -1,5 +1,6 @@
 import '../../../../core/error/guard.dart';
 import '../../../../core/result/result.dart';
+import '../../domain/entities/product.dart';
 import '../../domain/entities/service_category.dart';
 import '../../domain/entities/service_tier.dart';
 import '../../domain/entities/sub_service.dart';
@@ -19,6 +20,9 @@ class CatalogRepositoryImpl implements CatalogRepository {
   @override
   Future<Result<List<SubService>>> getSubServices(String categoryId) =>
       guard(() => _remote.getSubServices(categoryId));
+
+  @override
+  Future<Result<List<Product>>> getProducts() => guard(_remote.getProducts);
 
   @override
   Future<Result<List<ServiceTier>>> getTiers() => guard(_remote.getTiers);

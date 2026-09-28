@@ -60,19 +60,70 @@ class OrderMockDataSource
           orElse: () => _db.notFound('Address not found'),
         );
 
-    final now = DateTime.now();
-    final row = <String, dynamic>{
-      'id': 'ord-${++_orderSeq}',
-      'number': _orderSeq,
-      'userId': userId,
-      'lines': [
+    if (params.lines.isEmpty && params.items.isEmpty) {
+      _db.badRequest('Order must have at least one line or item');
+    }
+
+    final tier = _catalog.tierById(params.tierId);
+    final orderNumber = ++_orderSeq;
+
+    List<OrderLine> lines = const [];
+    Invoice? invoice;
+
+    if (params.items.isNotEmpty) {
+      // ---- Shop flow: the cart's total is fixed at checkout, before pickup.
+      // Server-side is the source of truth for pricing — the client's total
+      // is never trusted; every product id is resolved against the live
+      // catalog and snapshotted into the order.
+      if (params.paymentMethod == null) {
+        _db.badRequest('Payment method is required');
+      }
+      final items = <OrderItem>[
+        for (final item in params.items)
+          () {
+            if (item.quantity < 1) {
+              _db.badRequest('Quantity must be at least 1');
+            }
+            final product = _catalog.productById(item.productId);
+            return OrderItem(
+              name: product.name,
+              quantity: item.quantity,
+              unitPrice: product.unitPrice,
+              productId: product.id,
+              categoryId: product.categoryId,
+            );
+          }(),
+      ];
+      final subtotal = items.fold<double>(0, (sum, i) => sum + i.total);
+      invoice = Invoice(
+        id: 'inv-$orderNumber',
+        items: items,
+        vipSurcharge: tier.surchargeFor(subtotal),
+        // Cash on delivery carries a flat handling fee card doesn't.
+        codFee: params.paymentMethod!.codFee,
+        paymentMethod: params.paymentMethod,
+        // Card payment is simulated as an instant successful charge; cash is
+        // collected by the driver on delivery.
+        paid: params.paymentMethod == PaymentMethod.card,
+      );
+    } else {
+      // ---- Wizard flow: price is set later by the facility after pickup.
+      lines = [
         for (final line in params.lines)
           OrderLine(
             category: _catalog.categoryById(line.categoryId),
             subService: _catalog.subServiceById(line.subServiceId),
           ),
-      ],
-      'tier': _catalog.tierById(params.tierId),
+      ];
+    }
+
+    final now = DateTime.now();
+    final row = <String, dynamic>{
+      'id': 'ord-$orderNumber',
+      'number': orderNumber,
+      'userId': userId,
+      'lines': lines,
+      'tier': tier,
       'pickupSlot': _catalog.slotById(params.pickupSlotId),
       'deliverySlot': _catalog.slotById(params.deliverySlotId),
       'address': AddressModel.fromJson(addressRow),
@@ -87,7 +138,7 @@ class OrderMockDataSource
         OrderTimelineEvent(status: OrderStatus.pending, at: now),
         OrderTimelineEvent(status: OrderStatus.driverAssigned, at: now),
       ],
-      'invoice': null,
+      'invoice': invoice,
     };
     _db.table(_table).add(row);
     return _toOrder(row);
@@ -96,6 +147,7 @@ class OrderMockDataSource
   @override
   Future<List<LaundryOrder>> getOrders() async {
     await _db.delay();
+    _dispatchWashed();
     final userId = _db.requireUserId();
     final rows = _db.table(_table).where((r) => r['userId'] == userId).toList()
       ..sort(
@@ -108,6 +160,7 @@ class OrderMockDataSource
   @override
   Future<LaundryOrder> getOrder(String id) async {
     await _db.delay();
+    _dispatchWashed();
     _db.requireUserId();
     return _toOrder(_findOrder(id));
   }
@@ -175,6 +228,7 @@ class OrderMockDataSource
   @override
   Future<List<DriverTask>> getTodayTasks() async {
     await _db.delay();
+    _dispatchWashed();
     final driverId = _db.requireUserId();
     return _db
         .table(_table)
@@ -250,17 +304,30 @@ class OrderMockDataSource
     final row = _requireDriverOrder(orderId, OrderStatus.driverAssigned);
     final now = DateTime.now();
     _appendStatus(row, OrderStatus.pickedUp, now);
-    _appendStatus(
-      row,
-      OrderStatus.atFacility,
-      now.add(const Duration(seconds: 1)),
-    );
-    row['invoice'] = _generateInvoice(row['number'] as int);
-    _appendStatus(
-      row,
-      OrderStatus.awaitingPayment,
-      now.add(const Duration(seconds: 2)),
-    );
+    if (row['invoice'] == null) {
+      // Wizard flow: price isn't known yet — the facility inspects, prices,
+      // and the customer pays before processing starts.
+      _appendStatus(
+        row,
+        OrderStatus.atFacility,
+        now.add(const Duration(seconds: 1)),
+      );
+      row['invoice'] = _generateInvoice(row['number'] as int);
+      _appendStatus(
+        row,
+        OrderStatus.awaitingPayment,
+        now.add(const Duration(seconds: 2)),
+      );
+    } else {
+      // Shop flow: price was already fixed at checkout, so there's no
+      // inspection/payment wait — the items go straight into the wash. They
+      // stay there until the facility is done (see [_dispatchWashed]).
+      _appendStatus(
+        row,
+        OrderStatus.processing,
+        now.add(const Duration(seconds: 1)),
+      );
+    }
     return _toOrder(row);
   }
 
@@ -329,6 +396,24 @@ class OrderMockDataSource
   }
 
   // ---- Helpers --------------------------------------------------------
+
+  /// How long a picked-up shop order stays in the wash before it is
+  /// dispatched for delivery.
+  static const washWindow = Duration(minutes: 1);
+
+  /// Phase 4 stand-in: the facility operator marks the wash done and
+  /// auto-dispatch hands it to a driver. With no Admin Portal yet, any order
+  /// that has sat in `processing` for [washWindow] is dispatched on the next
+  /// read.
+  void _dispatchWashed() {
+    final cutoff = DateTime.now().subtract(washWindow);
+    for (final row in _db.table(_table)) {
+      if (row['status'] != OrderStatus.processing) continue;
+      final since = (row['timeline'] as List<OrderTimelineEvent>).last.at;
+      if (since.isAfter(cutoff)) continue;
+      _appendStatus(row, OrderStatus.outForDelivery, since.add(washWindow));
+    }
+  }
 
   Map<String, dynamic> _findOrder(String id) =>
       _db.findById(_table, id) ?? _db.notFound('Order not found');

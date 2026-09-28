@@ -10,16 +10,26 @@ import '../../domain/entities/order_status.dart';
 ///
 /// A fixed set of milestones — not every status. `awaitingPayment` is carried
 /// by the invoice block instead, and `driverAssigned` is quick enough to fold
-/// into "Order placed".
+/// into "Order placed". A shop-flow order (`order.lines.isEmpty` — price
+/// already fixed at checkout) uses a shorter set that skips the facility
+/// inspection/payment wait, but still shows the items being washed.
 class OrderTimeline extends StatelessWidget {
   const OrderTimeline({super.key, required this.order});
 
   final LaundryOrder order;
 
-  static const _milestones = [
+  static const _wizardMilestones = [
     OrderStatus.driverAssigned,
     OrderStatus.pickedUp,
     OrderStatus.atFacility,
+    OrderStatus.processing,
+    OrderStatus.outForDelivery,
+    OrderStatus.delivered,
+  ];
+
+  static const _shopMilestones = [
+    OrderStatus.driverAssigned,
+    OrderStatus.pickedUp,
     OrderStatus.processing,
     OrderStatus.outForDelivery,
     OrderStatus.delivered,
@@ -39,7 +49,10 @@ class OrderTimeline extends StatelessWidget {
   Widget build(BuildContext context) {
     final l10n = context.l10n;
     final format = AppFormat.of(context);
-    final reachedIndex = _milestones.indexOf(order.status);
+    final milestones = order.lines.isEmpty
+        ? _shopMilestones
+        : _wizardMilestones;
+    final reachedIndex = milestones.indexOf(order.status);
     final isFailure =
         order.status.isFailure || order.status == OrderStatus.cancelled;
 
@@ -52,11 +65,11 @@ class OrderTimeline extends StatelessWidget {
           state: _EntryState.done,
           isFirst: true,
         ),
-        for (var i = 0; i < _milestones.length; i++)
+        for (var i = 0; i < milestones.length; i++)
           _Entry(
-            label: _label(l10n, _milestones[i]),
-            time: order.timeOf(_milestones[i]) != null
-                ? format.dayAndTime(order.timeOf(_milestones[i])!)
+            label: _label(l10n, milestones[i]),
+            time: order.timeOf(milestones[i]) != null
+                ? format.dayAndTime(order.timeOf(milestones[i])!)
                 : null,
             state: isFailure && i >= reachedIndex
                 ? _EntryState.upcoming
@@ -65,7 +78,7 @@ class OrderTimeline extends StatelessWidget {
                 : i == reachedIndex
                 ? _EntryState.current
                 : _EntryState.upcoming,
-            isLast: i == _milestones.length - 1,
+            isLast: i == milestones.length - 1,
           ),
       ],
     );

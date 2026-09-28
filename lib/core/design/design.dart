@@ -13,6 +13,7 @@ export 'components/custody_strip.dart';
 export 'components/label_rows.dart';
 export 'components/page_scaffold.dart';
 export 'components/photo.dart';
+export 'components/product_grid.dart';
 export 'components/segmented_strip.dart';
 export 'components/serial_and_amount.dart';
 export 'components/state_views.dart';

@@ -7,6 +7,7 @@ import 'package:go_router/go_router.dart';
 import 'package:laundry_app/core/design/design.dart';
 import 'package:laundry_app/core/locale/locale_cubit.dart';
 import 'package:laundry_app/core/router/routes.dart';
+import 'package:laundry_app/core/theme/theme_cubit.dart';
 import 'package:laundry_app/features/auth/domain/entities/app_user.dart';
 import 'package:laundry_app/features/auth/presentation/cubit/session_cubit.dart';
 import 'package:laundry_app/features/auth/presentation/widgets/account_page.dart';
@@ -21,6 +22,7 @@ class _MockSessionCubit extends MockCubit<SessionState>
 void main() {
   late _MockSessionCubit session;
   late LocaleCubit locale;
+  late ThemeCubit theme;
 
   AppUser user(UserRole role) => AppUser(
     id: 'u1',
@@ -32,7 +34,9 @@ void main() {
 
   setUp(() async {
     SharedPreferences.setMockInitialValues({'language_code': 'en'});
-    locale = LocaleCubit(await SharedPreferences.getInstance());
+    final prefs = await SharedPreferences.getInstance();
+    locale = LocaleCubit(prefs);
+    theme = ThemeCubit(prefs);
     session = _MockSessionCubit();
     when(() => session.logout()).thenAnswer((_) async {});
   });
@@ -55,6 +59,7 @@ void main() {
         providers: [
           BlocProvider<SessionCubit>.value(value: session),
           BlocProvider.value(value: locale),
+          BlocProvider.value(value: theme),
         ],
         child: child,
       ),
@@ -88,7 +93,7 @@ void main() {
       await tester.pumpAndSettle();
 
       expect(inSheet(find.text('Log out?')), findsOneWidget);
-      expect(inSheet(find.textContaining('+971 50 123 4567')), findsOneWidget);
+      expect(inSheet(find.textContaining('4567')), findsOneWidget);
       verifyNever(() => session.logout());
     });
 
@@ -121,19 +126,29 @@ void main() {
       expect(inHeader(find.text('Log out')), findsOneWidget);
     });
 
-    testWidgets('mirrors its arrow in Arabic', (tester) async {
+    testWidgets('is in the header in Arabic, on the reading-end side', (
+      tester,
+    ) async {
       await pumpAccount(tester, language: const Locale('ar'));
 
-      final flip = tester.widget<Transform>(
-        find
-            .ancestor(
-              of: find.byIcon(CupertinoIcons.square_arrow_right),
-              matching: find.byType(Transform),
-            )
-            .first,
+      final logout = inHeader(find.text('تسجيل الخروج'));
+      expect(logout, findsOneWidget);
+      // Trailing in RTL is the left edge.
+      final screenWidth =
+          tester.view.physicalSize.width / tester.view.devicePixelRatio;
+      expect(tester.getCenter(logout).dx, lessThan(screenWidth / 2));
+    });
+
+    testWidgets('keeps the number on one line', (tester) async {
+      await pumpAccount(tester);
+
+      await tester.tap(inHeader(find.text('Log out')));
+      await tester.pumpAndSettle();
+
+      expect(
+        inSheet(find.textContaining('+971\u00A050\u00A0123\u00A04567')),
+        findsOneWidget,
       );
-      expect(inHeader(find.text('تسجيل الخروج')), findsOneWidget);
-      expect(flip.transform.storage.first, -1);
     });
   });
 
@@ -151,6 +166,28 @@ void main() {
       await pumpAccount(tester, role: UserRole.driver);
 
       expect(find.text('Saved addresses'), findsNothing);
+    });
+  });
+
+  group('appearance', () {
+    testWidgets('follows the system by default', (tester) async {
+      await pumpAccount(tester);
+
+      expect(theme.state, ThemeMode.system);
+      expect(find.text('APPEARANCE'), findsOneWidget);
+      expect(find.text('SYSTEM'), findsOneWidget);
+    });
+
+    testWidgets('picking dark applies and remembers it', (tester) async {
+      await pumpAccount(tester);
+
+      await tester.scrollUntilVisible(find.text('DARK'), 100);
+      await tester.tap(find.text('DARK'));
+      await tester.pumpAndSettle();
+
+      expect(theme.state, ThemeMode.dark);
+      final prefs = await SharedPreferences.getInstance();
+      expect(ThemeCubit(prefs).state, ThemeMode.dark);
     });
   });
 }

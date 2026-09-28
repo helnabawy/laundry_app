@@ -6,6 +6,7 @@ import 'core/di/injection.dart';
 import 'core/l10n/l10n.dart';
 import 'core/locale/locale_cubit.dart';
 import 'core/design/design.dart';
+import 'core/theme/theme_cubit.dart';
 import 'features/auth/presentation/cubit/session_cubit.dart';
 
 class LaundryApp extends StatelessWidget {
@@ -16,6 +17,7 @@ class LaundryApp extends StatelessWidget {
     return MultiBlocProvider(
       providers: [
         BlocProvider.value(value: sl<LocaleCubit>()),
+        BlocProvider.value(value: sl<ThemeCubit>()),
         BlocProvider.value(value: sl<SessionCubit>()),
       ],
       child: BlocBuilder<LocaleCubit, Locale?>(
@@ -30,7 +32,7 @@ class LaundryApp extends StatelessWidget {
             debugShowCheckedModeBanner: false,
             theme: AppTheme.light(),
             darkTheme: AppTheme.dark(),
-            themeMode: ThemeMode.system,
+            themeMode: context.watch<ThemeCubit>().state,
             locale: locale ?? const Locale(LocaleCubit.fallbackLanguageCode),
             supportedLocales: AppLocalizations.supportedLocales,
             localizationsDelegates: AppLocalizations.localizationsDelegates,

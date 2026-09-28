@@ -144,7 +144,7 @@
   },
   "noPickupToday": "No pickups scheduled today",
   "pickupToday": "You have a pickup today",
-  "orderNow": "Order now",
+  "orderNow": "Quick order",
   "orderNowSubtitle": "Choose a service and pickup time",
   "currentOrder": "Current order",
   "orderNumber": "Order {number}",
@@ -168,6 +168,7 @@
   "ourServices": "Our services",
   "noOrdersYet": "No orders yet",
   "navHome": "Home",
+  "navProducts": "Products",
   "navOrders": "My orders",
   "navAccount": "Account",
   "whatToWash": "What would you like cleaned?",
@@ -676,5 +677,56 @@
         "type": "int"
       }
     }
-  }
+  },
+  "shopTitle": "Shop",
+  "shopOurProducts": "Shop our products",
+  "categoryAll": "All",
+  "addToCart": "Add to cart",
+  "viewCartWithCount": "View cart · {count, plural, =1{1 item} other{{count} items}} · {amount}",
+  "@viewCartWithCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      },
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
+  "cartTitle": "Your cart",
+  "cartItemsLabel": "Cart, {count, plural, =0{empty} =1{1 item} other{{count} items}}",
+  "@cartItemsLabel": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "cartEmpty": "Your cart is empty",
+  "vipSurchargeLabel": "VIP surcharge",
+  "vipSurchargeToggleTitle": "VIP service",
+  "vipSurchargeToggleSubtitle": "Priority processing, delivered within {hours} hours",
+  "@vipSurchargeToggleSubtitle": {
+    "placeholders": {
+      "hours": {
+        "type": "int"
+      }
+    }
+  },
+  "checkoutTitle": "Checkout",
+  "codFeeLabel": "Cash on delivery fee",
+  "codFeeSubtitle": "+{amount} handling fee",
+  "@codFeeSubtitle": {
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
+  "shopEmptyState": "No products in this category yet",
+  "productUnavailable": "Currently unavailable",
+  "appearance": "Appearance",
+  "themeSystem": "System",
+  "themeLight": "Light",
+  "themeDark": "Dark"
 }

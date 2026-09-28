@@ -87,8 +87,14 @@ class _MyOrdersPageState extends State<MyOrdersPage> {
                           onReorder: order.status.isPast
                               ? () async {
                                   final cubit = context.read<OrdersCubit>();
+                                  // A shop-flow order (`lines.isEmpty`)
+                                  // reorders into the shop/cart checkout;
+                                  // a wizard-flow order reorders into the
+                                  // wizard, unchanged.
                                   await context.push(
-                                    Routes.orderNew,
+                                    order.lines.isEmpty
+                                        ? Routes.checkout
+                                        : Routes.orderNew,
                                     extra: order,
                                   );
                                   await cubit.load();

@@ -1,9 +1,11 @@
 import '../../../../core/network/api_client.dart';
 import '../../../../core/network/api_endpoints.dart';
+import '../../domain/entities/product.dart';
 import '../../domain/entities/service_category.dart';
 import '../../domain/entities/service_tier.dart';
 import '../../domain/entities/sub_service.dart';
 import '../../domain/entities/time_slot.dart';
+import '../models/product_model.dart';
 import '../models/service_category_model.dart';
 import '../models/service_tier_model.dart';
 import '../models/sub_service_model.dart';
@@ -32,6 +34,15 @@ class CatalogApiDataSource implements CatalogRemoteDataSource {
     return json
         .cast<Map<String, dynamic>>()
         .map(SubServiceModel.fromJson)
+        .toList();
+  }
+
+  @override
+  Future<List<Product>> getProducts() async {
+    final json = await _api.get(ApiEndpoints.products) as List<dynamic>;
+    return json
+        .cast<Map<String, dynamic>>()
+        .map(ProductModel.fromJson)
         .toList();
   }
 

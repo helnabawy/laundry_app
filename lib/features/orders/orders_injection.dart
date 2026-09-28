@@ -65,6 +65,7 @@ void registerOrdersFeature(GetIt sl) {
     // Catalog
     ..registerFactory(() => GetServiceCategories(sl()))
     ..registerFactory(() => GetSubServices(sl()))
+    ..registerFactory(() => GetProducts(sl()))
     ..registerFactory(() => GetServiceTiers(sl()))
     ..registerFactory(() => GetPickupSlots(sl()))
     ..registerFactory(() => GetDeliverySlots(sl()))

@@ -169,6 +169,7 @@ void main() {
       expect(find.text('Edit address'), findsOneWidget);
       expect(find.text('Al Mina'), findsOneWidget);
       expect(find.text('210'), findsOneWidget);
+      await tester.scrollTo(find.text('Delete address'));
       expect(find.text('Delete address'), findsOneWidget);
     });
 
@@ -190,7 +191,7 @@ void main() {
     testWidgets('delete asks first, and cancel keeps it', (tester) async {
       await pumpForm(tester, editing: _work);
 
-      await tester.ensureVisible(find.text('Delete address'));
+      await tester.scrollTo(find.text('Delete address'));
       await tester.tap(find.text('Delete address'));
       await tester.pumpAndSettle();
       expect(find.text('Delete this address?'), findsOneWidget);
@@ -207,7 +208,7 @@ void main() {
       when(() => delete('adr-2')).thenAnswer((_) async => const Ok(null));
       await pumpForm(tester, editing: _work);
 
-      await tester.ensureVisible(find.text('Delete address'));
+      await tester.scrollTo(find.text('Delete address'));
       await tester.tap(find.text('Delete address'));
       await tester.pumpAndSettle();
       await tester.tap(
@@ -227,7 +228,7 @@ void main() {
           .thenAnswer((_) async => const Err(LastAddressFailure()));
       await pumpForm(tester, editing: _work);
 
-      await tester.ensureVisible(find.text('Delete address'));
+      await tester.scrollTo(find.text('Delete address'));
       await tester.tap(find.text('Delete address'));
       await tester.pumpAndSettle();
       await tester.tap(

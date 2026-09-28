@@ -14,6 +14,11 @@ abstract final class Routes {
 
   static const customerHome = '/customer';
   static const orderNew = '/orders/new';
+
+  /// The shop flow: flat product grid + cart, additive alongside the order
+  /// wizard reachable via [orderNew].
+  static const shop = '/shop';
+  static const checkout = '/checkout';
   static String orderDetail(String id) => '/orders/$id';
   static String orderInvoice(String id) => '/orders/$id/invoice';
   static String orderInvoiceHelp(String id) => '/orders/$id/invoice/help';

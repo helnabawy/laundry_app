@@ -10,6 +10,7 @@ abstract final class ApiEndpoints {
   static const serviceCategories = '/api/service-categories';
   static String subServices(String categoryId) =>
       '/api/service-categories/$categoryId/sub-services';
+  static const products = '/api/products';
   static const serviceTiers = '/api/service-tiers';
   static const timeSlots = '/api/timeslots';
   static const orders = '/api/orders';

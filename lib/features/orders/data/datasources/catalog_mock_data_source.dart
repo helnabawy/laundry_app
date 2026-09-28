@@ -1,12 +1,13 @@
 import '../../../../core/mock/mock_database.dart';
+import '../../domain/entities/product.dart';
 import '../../domain/entities/service_category.dart';
 import '../../domain/entities/service_tier.dart';
 import '../../domain/entities/sub_service.dart';
 import '../../domain/entities/time_slot.dart';
 import 'catalog_remote_data_source.dart';
 
-/// Reference data for the order wizard (plan §1: 4 categories, 2 tiers) plus
-/// deterministic slot generation.
+/// Reference data for the order wizard (plan §1: 4 categories, 2 tiers) and
+/// the shop flow's flat product catalog, plus deterministic slot generation.
 ///
 /// Also exposes plain lookups (not part of [CatalogRemoteDataSource]) that
 /// [OrderMockDataSource] uses to resolve ids chosen during order creation.
@@ -113,6 +114,8 @@ class CatalogMockDataSource implements CatalogRemoteDataSource {
         {'ar': 'استلام وتسليم مجاني', 'en': 'Free pickup & delivery'},
         {'ar': 'مواعيد يومية متاحة', 'en': 'Daily slots available'},
       ],
+      surchargeType: TierSurchargeType.none,
+      surchargeValue: 0.0,
     ),
     (
       id: 'tier-vip',
@@ -123,6 +126,126 @@ class CatalogMockDataSource implements CatalogRemoteDataSource {
         {'ar': 'أولوية في المعالجة', 'en': 'Priority processing'},
         {'ar': 'مواعيد تسليم موسعة', 'en': 'Extended delivery slots'},
       ],
+      // Shop flow's cart-level VIP surcharge (plan §1 "دعم VIP surcharge").
+      surchargeType: TierSurchargeType.percentage,
+      surchargeValue: 15.0,
+    ),
+  ];
+
+  /// The shop flow's flat, bilingual product catalog — a product row IS the
+  /// purchasable unit there (no sub-service step), priced in EGP.
+  static final _productsRaw = [
+    // ---- Clothes ------------------------------------------------------
+    (
+      id: 'prod-tshirt',
+      categoryId: 'cat-clothes',
+      name: {'ar': 'تي شيرت', 'en': 'T-shirt'},
+      description: {'ar': 'غسيل وكي', 'en': 'Wash & iron'},
+      unitPrice: 2.0,
+    ),
+    (
+      id: 'prod-shirt',
+      categoryId: 'cat-clothes',
+      name: {'ar': 'قميص', 'en': 'Shirt'},
+      description: {'ar': 'غسيل وكي', 'en': 'Wash & iron'},
+      unitPrice: 10.0,
+    ),
+    (
+      id: 'prod-trouser',
+      categoryId: 'cat-clothes',
+      name: {'ar': 'بنطلون', 'en': 'Trouser'},
+      description: {'ar': 'غسيل وكي', 'en': 'Wash & iron'},
+      unitPrice: 15.0,
+    ),
+    (
+      id: 'prod-jacket',
+      categoryId: 'cat-clothes',
+      name: {'ar': 'جاكيت', 'en': 'Jacket'},
+      description: {'ar': 'غسيل وكي', 'en': 'Wash & iron'},
+      unitPrice: 25.0,
+    ),
+    (
+      id: 'prod-dress',
+      categoryId: 'cat-clothes',
+      name: {'ar': 'فستان', 'en': 'Dress'},
+      description: {'ar': 'غسيل وكي', 'en': 'Wash & iron'},
+      unitPrice: 30.0,
+    ),
+    (
+      id: 'prod-suit',
+      categoryId: 'cat-clothes',
+      name: {'ar': 'بدلة', 'en': 'Suit'},
+      description: {
+        'ar': 'غسيل وكي، جاكيت وبنطلون',
+        'en': 'Wash & iron, jacket & trouser',
+      },
+      unitPrice: 45.0,
+    ),
+    // ---- Home Textiles --------------------------------------------------
+    (
+      id: 'prod-bedsheet',
+      categoryId: 'cat-textiles',
+      name: {'ar': 'ملاءة سرير', 'en': 'Bedsheet'},
+      description: {'ar': 'غسيل وكي', 'en': 'Wash & iron'},
+      unitPrice: 20.0,
+    ),
+    (
+      id: 'prod-pillowcase',
+      categoryId: 'cat-textiles',
+      name: {'ar': 'كيس وسادة', 'en': 'Pillowcase'},
+      description: {'ar': 'غسيل وكي', 'en': 'Wash & iron'},
+      unitPrice: 6.0,
+    ),
+    (
+      id: 'prod-duvet-cover',
+      categoryId: 'cat-textiles',
+      name: {'ar': 'غطاء لحاف', 'en': 'Duvet cover'},
+      description: {'ar': 'غسيل وكي', 'en': 'Wash & iron'},
+      unitPrice: 35.0,
+    ),
+    (
+      id: 'prod-towel',
+      categoryId: 'cat-textiles',
+      name: {'ar': 'منشفة', 'en': 'Towel'},
+      description: {'ar': 'غسيل', 'en': 'Wash'},
+      unitPrice: 8.0,
+    ),
+    // ---- Carpets ----------------------------------------------------------
+    (
+      id: 'prod-carpet-small',
+      categoryId: 'cat-carpets',
+      name: {'ar': 'سجادة صغيرة', 'en': 'Small carpet'},
+      description: {'ar': 'تنظيف عميق وغسيل', 'en': 'Deep cleaning & wash'},
+      unitPrice: 60.0,
+    ),
+    (
+      id: 'prod-carpet-large',
+      categoryId: 'cat-carpets',
+      name: {'ar': 'سجادة كبيرة', 'en': 'Large carpet'},
+      description: {'ar': 'تنظيف عميق وغسيل', 'en': 'Deep cleaning & wash'},
+      unitPrice: 120.0,
+    ),
+    (
+      id: 'prod-rug',
+      categoryId: 'cat-carpets',
+      name: {'ar': 'كليم', 'en': 'Rug'},
+      description: {'ar': 'تنظيف عميق وغسيل', 'en': 'Deep cleaning & wash'},
+      unitPrice: 40.0,
+    ),
+    // ---- Curtains -----------------------------------------------------
+    (
+      id: 'prod-curtain-panel',
+      categoryId: 'cat-curtains',
+      name: {'ar': 'ستارة (قطعة)', 'en': 'Curtain panel'},
+      description: {'ar': 'فك، غسيل، وكي', 'en': 'Take-down, wash & iron'},
+      unitPrice: 30.0,
+    ),
+    (
+      id: 'prod-curtain-set',
+      categoryId: 'cat-curtains',
+      name: {'ar': 'طقم ستائر', 'en': 'Curtain set'},
+      description: {'ar': 'فك، غسيل، وكي', 'en': 'Take-down, wash & iron'},
+      unitPrice: 55.0,
     ),
   ];
 
@@ -139,6 +262,12 @@ class CatalogMockDataSource implements CatalogRemoteDataSource {
         .where((s) => s.categoryId == categoryId)
         .map(_subService)
         .toList();
+  }
+
+  @override
+  Future<List<Product>> getProducts() async {
+    await _db.delay();
+    return _productsRaw.map(_product).toList();
   }
 
   @override
@@ -170,6 +299,13 @@ class CatalogMockDataSource implements CatalogRemoteDataSource {
 
   SubService subServiceById(String id) =>
       _subService(_subServicesRaw.firstWhere((s) => s.id == id));
+
+  Product productById(String id) => _product(
+    _productsRaw.firstWhere(
+      (p) => p.id == id,
+      orElse: () => _db.notFound('Product not found'),
+    ),
+  );
 
   ServiceTier tierById(String id) =>
       _tier(_tiersRaw.firstWhere((t) => t.id == id));
@@ -242,6 +378,23 @@ class CatalogMockDataSource implements CatalogRemoteDataSource {
     description: _db.tr(s.description),
   );
 
+  Product _product(
+    ({
+      String id,
+      String categoryId,
+      Map<String, String> name,
+      Map<String, String> description,
+      double unitPrice,
+    })
+    p,
+  ) => Product(
+    id: p.id,
+    categoryId: p.categoryId,
+    name: _db.tr(p.name),
+    description: _db.tr(p.description),
+    unitPrice: p.unitPrice,
+  );
+
   ServiceTier _tier(
     ({
       String id,
@@ -249,6 +402,8 @@ class CatalogMockDataSource implements CatalogRemoteDataSource {
       int deliveryHours,
       bool isVip,
       List<Map<String, String>> perks,
+      TierSurchargeType surchargeType,
+      double surchargeValue,
     })
     t,
   ) => ServiceTier(
@@ -257,5 +412,7 @@ class CatalogMockDataSource implements CatalogRemoteDataSource {
     deliveryHours: t.deliveryHours,
     isVip: t.isVip,
     perks: t.perks.map(_db.tr).toList(),
+    surchargeType: t.surchargeType,
+    surchargeValue: t.surchargeValue,
   );
 }

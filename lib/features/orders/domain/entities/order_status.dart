@@ -3,8 +3,9 @@
 /// `awaitingPayment` → `processing` → `outForDelivery` are driven by the
 /// facility operator in the Admin Portal (Phase 4) and by Auto-Dispatch
 /// (Phase 3) — neither exists yet, so the mock backend advances them
-/// automatically right after pickup/payment so the app can be demoed
-/// end-to-end.
+/// automatically after pickup/payment so the app can be demoed end-to-end.
+/// A picked-up order that is already priced stays in `processing` for a
+/// short wash window before it goes out for delivery.
 enum OrderStatus {
   pending,
   driverAssigned,

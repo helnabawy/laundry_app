@@ -57,13 +57,21 @@ class _InvoiceViewState extends State<_InvoiceView> {
       builder: (context, state) {
         final order = state.order;
         final invoice = order?.invoice;
+        // A shop-flow order (`lines.isEmpty`) has its price fixed and its
+        // payment already chosen at checkout — this is a read-only receipt
+        // for it, not the wizard flow's post-inspection payment step.
+        final isShopOrder = order != null && order.lines.isEmpty;
         final mustAcknowledge =
-            invoice != null && invoice.hasConditions && !_acknowledged;
+            !isShopOrder &&
+            invoice != null &&
+            invoice.hasConditions &&
+            !_acknowledged;
 
         return DetailPage(
           title: l10n.invoiceTitle,
           subtitle: invoice?.id.toUpperCase(),
-          bottomBar: invoice == null || invoice.paymentMethod != null
+          bottomBar:
+              invoice == null || isShopOrder || invoice.paymentMethod != null
               ? null
               : ActionBar(
                   note: mustAcknowledge
@@ -96,6 +104,8 @@ class _InvoiceViewState extends State<_InvoiceView> {
                         onRetry: () =>
                             context.read<OrderTrackingCubit>().load(),
                       ))
+              : isShopOrder
+              ? _ShopInvoiceBody(invoice: invoice)
               : _InvoiceBody(
                   order: order,
                   invoice: invoice,
@@ -423,6 +433,119 @@ class _ConditionRow extends StatelessWidget {
               ),
             ),
           ),
+      ],
+    );
+  }
+}
+
+/// A shop-flow order's invoice: read-only, since the price was fixed and the
+/// payment already chosen at checkout — no conditions report (that's a
+/// facility-inspection artifact the shop flow never produces) and no
+/// payment-method chooser.
+class _ShopInvoiceBody extends StatelessWidget {
+  const _ShopInvoiceBody({required this.invoice});
+
+  final Invoice invoice;
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = context.l10n;
+    final colors = context.colors;
+    final format = AppFormat.of(context);
+
+    return ListView(
+      padding: EdgeInsets.zero,
+      children: [
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: DesignSpace.gutter),
+          child: StampHeading(
+            l10n.itemsDetails,
+            padding: const EdgeInsets.only(
+              top: DesignSpace.xl,
+              bottom: DesignSpace.belowHeading,
+            ),
+          ),
+        ),
+        LabelGroup(
+          children: [
+            for (final item in invoice.items)
+              LabelRow(
+                title: item.name,
+                subtitle: '${item.quantity} × ${format.money(item.unitPrice)}',
+                value: format.money(item.total),
+              ),
+          ],
+        ),
+
+        Padding(
+          padding: const EdgeInsets.fromLTRB(
+            DesignSpace.gutter,
+            DesignSpace.xl,
+            DesignSpace.gutter,
+            0,
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              FieldLine(
+                label: l10n.subtotal,
+                value: format.money(invoice.subtotal),
+              ),
+              if (invoice.vipSurcharge > 0) ...[
+                const StitchRule.dashed(),
+                FieldLine(
+                  label: l10n.vipSurchargeLabel,
+                  value: format.money(invoice.vipSurcharge),
+                ),
+              ],
+              if (invoice.codFee > 0) ...[
+                const StitchRule.dashed(),
+                FieldLine(
+                  label: l10n.codFeeLabel,
+                  value: format.money(invoice.codFee),
+                ),
+              ],
+              const StitchRule.dashed(),
+              FieldLine(
+                label: l10n.total,
+                value: format.money(invoice.total),
+                emphasised: true,
+              ),
+            ],
+          ),
+        ),
+
+        if (invoice.note case final note?)
+          Padding(
+            padding: const EdgeInsets.fromLTRB(
+              DesignSpace.gutter,
+              DesignSpace.xl,
+              DesignSpace.gutter,
+              0,
+            ),
+            child: NoticeBlock(title: l10n.laundryNote, message: note),
+          ),
+
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: DesignSpace.gutter),
+          child: StampHeading(l10n.paymentMethod),
+        ),
+        LabelGroup(
+          children: [
+            LabelRow(
+              leading: Icon(
+                invoice.paymentMethod == PaymentMethod.card
+                    ? CupertinoIcons.creditcard
+                    : CupertinoIcons.money_dollar_circle,
+                color: colors.ink,
+              ),
+              title: invoice.paymentMethod?.label(l10n) ?? '',
+              subtitle: invoice.paid ? l10n.paid : l10n.unpaid,
+            ),
+          ],
+        ),
+
+        const SizedBox(height: DesignSpace.huge),
       ],
     );
   }

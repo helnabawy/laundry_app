@@ -27,6 +27,17 @@ extension PumpApp on WidgetTester {
     await pumpAndSettle();
   }
 
+  /// Scrolls the page's list until [finder] is built and on screen. Lists
+  /// build lazily, so a control below the fold doesn't exist until then.
+  Future<void> scrollTo(Finder finder) async {
+    await scrollUntilVisible(
+      finder,
+      200,
+      scrollable: find.byType(Scrollable).first,
+    );
+    await pumpAndSettle();
+  }
+
   /// Pumps a single [page] as the only route.
   Future<void> pumpPage(
     Widget page, {

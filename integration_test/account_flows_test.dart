@@ -1,3 +1,4 @@
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -22,6 +23,10 @@ void main() {
   /// A fresh install every time: no session, no saved account, a fresh mock
   /// backend, and English already chosen so each flow starts at login.
   Future<void> launchFreshApp(WidgetTester tester) async {
+    // Unmount the previous flow's app first. Pumping `LaundryApp` over it
+    // would reuse its elements, carrying state such as an open snackbar
+    // into this flow.
+    await tester.pumpWidget(const SizedBox.shrink());
     await sl.reset();
     final prefs = await SharedPreferences.getInstance();
     await prefs.clear();
@@ -46,6 +51,11 @@ void main() {
     await tester.pumpAndSettle();
   }
 
+  Future<void> enterCode(WidgetTester tester) async {
+    await tester.enterText(find.byType(TextField), MockDatabase.otpCode);
+    await tester.pumpAndSettle();
+  }
+
   Future<void> signInWithNewNumber(
     WidgetTester tester, {
     required String phone,
@@ -57,25 +67,46 @@ void main() {
     await enterCode(tester);
   }
 
-  Future<void> enterCode(WidgetTester tester) async {
-    await tester.enterText(find.byType(TextField), MockDatabase.otpCode);
-    await tester.pumpAndSettle();
-  }
-
   Future<void> openAccountTab(WidgetTester tester) => tapAndSettle(
     tester,
-    find.descendant(of: find.byType(TapeTabBar), matching: find.text('Account')),
+    find.descendant(
+      of: find.byType(TapeTabBar),
+      matching: find.text('Account'),
+    ),
   );
 
-  Future<void> fillAddress(WidgetTester tester, {String area = 'Al Reem'}) async {
+  Future<void> fillAddress(
+    WidgetTester tester, {
+    String area = 'Al Reem',
+  }) async {
     await tester.enterText(labelledField('City'), 'Abu Dhabi');
     await tester.enterText(labelledField('Area'), area);
     await tester.enterText(labelledField('Building'), '9');
     await tester.enterText(labelledField('Apartment'), '1204');
   }
 
+  /// Pumps until [finder] matches (or, when [gone], stops matching), or fails after [timeout]. A list reloads
+  /// behind its old rows without animating, so `pumpAndSettle` alone returns
+  /// before the mock backend's reply has landed.
+  Future<void> pumpUntil(
+    WidgetTester tester,
+    Finder finder, {
+    bool gone = false,
+    Duration timeout = const Duration(seconds: 5),
+  }) async {
+    final end = DateTime.now().add(timeout);
+    while (finder.evaluate().isEmpty != gone) {
+      if (DateTime.now().isAfter(end)) {
+        fail('Timed out waiting for ${finder.describeMatch(Plurality.one)}');
+      }
+      await tester.pump(const Duration(milliseconds: 100));
+    }
+    await tester.pumpAndSettle();
+  }
+
   Future<void> deleteAddressNamed(WidgetTester tester, String name) async {
     await tapAndSettle(tester, find.text(name));
+    await tester.scrollTo(find.text('Delete address'));
     await tapAndSettle(tester, find.text('Delete address'));
     await tapAndSettle(tester, inSheet(find.text('Delete address')));
   }
@@ -88,11 +119,7 @@ void main() {
 
       // First time: number, then name.
       expect(find.text('WELCOME BACK'), findsNothing);
-      await signInWithNewNumber(
-        tester,
-        phone: '509876543',
-        name: 'Sara Ahmed',
-      );
+      await signInWithNewNumber(tester, phone: '509876543', name: 'Sara Ahmed');
 
       // The name came from login, so onboarding only wants the address.
       expect(find.text('Where should we pick up your items?'), findsOneWidget);
@@ -148,20 +175,20 @@ void main() {
       await tester.enterText(labelledField('Address name (optional)'), 'Gym');
       await fillAddress(tester);
       await tapAndSettle(tester, find.text('Save'));
-      expect(find.text('Gym'), findsOneWidget);
+      await pumpUntil(tester, find.text('Gym'));
 
       // Edit it.
       await tapAndSettle(tester, find.text('Gym'));
       expect(find.text('Edit address'), findsOneWidget);
       await tester.enterText(labelledField('Area'), 'Saadiyat');
       await tapAndSettle(tester, find.text('Save'));
-      expect(find.textContaining('Saadiyat'), findsOneWidget);
+      await pumpUntil(tester, find.textContaining('Saadiyat'));
 
       // Delete down to the last one, which stays.
       await deleteAddressNamed(tester, 'Gym');
-      expect(find.text('Gym'), findsNothing);
+      await pumpUntil(tester, find.text('Gym'), gone: true);
       await deleteAddressNamed(tester, 'Work');
-      expect(find.text('Work'), findsNothing);
+      await pumpUntil(tester, find.text('Work'), gone: true);
       await deleteAddressNamed(tester, 'Home');
       expect(
         find.text('Keep at least one address for pickups'),

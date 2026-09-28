@@ -56,7 +56,11 @@ class OrderConfirmationView extends StatelessWidget {
               ),
             ),
             CustodyStrip(
-              stages: custodyStagesFor(order.status, l10n),
+              stages: custodyStagesFor(
+                order.status,
+                l10n,
+                isShopOrder: order.lines.isEmpty,
+              ),
               caption:
                   '${l10n.orderNumberLabel} ${order.number} · '
                   '${order.tier.name}',
@@ -101,6 +105,57 @@ class OrderConfirmationView extends StatelessWidget {
               heading: l10n.addressFieldLabel,
               children: [AddressTile(address: order.address)],
             ),
+            // Shop-flow orders already have a fixed, confirmed price at this
+            // point (unlike a wizard-flow order, priced later by the
+            // facility), so the itemized breakdown can be shown immediately.
+            if (order.invoice case final invoice?) ...[
+              Padding(
+                padding: const EdgeInsets.fromLTRB(
+                  DesignSpace.gutter,
+                  DesignSpace.xxl,
+                  DesignSpace.gutter,
+                  0,
+                ),
+                child: LabelGroup(
+                  heading: l10n.itemsDetails,
+                  children: [
+                    for (final item in invoice.items)
+                      LabelRow(
+                        title: item.name,
+                        subtitle:
+                            '${item.quantity} \u00d7 ${format.money(item.unitPrice)}',
+                        value: format.money(item.total),
+                      ),
+                  ],
+                ),
+              ),
+              if (invoice.vipSurcharge > 0)
+                Padding(
+                  padding: const EdgeInsets.fromLTRB(
+                    DesignSpace.gutter,
+                    DesignSpace.xl,
+                    DesignSpace.gutter,
+                    0,
+                  ),
+                  child: FieldLine(
+                    label: l10n.vipSurchargeLabel,
+                    value: format.money(invoice.vipSurcharge),
+                  ),
+                ),
+              if (invoice.codFee > 0)
+                Padding(
+                  padding: EdgeInsets.fromLTRB(
+                    DesignSpace.gutter,
+                    invoice.vipSurcharge > 0 ? DesignSpace.sm : DesignSpace.xl,
+                    DesignSpace.gutter,
+                    0,
+                  ),
+                  child: FieldLine(
+                    label: l10n.codFeeLabel,
+                    value: format.money(invoice.codFee),
+                  ),
+                ),
+            ],
             Padding(
               padding: const EdgeInsets.fromLTRB(
                 DesignSpace.gutter,
@@ -111,7 +166,12 @@ class OrderConfirmationView extends StatelessWidget {
               child: AmountSlot(
                 label: l10n.total,
                 placeholder: l10n.currencyAed('\u2014.\u2014\u2014'),
-                pendingNote: l10n.invoiceAfterInspectionBody,
+                amount: order.invoice != null
+                    ? format.money(order.invoice!.total)
+                    : null,
+                pendingNote: order.invoice != null
+                    ? null
+                    : l10n.invoiceAfterInspectionBody,
               ),
             ),
           ],

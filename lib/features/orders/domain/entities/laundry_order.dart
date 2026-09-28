@@ -34,8 +34,12 @@ class LaundryOrder extends Equatable {
   final String id;
   final int number;
 
-  /// One entry per category in this collection, each with its own service.
-  /// Never empty.
+  /// One entry per category in this collection, each with its own service —
+  /// the wizard flow. Never empty for a wizard-flow order.
+  ///
+  /// Empty for a shop-flow order (built from a product cart instead, with
+  /// [invoice] populated immediately) — this is the discriminator between
+  /// the two flows.
   final List<OrderLine> lines;
 
   final ServiceTier tier;
@@ -70,12 +74,26 @@ class LaundryOrder extends Equatable {
 
   /// `Clothes · Wash & Iron` for one line, `Clothes, Curtains` for several —
   /// the fibre line has no room to spell out a service per category.
-  String get servicesLabel => lines.length == 1
-      ? lines.single.label
-      : lines.map((l) => l.category.name).join(', ');
+  ///
+  /// A shop-flow order has no [lines] (see its doc comment) — its invoice
+  /// items stand in instead: the product name for one item, the item names
+  /// joined for several.
+  String get servicesLabel {
+    if (lines.isEmpty) {
+      final items = invoice!.items;
+      return items.length == 1
+          ? items.single.name
+          : items.map((i) => i.name).join(', ');
+    }
+    return lines.length == 1
+        ? lines.single.label
+        : lines.map((l) => l.category.name).join(', ');
+  }
 
   /// The glyph the order is represented by when only one mark fits.
-  String get leadCategoryId => lines.first.category.id;
+  String get leadCategoryId => lines.isEmpty
+      ? invoice!.items.first.categoryId!
+      : lines.first.category.id;
 
   DateTime? timeOf(OrderStatus status) => timeline
       .cast<OrderTimelineEvent?>()

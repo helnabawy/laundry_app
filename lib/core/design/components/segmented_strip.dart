@@ -57,3 +57,86 @@ class SegmentedStrip extends StatelessWidget {
     );
   }
 }
+
+/// A horizontally-scrolling row of pill filter chips — "All" plus each
+/// category — the ink fills the selected one. Unlike [SegmentedStrip], the
+/// set is open-ended and only one chip is ever selected at a time, so it
+/// reads as a filter rather than a fixed set of fields.
+class ChipStrip extends StatelessWidget {
+  const ChipStrip({
+    super.key,
+    required this.labels,
+    required this.selectedIndex,
+    required this.onSelected,
+  });
+
+  final List<String> labels;
+
+  /// Null selects nothing (every chip reads as unselected).
+  final int? selectedIndex;
+  final ValueChanged<int> onSelected;
+
+  @override
+  Widget build(BuildContext context) {
+    return SizedBox(
+      height: 40,
+      child: ListView.separated(
+        scrollDirection: Axis.horizontal,
+        padding: const EdgeInsets.symmetric(horizontal: DesignSpace.gutter),
+        itemCount: labels.length,
+        separatorBuilder: (_, _) => const SizedBox(width: DesignSpace.sm),
+        itemBuilder: (context, i) => _Chip(
+          label: labels[i],
+          selected: i == selectedIndex,
+          onTap: () => onSelected(i),
+        ),
+      ),
+    );
+  }
+}
+
+class _Chip extends StatelessWidget {
+  const _Chip({
+    required this.label,
+    required this.selected,
+    required this.onTap,
+  });
+
+  final String label;
+  final bool selected;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    final colors = context.colors;
+    return Semantics(
+      button: true,
+      selected: selected,
+      child: GestureDetector(
+        behavior: HitTestBehavior.opaque,
+        onTap: onTap,
+        child: AnimatedContainer(
+          duration: DesignMotion.quick,
+          alignment: Alignment.center,
+          padding: const EdgeInsets.symmetric(horizontal: DesignSpace.lg),
+          decoration: BoxDecoration(
+            color: selected ? colors.ink : const Color(0x00000000),
+            border: Border.all(
+              color: selected ? colors.ink : colors.rule,
+              width: DesignRule.hair,
+            ),
+            borderRadius: BorderRadius.circular(DesignRadius.control),
+          ),
+          child: Text(
+            label.toUpperCase(),
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+            style: DesignTypography.stamp(
+              selected ? colors.onInk : colors.inkSecondary,
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}

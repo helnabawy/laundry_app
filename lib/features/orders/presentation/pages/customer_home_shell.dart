@@ -9,6 +9,8 @@ import '../../../../core/di/injection.dart';
 import '../../../../core/l10n/l10n.dart';
 import '../../../auth/presentation/widgets/account_page.dart';
 import '../../../notifications/presentation/cubit/notifications_cubit.dart';
+import '../../../shop/presentation/cubit/cart_cubit.dart';
+import '../../../shop/presentation/pages/product_grid_page.dart';
 import '../cubit/orders_cubit.dart';
 import 'home_page.dart';
 import 'my_orders_page.dart';
@@ -24,6 +26,7 @@ class CustomerHomeShell extends StatelessWidget {
       providers: [
         BlocProvider(create: (_) => sl<OrdersCubit>()..load()),
         BlocProvider(create: (_) => sl<NotificationsCubit>()..load()),
+        BlocProvider.value(value: sl<CartCubit>()),
       ],
       child: const _CustomerHomeView(),
     );
@@ -40,15 +43,15 @@ class _CustomerHomeView extends StatefulWidget {
 class _CustomerHomeViewState extends State<_CustomerHomeView> {
   var _index = 0;
 
-  void _goToOrders() => setState(() => _index = 1);
+  void _goToOrders() => setState(() => _index = 2);
 
-  /// The order list is the subject of two of the three tabs, and an order can
+  /// The order list is the subject of two of the four tabs, and an order can
   /// be created or advanced while this shell is alive. Re-reading it on tab
   /// change is cheap and keeps the hero from claiming nothing is in custody
   /// when something is.
   void _select(int index) {
     setState(() => _index = index);
-    if (index != 2) unawaited(context.read<OrdersCubit>().load());
+    if (index != 3) unawaited(context.read<OrdersCubit>().load());
     unawaited(context.read<NotificationsCubit>().load());
   }
 
@@ -58,6 +61,7 @@ class _CustomerHomeViewState extends State<_CustomerHomeView> {
     final colors = context.colors;
     final pages = [
       HomePage(onViewAllOrders: _goToOrders),
+      const ProductGridPage(),
       const MyOrdersPage(),
       const AccountPage(),
     ];
@@ -73,6 +77,11 @@ class _CustomerHomeViewState extends State<_CustomerHomeView> {
             icon: CupertinoIcons.house,
             activeIcon: CupertinoIcons.house_fill,
             label: l10n.navHome,
+          ),
+          TapeTab(
+            icon: CupertinoIcons.bag,
+            activeIcon: CupertinoIcons.bag_fill,
+            label: l10n.navProducts,
           ),
           TapeTab(
             icon: CupertinoIcons.doc_text,

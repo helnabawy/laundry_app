@@ -17,7 +17,10 @@ class OrderApiDataSource implements OrderRemoteDataSource {
       ApiEndpoints.orders,
       data: {
         'lines': [for (final line in params.lines) line.toJson()],
+        'items': [for (final item in params.items) item.toJson()],
         'tierId': params.tierId,
+        if (params.paymentMethod != null)
+          'paymentMethod': params.paymentMethod!.name,
         'pickupSlotId': params.pickupSlotId,
         'deliverySlotId': params.deliverySlotId,
         'addressId': params.addressId,

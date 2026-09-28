@@ -5,5 +5,7 @@ abstract final class OrderItemModel {
     name: json['name'] as String,
     quantity: json['quantity'] as int,
     unitPrice: (json['unitPrice'] as num).toDouble(),
+    productId: json['productId'] as String?,
+    categoryId: json['categoryId'] as String?,
   );
 }

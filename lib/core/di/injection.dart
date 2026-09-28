@@ -6,6 +6,7 @@ import '../../features/auth/auth_injection.dart';
 import '../../features/auth/presentation/cubit/session_cubit.dart';
 import '../../features/notifications/notifications_injection.dart';
 import '../../features/orders/orders_injection.dart';
+import '../../features/shop/shop_injection.dart';
 import '../../features/support/support_injection.dart';
 import '../config/app_config.dart';
 import '../locale/locale_cubit.dart';
@@ -14,6 +15,7 @@ import '../network/api_client.dart';
 import '../network/dio_factory.dart';
 import '../router/app_router.dart';
 import '../storage/token_storage.dart';
+import '../theme/theme_cubit.dart';
 
 final sl = GetIt.instance;
 
@@ -26,6 +28,7 @@ Future<void> configureDependencies() async {
     ..registerSingleton<SharedPreferences>(prefs)
     ..registerLazySingleton<TokenStorage>(SecureTokenStorage.new)
     ..registerLazySingleton(() => LocaleCubit(sl()))
+    ..registerLazySingleton(() => ThemeCubit(sl()))
     ..registerLazySingleton(
       () => MockDatabase(languageCode: () => sl<LocaleCubit>().languageCode),
     )
@@ -43,6 +46,7 @@ Future<void> configureDependencies() async {
   registerAddressesFeature(sl);
   registerAuthFeature(sl);
   registerOrdersFeature(sl);
+  registerShopFeature(sl);
   registerSupportFeature(sl);
   registerNotificationsFeature(sl);
 

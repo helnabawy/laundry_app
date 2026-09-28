@@ -20,6 +20,8 @@ import '../../features/orders/presentation/pages/invoice_page.dart';
 import '../../features/orders/presentation/pages/order_tracking_page.dart';
 import '../../features/orders/presentation/pages/order_wizard_page.dart';
 import '../../features/orders/presentation/pages/pickup_detail_page.dart';
+import '../../features/shop/presentation/pages/checkout_page.dart';
+import '../../features/shop/presentation/pages/product_grid_page.dart';
 import '../../features/support/presentation/pages/assistant_page.dart';
 import '../../features/support/presentation/pages/invoice_help_page.dart';
 import '../locale/locale_cubit.dart';
@@ -84,6 +86,24 @@ GoRouter createRouter({
           final LaundryOrder order => OrderWizardPage(reorderFrom: order),
           (category: final String id) => OrderWizardPage(startWithCategory: id),
           _ => const OrderWizardPage(),
+        },
+      ),
+      GoRoute(
+        path: Routes.shop,
+        // `extra` is `(category: id)` when a service row or category chip
+        // was tapped on Home.
+        builder: (_, state) => switch (state.extra) {
+          (category: final String id) => ProductGridPage(startWithCategory: id),
+          _ => const ProductGridPage(),
+        },
+      ),
+      GoRoute(
+        path: Routes.checkout,
+        // `extra` is the past shop-flow order being repeated, when
+        // reordering.
+        builder: (_, state) => switch (state.extra) {
+          final LaundryOrder order => CheckoutPage(reorderFrom: order),
+          _ => const CheckoutPage(),
         },
       ),
       GoRoute(
@@ -175,6 +195,8 @@ String? resolveRedirect({
         Routes.customerHome,
         '/orders',
         Routes.addresses,
+        Routes.shop,
+        Routes.checkout,
       ];
       final inCustomerArea = customerAreaPrefixes.any(location.startsWith);
       final inDriverArea = location.startsWith(Routes.driverHome);

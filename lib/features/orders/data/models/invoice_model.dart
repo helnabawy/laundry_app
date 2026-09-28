@@ -17,6 +17,8 @@ abstract final class InvoiceModel {
     paymentMethod: (json['paymentMethod'] as String?) != null
         ? PaymentMethod.fromJson(json['paymentMethod'] as String)
         : null,
+    vipSurcharge: (json['vipSurcharge'] as num?)?.toDouble() ?? 0,
+    codFee: (json['codFee'] as num?)?.toDouble() ?? 0,
     paid: json['paid'] as bool,
   );
 }
