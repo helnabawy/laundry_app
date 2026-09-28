@@ -6,17 +6,10 @@
 abstract final class AppConfig {
   /// When true the app runs against the in-memory mock backend
   /// (default until the ASP.NET Core API from Phase 1 is deployed).
-  static const bool useMockApi = bool.fromEnvironment(
-    'USE_MOCK_API',
-    defaultValue: true,
-  );
+  static const bool useMockApi = bool.fromEnvironment('USE_MOCK_API', defaultValue: true);
 
-  /// Base URL of the ASP.NET Core API. `10.0.2.2` is the host machine as
   /// seen from the Android emulator.
-  static const String apiBaseUrl = String.fromEnvironment(
-    'API_BASE_URL',
-    defaultValue: 'http://10.0.2.2:5080',
-  );
+  static const String apiBaseUrl = String.fromEnvironment('API_BASE_URL', defaultValue: 'http://10.0.2.2:5080');
 
   /// UAE only for the MVP.
   static const String countryDialCode = '+971';
@@ -28,7 +21,6 @@ abstract final class AppConfig {
 
   /// Map tiles for the address pin. OpenStreetMap's own servers are fine for
   /// development but not for production traffic — point this at a paid tile
-  /// host (MapTiler, Mapbox, Stadia…) before launch.
   static const String mapTileUrl = String.fromEnvironment(
     'MAP_TILE_URL',
     defaultValue: 'https://tile.openstreetmap.org/{z}/{x}/{y}.png',

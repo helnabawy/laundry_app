@@ -364,6 +364,10 @@
   "openInMaps": "Open in Maps",
   "call": "Call",
   "message": "Message",
+  "whatsapp": "WhatsApp",
+  "@whatsapp": {
+    "description": "Driver's button that opens a WhatsApp chat with the customer."
+  },
   "countAtLaundryTitle": "Items are counted at the laundry",
   "countAtLaundryBody": "Confirm pickup only after receiving all items",
   "confirmPickup": "Confirm pickup",

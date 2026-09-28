@@ -98,20 +98,6 @@ class _OrderTrackingView extends StatelessWidget {
               padding: EdgeInsets.zero,
               children: [
                 HeroCustody(order: order),
-                if (order.driverName case final driver?)
-                  Padding(
-                    padding: const EdgeInsets.fromLTRB(
-                      DesignSpace.gutter,
-                      DesignSpace.xl,
-                      DesignSpace.gutter,
-                      0,
-                    ),
-                    child: Text(
-                      l10n.driverName(driver),
-                      style: Theme.of(context).textTheme.bodyMedium
-                          ?.copyWith(color: colors.inkSecondary),
-                    ),
-                  ),
                 if (order.status == OrderStatus.delivered)
                   Padding(
                     padding: const EdgeInsets.fromLTRB(

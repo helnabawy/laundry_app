@@ -5,7 +5,8 @@ import '../../../../core/l10n/l10n.dart';
 import '../../../../core/utils/phone_format.dart';
 import '../utils/launchers.dart';
 
-/// Who the driver is meeting, and the two ways to reach them.
+/// Who the driver is meeting, and the two ways to reach them: a phone call
+/// or a WhatsApp chat.
 ///
 /// Reaching the customer is the driver's most time-critical action after
 /// navigating, so both routes sit on one strip at full touch size.
@@ -52,10 +53,10 @@ class StopContact extends StatelessWidget {
               const SizedBox(width: DesignSpace.md),
               Expanded(
                 child: ActionButton(
-                  label: l10n.message,
+                  label: l10n.whatsapp,
                   tone: ActionTone.secondary,
-                  icon: const Icon(CupertinoIcons.chat_bubble),
-                  onPressed: () => launchSms(phone),
+                  icon: const Icon(CupertinoIcons.chat_bubble_text),
+                  onPressed: () => launchWhatsApp(phone),
                 ),
               ),
             ],

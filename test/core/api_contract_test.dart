@@ -69,7 +69,10 @@ void main() {
 
   group('catalogue', () {
     test('categories, sub-services, products, tiers and slots parse', () {
-      expect(list('categories_ar').map(ServiceCategoryModel.fromJson), isNotEmpty);
+      expect(
+        list('categories_ar').map(ServiceCategoryModel.fromJson),
+        isNotEmpty,
+      );
       expect(list('sub_services').map(SubServiceModel.fromJson), isNotEmpty);
       expect(list('products').map(ProductModel.fromJson), isNotEmpty);
       final tiers = list('tiers_ar').map(ServiceTierModel.fromJson).toList();
@@ -82,7 +85,9 @@ void main() {
     test('verify-otp, me and addresses parse', () {
       final verify = fixture('verify_otp_customer') as Map<String, dynamic>;
       expect(verify['token'], isA<String>());
-      final user = AppUserModel.fromJson(verify['user'] as Map<String, dynamic>);
+      final user = AppUserModel.fromJson(
+        verify['user'] as Map<String, dynamic>,
+      );
       expect(user.role, UserRole.customer);
       AppUserModel.fromJson(fixture('me') as Map<String, dynamic>);
       expect(list('addresses').map(AddressModel.fromJson), isNotEmpty);
