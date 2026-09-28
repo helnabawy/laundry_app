@@ -61,9 +61,11 @@ abstract final class LaundryOrderModel {
 
   /// Reads the multi-line shape, falling back to the single `category` /
   /// `subService` pair an older payload sends so one backend version does not
-  /// break the app.
+  /// break the app. A shop order has no lines: `lines` is `[]` and there is no
+  /// legacy pair, so it parses to an empty list.
   static List<OrderLine> _lines(Map<String, dynamic> json) {
-    if (json['lines'] case final List<dynamic> raw when raw.isNotEmpty) {
+    if (json['lines'] case final List<dynamic> raw
+        when raw.isNotEmpty || json['category'] == null) {
       return raw
           .cast<Map<String, dynamic>>()
           .map(
@@ -78,6 +80,7 @@ abstract final class LaundryOrderModel {
           )
           .toList();
     }
+    if (json['category'] is! Map<String, dynamic>) return const [];
     return [
       OrderLine(
         category: ServiceCategoryModel.fromJson(

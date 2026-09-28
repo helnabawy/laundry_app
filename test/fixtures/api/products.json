@@ -1,0 +1,137 @@
+[
+    {
+        "id": "prod-tshirt",
+        "categoryId": "cat-clothes",
+        "name": "T-shirt",
+        "description": "Wash & iron",
+        "unitPrice": 2,
+        "imageUrl": null,
+        "isActive": true
+    },
+    {
+        "id": "prod-shirt",
+        "categoryId": "cat-clothes",
+        "name": "Shirt",
+        "description": "Wash & iron",
+        "unitPrice": 10,
+        "imageUrl": null,
+        "isActive": true
+    },
+    {
+        "id": "prod-trouser",
+        "categoryId": "cat-clothes",
+        "name": "Trouser",
+        "description": "Wash & iron",
+        "unitPrice": 15,
+        "imageUrl": null,
+        "isActive": true
+    },
+    {
+        "id": "prod-jacket",
+        "categoryId": "cat-clothes",
+        "name": "Jacket",
+        "description": "Wash & iron",
+        "unitPrice": 25,
+        "imageUrl": null,
+        "isActive": true
+    },
+    {
+        "id": "prod-dress",
+        "categoryId": "cat-clothes",
+        "name": "Dress",
+        "description": "Wash & iron",
+        "unitPrice": 30,
+        "imageUrl": null,
+        "isActive": true
+    },
+    {
+        "id": "prod-suit",
+        "categoryId": "cat-clothes",
+        "name": "Suit",
+        "description": "Wash & iron, jacket & trouser",
+        "unitPrice": 45,
+        "imageUrl": null,
+        "isActive": true
+    },
+    {
+        "id": "prod-bedsheet",
+        "categoryId": "cat-textiles",
+        "name": "Bedsheet",
+        "description": "Wash & iron",
+        "unitPrice": 20,
+        "imageUrl": null,
+        "isActive": true
+    },
+    {
+        "id": "prod-pillowcase",
+        "categoryId": "cat-textiles",
+        "name": "Pillowcase",
+        "description": "Wash & iron",
+        "unitPrice": 6,
+        "imageUrl": null,
+        "isActive": true
+    },
+    {
+        "id": "prod-duvet-cover",
+        "categoryId": "cat-textiles",
+        "name": "Duvet cover",
+        "description": "Wash & iron",
+        "unitPrice": 35,
+        "imageUrl": null,
+        "isActive": true
+    },
+    {
+        "id": "prod-towel",
+        "categoryId": "cat-textiles",
+        "name": "Towel",
+        "description": "Wash",
+        "unitPrice": 8,
+        "imageUrl": null,
+        "isActive": true
+    },
+    {
+        "id": "prod-carpet-small",
+        "categoryId": "cat-carpets",
+        "name": "Small carpet",
+        "description": "Deep cleaning & wash",
+        "unitPrice": 60,
+        "imageUrl": null,
+        "isActive": true
+    },
+    {
+        "id": "prod-carpet-large",
+        "categoryId": "cat-carpets",
+        "name": "Large carpet",
+        "description": "Deep cleaning & wash",
+        "unitPrice": 120,
+        "imageUrl": null,
+        "isActive": true
+    },
+    {
+        "id": "prod-rug",
+        "categoryId": "cat-carpets",
+        "name": "Rug",
+        "description": "Deep cleaning & wash",
+        "unitPrice": 40,
+        "imageUrl": null,
+        "isActive": true
+    },
+    {
+        "id": "prod-curtain-panel",
+        "categoryId": "cat-curtains",
+        "name": "Curtain panel",
+        "description": "Take-down, wash & iron",
+        "unitPrice": 30,
+        "imageUrl": null,
+        "isActive": true
+    },
+    {
+        "id": "prod-curtain-set",
+        "categoryId": "cat-curtains",
+        "name": "Curtain set",
+        "description": "Take-down, wash & iron",
+        "unitPrice": 55,
+        "imageUrl": null,
+        "isActive": true
+    }
+]

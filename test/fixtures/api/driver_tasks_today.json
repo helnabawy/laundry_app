@@ -1,0 +1,96 @@
+[
+    {
+        "type": "pickup",
+        "order": {
+            "id": "cmul7fd1301n2nluxkx1wueqw",
+            "number": 1224,
+            "lines": [],
+            "tier": {
+                "id": "tier-standard",
+                "name": "Standard",
+                "deliveryHours": 48,
+                "isVip": false,
+                "perks": [
+                    "Free pickup & delivery",
+                    "Daily slots available"
+                ],
+                "surchargeType": "none",
+                "surchargeValue": 0
+            },
+            "pickupSlot": {
+                "id": "2026-09-29-win-1100",
+                "start": "2026-09-29T07:00:00.000Z",
+                "end": "2026-09-29T09:00:00.000Z",
+                "isFull": false
+            },
+            "deliverySlot": {
+                "id": "2026-10-01-win-0900",
+                "start": "2026-10-01T05:00:00.000Z",
+                "end": "2026-10-01T07:00:00.000Z",
+                "isFull": false
+            },
+            "address": {
+                "id": "adr-1",
+                "area": "الخالدية",
+                "city": "أبوظبي",
+                "kind": "home",
+                "floor": "7",
+                "label": null,
+                "building": "12",
+                "latitude": 24.4672,
+                "apartment": "704",
+                "longitude": 54.3532,
+                "alternatePhone": null
+            },
+            "customerName": "خالد المنصوري",
+            "customerPhone": "+971501234567",
+            "status": "driverAssigned",
+            "createdAt": "2026-09-28T12:09:02.573Z",
+            "timeline": [
+                {
+                    "status": "pending",
+                    "at": "2026-09-28T12:09:02.573Z"
+                },
+                {
+                    "status": "driverAssigned",
+                    "at": "2026-09-28T17:37:30.593Z"
+                }
+            ],
+            "driverName": "أحمد علي",
+            "invoice": {
+                "id": "INV-1224",
+                "items": [
+                    {
+                        "name": "Shirt",
+                        "quantity": 4,
+                        "unitPrice": 10,
+                        "productId": "prod-shirt",
+                        "categoryId": "cat-clothes"
+                    },
+                    {
+                        "name": "Jacket",
+                        "quantity": 1,
+                        "unitPrice": 25,
+                        "productId": "prod-jacket",
+                        "categoryId": "cat-clothes"
+                    },
+                    {
+                        "name": "Duvet cover",
+                        "quantity": 3,
+                        "unitPrice": 35,
+                        "productId": "prod-duvet-cover",
+                        "categoryId": "cat-textiles"
+                    }
+                ],
+                "conditions": [],
+                "note": null,
+                "paymentMethod": "card",
+                "vipSurcharge": 0,
+                "codFee": 0,
+                "paid": true
+            },
+            "failure": null,
+            "rating": null
+        }
+    }
+]

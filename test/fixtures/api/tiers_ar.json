@@ -1,0 +1,26 @@
+[
+    {
+        "id": "tier-standard",
+        "name": "عادي",
+        "deliveryHours": 48,
+        "isVip": false,
+        "perks": [
+            "استلام وتسليم مجاني",
+            "مواعيد يومية متاحة"
+        ],
+        "surchargeType": "none",
+        "surchargeValue": 0
+    },
+    {
+        "id": "tier-vip",
+        "name": "VIP",
+        "deliveryHours": 24,
+        "isVip": true,
+        "perks": [
+            "أولوية في المعالجة",
+            "مواعيد تسليم موسعة"
+        ],
+        "surchargeType": "percentage",
+        "surchargeValue": 15
+    }
+]

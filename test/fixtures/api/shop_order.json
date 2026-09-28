@@ -1,0 +1,73 @@
+{
+    "id": "cmulb55b6006ub4uxvs6c9wi2",
+    "number": 1240,
+    "lines": [],
+    "tier": {
+        "id": "tier-standard",
+        "name": "Standard",
+        "deliveryHours": 48,
+        "isVip": false,
+        "perks": [
+            "Free pickup & delivery",
+            "Daily slots available"
+        ],
+        "surchargeType": "none",
+        "surchargeValue": 0
+    },
+    "pickupSlot": {
+        "id": "2026-09-28-win-1800",
+        "start": "2026-09-28T14:00:00.000Z",
+        "end": "2026-09-28T16:00:00.000Z",
+        "isFull": false
+    },
+    "deliverySlot": {
+        "id": "2026-09-30-win-1800",
+        "start": "2026-09-30T14:00:00.000Z",
+        "end": "2026-09-30T16:00:00.000Z",
+        "isFull": false
+    },
+    "address": {
+        "id": "adr-1",
+        "area": "\u0627\u0644\u062e\u0627\u0644\u062f\u064a\u0629",
+        "city": "\u0623\u0628\u0648\u0638\u0628\u064a",
+        "kind": "home",
+        "floor": "7",
+        "label": null,
+        "building": "12",
+        "latitude": 24.4672,
+        "apartment": "704",
+        "longitude": 54.3532,
+        "alternatePhone": null
+    },
+    "customerName": "\u062e\u0627\u0644\u062f \u0627\u0644\u0645\u0646\u0635\u0648\u0631\u064a",
+    "customerPhone": "+971501234567",
+    "status": "pending",
+    "createdAt": "2026-09-28T13:53:05.826Z",
+    "timeline": [
+        {
+            "status": "pending",
+            "at": "2026-09-28T13:53:05.915Z"
+        }
+    ],
+    "driverName": null,
+    "invoice": {
+        "id": "INV-1240",
+        "items": [
+            {
+                "name": "T-shirt",
+                "quantity": 1,
+                "unitPrice": 2,
+                "productId": "prod-tshirt",
+                "categoryId": "cat-clothes"
+            }
+        ],
+        "conditions": [],
+        "note": null,
+        "paymentMethod": "cashOnDelivery",
+        "vipSurcharge": 0,
+        "codFee": 5,
+        "paid": false
+    },
+    "failure": null,
+    "rating": null
+}

@@ -1,0 +1,26 @@
+[
+    {
+        "id": "sub-wash-only",
+        "categoryId": "cat-clothes",
+        "name": "Wash only",
+        "description": "Wash & dry, no iron"
+    },
+    {
+        "id": "sub-wash-iron",
+        "categoryId": "cat-clothes",
+        "name": "Wash & Iron",
+        "description": "Wash, dry & full iron"
+    },
+    {
+        "id": "sub-iron-only",
+        "categoryId": "cat-clothes",
+        "name": "Iron only",
+        "description": "Iron clean items"
+    },
+    {
+        "id": "sub-full-service",
+        "categoryId": "cat-clothes",
+        "name": "Full Service",
+        "description": "Wash, iron, hang & wrap"
+    }
+]

@@ -1,0 +1,28 @@
+[
+    {
+        "id": "adr-1",
+        "kind": "home",
+        "label": null,
+        "city": "أبوظبي",
+        "area": "الخالدية",
+        "building": "12",
+        "floor": "7",
+        "apartment": "704",
+        "alternatePhone": null,
+        "latitude": 24.4672,
+        "longitude": 54.3532
+    },
+    {
+        "id": "adr-2",
+        "kind": "work",
+        "label": null,
+        "city": "أبوظبي",
+        "area": "الميناء",
+        "building": "3",
+        "floor": "2",
+        "apartment": "210",
+        "alternatePhone": null,
+        "latitude": 24.519,
+        "longitude": 54.379
+    }
+]

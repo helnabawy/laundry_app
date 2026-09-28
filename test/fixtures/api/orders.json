@@ -1,0 +1,2052 @@
+[
+  {
+    "id": "cmulb7gwc0075b4uxtpslogyp",
+    "number": 1242,
+    "lines": [],
+    "tier": {
+      "id": "tier-standard",
+      "name": "Standard",
+      "deliveryHours": 48,
+      "isVip": false,
+      "perks": [
+        "Free pickup & delivery",
+        "Daily slots available"
+      ],
+      "surchargeType": "none",
+      "surchargeValue": 0
+    },
+    "pickupSlot": {
+      "id": "2026-09-28-win-1800",
+      "start": "2026-09-28T14:00:00.000Z",
+      "end": "2026-09-28T16:00:00.000Z",
+      "isFull": false
+    },
+    "deliverySlot": {
+      "id": "2026-09-30-win-1800",
+      "start": "2026-09-30T14:00:00.000Z",
+      "end": "2026-09-30T16:00:00.000Z",
+      "isFull": false
+    },
+    "address": {
+      "id": "adr-1",
+      "area": "الخالدية",
+      "city": "أبوظبي",
+      "kind": "home",
+      "floor": "7",
+      "label": null,
+      "building": "12",
+      "latitude": 24.4672,
+      "apartment": "704",
+      "longitude": 54.3532,
+      "alternatePhone": null
+    },
+    "customerName": "خالد المنصوري",
+    "customerPhone": "+971501234567",
+    "status": "pending",
+    "createdAt": "2026-09-28T13:54:54.156Z",
+    "timeline": [
+      {
+        "status": "pending",
+        "at": "2026-09-28T13:54:54.191Z"
+      }
+    ],
+    "driverName": null,
+    "invoice": {
+      "id": "INV-1242",
+      "items": [
+        {
+          "name": "T-shirt",
+          "quantity": 1,
+          "unitPrice": 2,
+          "productId": "prod-tshirt",
+          "categoryId": "cat-clothes"
+        }
+      ],
+      "conditions": [],
+      "note": null,
+      "paymentMethod": "cashOnDelivery",
+      "vipSurcharge": 0,
+      "codFee": 5,
+      "paid": false
+    },
+    "failure": null,
+    "rating": null
+  },
+  {
+    "id": "cmulb6ha3006zb4ux5bc214hd",
+    "number": 1241,
+    "lines": [],
+    "tier": {
+      "id": "tier-standard",
+      "name": "Standard",
+      "deliveryHours": 48,
+      "isVip": false,
+      "perks": [
+        "Free pickup & delivery",
+        "Daily slots available"
+      ],
+      "surchargeType": "none",
+      "surchargeValue": 0
+    },
+    "pickupSlot": {
+      "id": "2026-09-28-win-1800",
+      "start": "2026-09-28T14:00:00.000Z",
+      "end": "2026-09-28T16:00:00.000Z",
+      "isFull": false
+    },
+    "deliverySlot": {
+      "id": "2026-09-30-win-1800",
+      "start": "2026-09-30T14:00:00.000Z",
+      "end": "2026-09-30T16:00:00.000Z",
+      "isFull": false
+    },
+    "address": {
+      "id": "adr-1",
+      "area": "الخالدية",
+      "city": "أبوظبي",
+      "kind": "home",
+      "floor": "7",
+      "label": null,
+      "building": "12",
+      "latitude": 24.4672,
+      "apartment": "704",
+      "longitude": 54.3532,
+      "alternatePhone": null
+    },
+    "customerName": "خالد المنصوري",
+    "customerPhone": "+971501234567",
+    "status": "pending",
+    "createdAt": "2026-09-28T13:54:07.995Z",
+    "timeline": [
+      {
+        "status": "pending",
+        "at": "2026-09-28T13:54:08.030Z"
+      }
+    ],
+    "driverName": null,
+    "invoice": {
+      "id": "INV-1241",
+      "items": [
+        {
+          "name": "T-shirt",
+          "quantity": 1,
+          "unitPrice": 2,
+          "productId": "prod-tshirt",
+          "categoryId": "cat-clothes"
+        }
+      ],
+      "conditions": [],
+      "note": null,
+      "paymentMethod": "cashOnDelivery",
+      "vipSurcharge": 0,
+      "codFee": 5,
+      "paid": false
+    },
+    "failure": null,
+    "rating": null
+  },
+  {
+    "id": "cmulb55b6006ub4uxvs6c9wi2",
+    "number": 1240,
+    "lines": [],
+    "tier": {
+      "id": "tier-standard",
+      "name": "Standard",
+      "deliveryHours": 48,
+      "isVip": false,
+      "perks": [
+        "Free pickup & delivery",
+        "Daily slots available"
+      ],
+      "surchargeType": "none",
+      "surchargeValue": 0
+    },
+    "pickupSlot": {
+      "id": "2026-09-28-win-1800",
+      "start": "2026-09-28T14:00:00.000Z",
+      "end": "2026-09-28T16:00:00.000Z",
+      "isFull": false
+    },
+    "deliverySlot": {
+      "id": "2026-09-30-win-1800",
+      "start": "2026-09-30T14:00:00.000Z",
+      "end": "2026-09-30T16:00:00.000Z",
+      "isFull": false
+    },
+    "address": {
+      "id": "adr-1",
+      "area": "الخالدية",
+      "city": "أبوظبي",
+      "kind": "home",
+      "floor": "7",
+      "label": null,
+      "building": "12",
+      "latitude": 24.4672,
+      "apartment": "704",
+      "longitude": 54.3532,
+      "alternatePhone": null
+    },
+    "customerName": "خالد المنصوري",
+    "customerPhone": "+971501234567",
+    "status": "pending",
+    "createdAt": "2026-09-28T13:53:05.826Z",
+    "timeline": [
+      {
+        "status": "pending",
+        "at": "2026-09-28T13:53:05.915Z"
+      }
+    ],
+    "driverName": null,
+    "invoice": {
+      "id": "INV-1240",
+      "items": [
+        {
+          "name": "T-shirt",
+          "quantity": 1,
+          "unitPrice": 2,
+          "productId": "prod-tshirt",
+          "categoryId": "cat-clothes"
+        }
+      ],
+      "conditions": [],
+      "note": null,
+      "paymentMethod": "cashOnDelivery",
+      "vipSurcharge": 0,
+      "codFee": 5,
+      "paid": false
+    },
+    "failure": null,
+    "rating": null
+  },
+  {
+    "id": "cmulahw7i0062b4uxwm3vnch7",
+    "number": 1238,
+    "lines": [],
+    "tier": {
+      "id": "tier-vip",
+      "name": "VIP",
+      "deliveryHours": 24,
+      "isVip": true,
+      "perks": [
+        "Priority processing",
+        "Extended delivery slots"
+      ],
+      "surchargeType": "percentage",
+      "surchargeValue": 15
+    },
+    "pickupSlot": {
+      "id": "2026-09-30-win-1100",
+      "start": "2026-09-30T07:00:00.000Z",
+      "end": "2026-09-30T09:00:00.000Z",
+      "isFull": false
+    },
+    "deliverySlot": {
+      "id": "2026-10-01-win-1100",
+      "start": "2026-10-01T07:00:00.000Z",
+      "end": "2026-10-01T09:00:00.000Z",
+      "isFull": false
+    },
+    "address": {
+      "id": "adr-1",
+      "area": "الخالدية",
+      "city": "أبوظبي",
+      "kind": "home",
+      "floor": "7",
+      "label": null,
+      "building": "12",
+      "latitude": 24.4672,
+      "apartment": "704",
+      "longitude": 54.3532,
+      "alternatePhone": null
+    },
+    "customerName": "خالد المنصوري",
+    "customerPhone": "+971501234567",
+    "status": "processing",
+    "createdAt": "2026-09-28T13:35:00.942Z",
+    "timeline": [
+      {
+        "status": "pending",
+        "at": "2026-09-28T13:35:00.954Z"
+      },
+      {
+        "status": "driverAssigned",
+        "at": "2026-09-28T13:35:05.330Z"
+      },
+      {
+        "status": "pickedUp",
+        "at": "2026-09-28T13:35:05.718Z"
+      },
+      {
+        "status": "processing",
+        "at": "2026-09-28T13:35:07.795Z"
+      }
+    ],
+    "driverName": "أحمد علي",
+    "invoice": {
+      "id": "INV-1238",
+      "items": [
+        {
+          "name": "Shirt",
+          "quantity": 3,
+          "unitPrice": 10,
+          "productId": "prod-shirt",
+          "categoryId": "cat-clothes"
+        },
+        {
+          "name": "Suit",
+          "quantity": 1,
+          "unitPrice": 45,
+          "productId": "prod-suit",
+          "categoryId": "cat-clothes"
+        }
+      ],
+      "conditions": [],
+      "note": null,
+      "paymentMethod": "card",
+      "vipSurcharge": 11.25,
+      "codFee": 0,
+      "paid": true
+    },
+    "failure": null,
+    "rating": null
+  },
+  {
+    "id": "cmul9znd2004eb4uxacpvjlpo",
+    "number": 1235,
+    "lines": [],
+    "tier": {
+      "id": "tier-vip",
+      "name": "VIP",
+      "deliveryHours": 24,
+      "isVip": true,
+      "perks": [
+        "Priority processing",
+        "Extended delivery slots"
+      ],
+      "surchargeType": "percentage",
+      "surchargeValue": 15
+    },
+    "pickupSlot": {
+      "id": "2026-09-30-win-0900",
+      "start": "2026-09-30T05:00:00.000Z",
+      "end": "2026-09-30T07:00:00.000Z",
+      "isFull": false
+    },
+    "deliverySlot": {
+      "id": "2026-10-01-win-0900",
+      "start": "2026-10-01T05:00:00.000Z",
+      "end": "2026-10-01T07:00:00.000Z",
+      "isFull": false
+    },
+    "address": {
+      "id": "adr-1",
+      "area": "الخالدية",
+      "city": "أبوظبي",
+      "kind": "home",
+      "floor": "7",
+      "label": null,
+      "building": "12",
+      "latitude": 24.4672,
+      "apartment": "704",
+      "longitude": 54.3532,
+      "alternatePhone": null
+    },
+    "customerName": "خالد المنصوري",
+    "customerPhone": "+971501234567",
+    "status": "processing",
+    "createdAt": "2026-09-28T13:20:49.670Z",
+    "timeline": [
+      {
+        "status": "pending",
+        "at": "2026-09-28T13:20:49.681Z"
+      },
+      {
+        "status": "driverAssigned",
+        "at": "2026-09-28T13:20:52.275Z"
+      },
+      {
+        "status": "pickedUp",
+        "at": "2026-09-28T13:20:52.609Z"
+      },
+      {
+        "status": "processing",
+        "at": "2026-09-28T13:20:54.062Z"
+      }
+    ],
+    "driverName": "أحمد علي",
+    "invoice": {
+      "id": "INV-1235",
+      "items": [
+        {
+          "name": "Shirt",
+          "quantity": 3,
+          "unitPrice": 10,
+          "productId": "prod-shirt",
+          "categoryId": "cat-clothes"
+        },
+        {
+          "name": "Suit",
+          "quantity": 1,
+          "unitPrice": 45,
+          "productId": "prod-suit",
+          "categoryId": "cat-clothes"
+        }
+      ],
+      "conditions": [],
+      "note": null,
+      "paymentMethod": "card",
+      "vipSurcharge": 11.25,
+      "codFee": 0,
+      "paid": true
+    },
+    "failure": null,
+    "rating": null
+  },
+  {
+    "id": "cmul9gywo002qb4uxg6leoo5f",
+    "number": 1232,
+    "lines": [],
+    "tier": {
+      "id": "tier-vip",
+      "name": "VIP",
+      "deliveryHours": 24,
+      "isVip": true,
+      "perks": [
+        "Priority processing",
+        "Extended delivery slots"
+      ],
+      "surchargeType": "percentage",
+      "surchargeValue": 15
+    },
+    "pickupSlot": {
+      "id": "2026-09-30-win-0900",
+      "start": "2026-09-30T05:00:00.000Z",
+      "end": "2026-09-30T07:00:00.000Z",
+      "isFull": false
+    },
+    "deliverySlot": {
+      "id": "2026-10-01-win-0900",
+      "start": "2026-10-01T05:00:00.000Z",
+      "end": "2026-10-01T07:00:00.000Z",
+      "isFull": false
+    },
+    "address": {
+      "id": "adr-1",
+      "area": "الخالدية",
+      "city": "أبوظبي",
+      "kind": "home",
+      "floor": "7",
+      "label": null,
+      "building": "12",
+      "latitude": 24.4672,
+      "apartment": "704",
+      "longitude": 54.3532,
+      "alternatePhone": null
+    },
+    "customerName": "خالد المنصوري",
+    "customerPhone": "+971501234567",
+    "status": "processing",
+    "createdAt": "2026-09-28T13:06:18.168Z",
+    "timeline": [
+      {
+        "status": "pending",
+        "at": "2026-09-28T13:06:18.189Z"
+      },
+      {
+        "status": "driverAssigned",
+        "at": "2026-09-28T13:06:22.398Z"
+      },
+      {
+        "status": "pickedUp",
+        "at": "2026-09-28T13:06:24.153Z"
+      },
+      {
+        "status": "processing",
+        "at": "2026-09-28T13:06:27.795Z"
+      }
+    ],
+    "driverName": "أحمد علي",
+    "invoice": {
+      "id": "INV-1232",
+      "items": [
+        {
+          "name": "Shirt",
+          "quantity": 3,
+          "unitPrice": 10,
+          "productId": "prod-shirt",
+          "categoryId": "cat-clothes"
+        },
+        {
+          "name": "Suit",
+          "quantity": 1,
+          "unitPrice": 45,
+          "productId": "prod-suit",
+          "categoryId": "cat-clothes"
+        }
+      ],
+      "conditions": [],
+      "note": null,
+      "paymentMethod": "card",
+      "vipSurcharge": 11.25,
+      "codFee": 0,
+      "paid": true
+    },
+    "failure": null,
+    "rating": null
+  },
+  {
+    "id": "cmulagq3y0057b4uxym39fpla",
+    "number": 1237,
+    "lines": [
+      {
+        "category": {
+          "id": "cat-clothes",
+          "name": "Clothes",
+          "description": "Wash, iron, full service",
+          "iconKey": "shirt",
+          "imageUrl": "http://localhost:3000/catalog/cat-clothes.webp"
+        },
+        "subService": {
+          "id": "sub-wash-iron",
+          "categoryId": "cat-clothes",
+          "name": "Wash & Iron",
+          "description": "Wash, dry & full iron"
+        }
+      }
+    ],
+    "tier": {
+      "id": "tier-standard",
+      "name": "Standard",
+      "deliveryHours": 48,
+      "isVip": false,
+      "perks": [
+        "Free pickup & delivery",
+        "Daily slots available"
+      ],
+      "surchargeType": "none",
+      "surchargeValue": 0
+    },
+    "pickupSlot": {
+      "id": "2026-09-30-win-1100",
+      "start": "2026-09-30T07:00:00.000Z",
+      "end": "2026-09-30T09:00:00.000Z",
+      "isFull": false
+    },
+    "deliverySlot": {
+      "id": "2026-10-02-win-1100",
+      "start": "2026-10-02T07:00:00.000Z",
+      "end": "2026-10-02T09:00:00.000Z",
+      "isFull": false
+    },
+    "address": {
+      "id": "adr-1",
+      "area": "الخالدية",
+      "city": "أبوظبي",
+      "kind": "home",
+      "floor": "7",
+      "label": null,
+      "building": "12",
+      "latitude": 24.4672,
+      "apartment": "704",
+      "longitude": 54.3532,
+      "alternatePhone": null
+    },
+    "customerName": "خالد المنصوري",
+    "customerPhone": "+971501234567",
+    "status": "delivered",
+    "createdAt": "2026-09-28T13:34:06.382Z",
+    "timeline": [
+      {
+        "status": "pending",
+        "at": "2026-09-28T13:34:06.402Z"
+      },
+      {
+        "status": "driverAssigned",
+        "at": "2026-09-28T13:34:20.277Z"
+      },
+      {
+        "status": "pickedUp",
+        "at": "2026-09-28T13:34:34.523Z"
+      },
+      {
+        "status": "atFacility",
+        "at": "2026-09-28T13:34:38.616Z"
+      },
+      {
+        "status": "awaitingPayment",
+        "at": "2026-09-28T13:34:43.781Z"
+      },
+      {
+        "status": "processing",
+        "at": "2026-09-28T13:34:47.180Z"
+      },
+      {
+        "status": "outForDelivery",
+        "at": "2026-09-28T13:34:55.493Z"
+      },
+      {
+        "status": "delivered",
+        "at": "2026-09-28T13:34:58.237Z"
+      }
+    ],
+    "driverName": "أحمد علي",
+    "invoice": {
+      "id": "INV-1237",
+      "items": [
+        {
+          "name": "Shirt",
+          "quantity": 3,
+          "unitPrice": 10,
+          "productId": "prod-shirt",
+          "categoryId": "cat-clothes"
+        }
+      ],
+      "conditions": [
+        {
+          "itemName": "Shirt",
+          "kind": "stain",
+          "note": "Ink on the cuff",
+          "photoUrl": null
+        }
+      ],
+      "note": null,
+      "paymentMethod": "cashOnDelivery",
+      "vipSurcharge": 0,
+      "codFee": 5,
+      "paid": true
+    },
+    "failure": null,
+    "rating": null
+  },
+  {
+    "id": "cmul9zdhw003jb4uxydlv998l",
+    "number": 1234,
+    "lines": [
+      {
+        "category": {
+          "id": "cat-clothes",
+          "name": "Clothes",
+          "description": "Wash, iron, full service",
+          "iconKey": "shirt",
+          "imageUrl": "http://localhost:3000/catalog/cat-clothes.webp"
+        },
+        "subService": {
+          "id": "sub-wash-iron",
+          "categoryId": "cat-clothes",
+          "name": "Wash & Iron",
+          "description": "Wash, dry & full iron"
+        }
+      }
+    ],
+    "tier": {
+      "id": "tier-standard",
+      "name": "Standard",
+      "deliveryHours": 48,
+      "isVip": false,
+      "perks": [
+        "Free pickup & delivery",
+        "Daily slots available"
+      ],
+      "surchargeType": "none",
+      "surchargeValue": 0
+    },
+    "pickupSlot": {
+      "id": "2026-09-30-win-0900",
+      "start": "2026-09-30T05:00:00.000Z",
+      "end": "2026-09-30T07:00:00.000Z",
+      "isFull": false
+    },
+    "deliverySlot": {
+      "id": "2026-10-02-win-0900",
+      "start": "2026-10-02T05:00:00.000Z",
+      "end": "2026-10-02T07:00:00.000Z",
+      "isFull": false
+    },
+    "address": {
+      "id": "adr-1",
+      "area": "الخالدية",
+      "city": "أبوظبي",
+      "kind": "home",
+      "floor": "7",
+      "label": null,
+      "building": "12",
+      "latitude": 24.4672,
+      "apartment": "704",
+      "longitude": 54.3532,
+      "alternatePhone": null
+    },
+    "customerName": "خالد المنصوري",
+    "customerPhone": "+971501234567",
+    "status": "delivered",
+    "createdAt": "2026-09-28T13:20:36.884Z",
+    "timeline": [
+      {
+        "status": "pending",
+        "at": "2026-09-28T13:20:36.898Z"
+      },
+      {
+        "status": "driverAssigned",
+        "at": "2026-09-28T13:20:40.372Z"
+      },
+      {
+        "status": "pickedUp",
+        "at": "2026-09-28T13:20:40.762Z"
+      },
+      {
+        "status": "atFacility",
+        "at": "2026-09-28T13:20:42.565Z"
+      },
+      {
+        "status": "awaitingPayment",
+        "at": "2026-09-28T13:20:44.498Z"
+      },
+      {
+        "status": "processing",
+        "at": "2026-09-28T13:20:45.914Z"
+      },
+      {
+        "status": "outForDelivery",
+        "at": "2026-09-28T13:20:47.279Z"
+      },
+      {
+        "status": "delivered",
+        "at": "2026-09-28T13:20:48.707Z"
+      }
+    ],
+    "driverName": "أحمد علي",
+    "invoice": {
+      "id": "INV-1234",
+      "items": [
+        {
+          "name": "Shirt",
+          "quantity": 3,
+          "unitPrice": 10,
+          "productId": "prod-shirt",
+          "categoryId": "cat-clothes"
+        }
+      ],
+      "conditions": [
+        {
+          "itemName": "Shirt",
+          "kind": "stain",
+          "note": "Ink on the cuff",
+          "photoUrl": null
+        }
+      ],
+      "note": null,
+      "paymentMethod": "cashOnDelivery",
+      "vipSurcharge": 0,
+      "codFee": 5,
+      "paid": true
+    },
+    "failure": null,
+    "rating": null
+  },
+  {
+    "id": "cmul9g9vs001vb4uxofa2q0hd",
+    "number": 1231,
+    "lines": [
+      {
+        "category": {
+          "id": "cat-clothes",
+          "name": "Clothes",
+          "description": "Wash, iron, full service",
+          "iconKey": "shirt",
+          "imageUrl": "http://localhost:3000/catalog/cat-clothes.webp"
+        },
+        "subService": {
+          "id": "sub-wash-iron",
+          "categoryId": "cat-clothes",
+          "name": "Wash & Iron",
+          "description": "Wash, dry & full iron"
+        }
+      }
+    ],
+    "tier": {
+      "id": "tier-standard",
+      "name": "Standard",
+      "deliveryHours": 48,
+      "isVip": false,
+      "perks": [
+        "Free pickup & delivery",
+        "Daily slots available"
+      ],
+      "surchargeType": "none",
+      "surchargeValue": 0
+    },
+    "pickupSlot": {
+      "id": "2026-09-30-win-0900",
+      "start": "2026-09-30T05:00:00.000Z",
+      "end": "2026-09-30T07:00:00.000Z",
+      "isFull": false
+    },
+    "deliverySlot": {
+      "id": "2026-10-02-win-0900",
+      "start": "2026-10-02T05:00:00.000Z",
+      "end": "2026-10-02T07:00:00.000Z",
+      "isFull": false
+    },
+    "address": {
+      "id": "adr-1",
+      "area": "الخالدية",
+      "city": "أبوظبي",
+      "kind": "home",
+      "floor": "7",
+      "label": null,
+      "building": "12",
+      "latitude": 24.4672,
+      "apartment": "704",
+      "longitude": 54.3532,
+      "alternatePhone": null
+    },
+    "customerName": "خالد المنصوري",
+    "customerPhone": "+971501234567",
+    "status": "delivered",
+    "createdAt": "2026-09-28T13:05:45.736Z",
+    "timeline": [
+      {
+        "status": "pending",
+        "at": "2026-09-28T13:05:45.741Z"
+      },
+      {
+        "status": "driverAssigned",
+        "at": "2026-09-28T13:05:49.142Z"
+      },
+      {
+        "status": "pickedUp",
+        "at": "2026-09-28T13:05:49.474Z"
+      },
+      {
+        "status": "atFacility",
+        "at": "2026-09-28T13:05:51.944Z"
+      },
+      {
+        "status": "awaitingPayment",
+        "at": "2026-09-28T13:05:56.003Z"
+      },
+      {
+        "status": "processing",
+        "at": "2026-09-28T13:06:06.790Z"
+      },
+      {
+        "status": "outForDelivery",
+        "at": "2026-09-28T13:06:11.869Z"
+      },
+      {
+        "status": "delivered",
+        "at": "2026-09-28T13:06:14.798Z"
+      }
+    ],
+    "driverName": "أحمد علي",
+    "invoice": {
+      "id": "INV-1231",
+      "items": [
+        {
+          "name": "Shirt",
+          "quantity": 3,
+          "unitPrice": 10,
+          "productId": "prod-shirt",
+          "categoryId": "cat-clothes"
+        }
+      ],
+      "conditions": [
+        {
+          "itemName": "Shirt",
+          "kind": "stain",
+          "note": "Ink on the cuff",
+          "photoUrl": null
+        }
+      ],
+      "note": null,
+      "paymentMethod": "cashOnDelivery",
+      "vipSurcharge": 0,
+      "codFee": 5,
+      "paid": true
+    },
+    "failure": null,
+    "rating": null
+  },
+  {
+    "id": "cmul9760m0005b4ux0yl2diav",
+    "number": 1228,
+    "lines": [
+      {
+        "category": {
+          "id": "cat-clothes",
+          "name": "Clothes",
+          "description": "Wash, iron, full service",
+          "iconKey": "shirt",
+          "imageUrl": "http://localhost:3000/catalog/cat-clothes.webp"
+        },
+        "subService": {
+          "id": "sub-wash-iron",
+          "categoryId": "cat-clothes",
+          "name": "Wash & Iron",
+          "description": "Wash, dry & full iron"
+        }
+      }
+    ],
+    "tier": {
+      "id": "tier-standard",
+      "name": "Standard",
+      "deliveryHours": 48,
+      "isVip": false,
+      "perks": [
+        "Free pickup & delivery",
+        "Daily slots available"
+      ],
+      "surchargeType": "none",
+      "surchargeValue": 0
+    },
+    "pickupSlot": {
+      "id": "2026-09-30-win-0900",
+      "start": "2026-09-30T05:00:00.000Z",
+      "end": "2026-09-30T07:00:00.000Z",
+      "isFull": false
+    },
+    "deliverySlot": {
+      "id": "2026-10-02-win-0900",
+      "start": "2026-10-02T05:00:00.000Z",
+      "end": "2026-10-02T07:00:00.000Z",
+      "isFull": false
+    },
+    "address": {
+      "id": "adr-1",
+      "area": "الخالدية",
+      "city": "أبوظبي",
+      "kind": "home",
+      "floor": "7",
+      "label": null,
+      "building": "12",
+      "latitude": 24.4672,
+      "apartment": "704",
+      "longitude": 54.3532,
+      "alternatePhone": null
+    },
+    "customerName": "خالد المنصوري",
+    "customerPhone": "+971501234567",
+    "status": "awaitingPayment",
+    "createdAt": "2026-09-28T12:58:40.822Z",
+    "timeline": [
+      {
+        "status": "pending",
+        "at": "2026-09-28T12:58:40.853Z"
+      },
+      {
+        "status": "driverAssigned",
+        "at": "2026-09-28T12:58:50.566Z"
+      },
+      {
+        "status": "pickedUp",
+        "at": "2026-09-28T12:59:01.143Z"
+      },
+      {
+        "status": "atFacility",
+        "at": "2026-09-28T12:59:17.016Z"
+      },
+      {
+        "status": "awaitingPayment",
+        "at": "2026-09-28T13:00:17.903Z"
+      }
+    ],
+    "driverName": "أحمد علي",
+    "invoice": {
+      "id": "INV-1228",
+      "items": [
+        {
+          "name": "T-shirt",
+          "quantity": 1,
+          "unitPrice": 2,
+          "productId": "prod-tshirt",
+          "categoryId": "cat-clothes"
+        },
+        {
+          "name": "Trouser",
+          "quantity": 1,
+          "unitPrice": 15,
+          "productId": "prod-trouser",
+          "categoryId": "cat-clothes"
+        },
+        {
+          "name": "Jacket",
+          "quantity": 1,
+          "unitPrice": 25,
+          "productId": "prod-jacket",
+          "categoryId": "cat-clothes"
+        },
+        {
+          "name": "Large carpet",
+          "quantity": 1,
+          "unitPrice": 120,
+          "productId": "prod-carpet-large",
+          "categoryId": "cat-carpets"
+        }
+      ],
+      "conditions": [],
+      "note": null,
+      "paymentMethod": null,
+      "vipSurcharge": 0,
+      "codFee": 0,
+      "paid": false
+    },
+    "failure": null,
+    "rating": null
+  },
+  {
+    "id": "cmul7fd0a01m0nlux9qm5feoa",
+    "number": 1219,
+    "lines": [
+      {
+        "category": {
+          "id": "cat-clothes",
+          "name": "Clothes",
+          "description": "Wash, iron, full service",
+          "iconKey": "shirt",
+          "imageUrl": "http://localhost:3000/catalog/cat-clothes.webp"
+        },
+        "subService": {
+          "id": "sub-iron-only",
+          "categoryId": "cat-clothes",
+          "name": "Iron only",
+          "description": "Iron clean items"
+        }
+      }
+    ],
+    "tier": {
+      "id": "tier-standard",
+      "name": "Standard",
+      "deliveryHours": 48,
+      "isVip": false,
+      "perks": [
+        "Free pickup & delivery",
+        "Daily slots available"
+      ],
+      "surchargeType": "none",
+      "surchargeValue": 0
+    },
+    "pickupSlot": {
+      "id": "2026-09-27-win-1800",
+      "start": "2026-09-27T14:00:00.000Z",
+      "end": "2026-09-27T16:00:00.000Z",
+      "isFull": false
+    },
+    "deliverySlot": {
+      "id": "2026-09-29-win-1600",
+      "start": "2026-09-29T12:00:00.000Z",
+      "end": "2026-09-29T14:00:00.000Z",
+      "isFull": false
+    },
+    "address": {
+      "id": "adr-1",
+      "area": "الخالدية",
+      "city": "أبوظبي",
+      "kind": "home",
+      "floor": "7",
+      "label": null,
+      "building": "12",
+      "latitude": 24.4672,
+      "apartment": "704",
+      "longitude": 54.3532,
+      "alternatePhone": null
+    },
+    "customerName": "خالد المنصوري",
+    "customerPhone": "+971501234567",
+    "status": "delivered",
+    "createdAt": "2026-09-26T08:09:02.573Z",
+    "timeline": [
+      {
+        "status": "pending",
+        "at": "2026-09-26T08:09:02.573Z"
+      },
+      {
+        "status": "driverAssigned",
+        "at": "2026-09-26T10:37:08.682Z"
+      },
+      {
+        "status": "pickedUp",
+        "at": "2026-09-26T13:16:05.238Z"
+      },
+      {
+        "status": "atFacility",
+        "at": "2026-09-26T17:17:32.373Z"
+      },
+      {
+        "status": "awaitingPayment",
+        "at": "2026-09-26T23:08:34.630Z"
+      },
+      {
+        "status": "processing",
+        "at": "2026-09-27T03:24:27.327Z"
+      },
+      {
+        "status": "outForDelivery",
+        "at": "2026-09-27T13:24:27.327Z"
+      },
+      {
+        "status": "delivered",
+        "at": "2026-09-27T15:44:18.511Z"
+      }
+    ],
+    "driverName": "Rashid Khan",
+    "invoice": {
+      "id": "INV-1219",
+      "items": [
+        {
+          "name": "Large carpet",
+          "quantity": 3,
+          "unitPrice": 120,
+          "productId": "prod-carpet-large",
+          "categoryId": "cat-carpets"
+        },
+        {
+          "name": "Small carpet",
+          "quantity": 4,
+          "unitPrice": 60,
+          "productId": "prod-carpet-small",
+          "categoryId": "cat-carpets"
+        }
+      ],
+      "conditions": [],
+      "note": null,
+      "paymentMethod": "card",
+      "vipSurcharge": 0,
+      "codFee": 0,
+      "paid": true
+    },
+    "failure": null,
+    "rating": null
+  },
+  {
+    "id": "cmul7fd0201llnluxeipm41kj",
+    "number": 1218,
+    "lines": [
+      {
+        "category": {
+          "id": "cat-clothes",
+          "name": "Clothes",
+          "description": "Wash, iron, full service",
+          "iconKey": "shirt",
+          "imageUrl": "http://localhost:3000/catalog/cat-clothes.webp"
+        },
+        "subService": {
+          "id": "sub-wash-only",
+          "categoryId": "cat-clothes",
+          "name": "Wash only",
+          "description": "Wash & dry, no iron"
+        }
+      }
+    ],
+    "tier": {
+      "id": "tier-standard",
+      "name": "Standard",
+      "deliveryHours": 48,
+      "isVip": false,
+      "perks": [
+        "Free pickup & delivery",
+        "Daily slots available"
+      ],
+      "surchargeType": "none",
+      "surchargeValue": 0
+    },
+    "pickupSlot": {
+      "id": "2026-09-27-win-1800",
+      "start": "2026-09-27T14:00:00.000Z",
+      "end": "2026-09-27T16:00:00.000Z",
+      "isFull": false
+    },
+    "deliverySlot": {
+      "id": "2026-09-29-win-1100",
+      "start": "2026-09-29T07:00:00.000Z",
+      "end": "2026-09-29T09:00:00.000Z",
+      "isFull": false
+    },
+    "address": {
+      "id": "adr-1",
+      "area": "الخالدية",
+      "city": "أبوظبي",
+      "kind": "home",
+      "floor": "7",
+      "label": null,
+      "building": "12",
+      "latitude": 24.4672,
+      "apartment": "704",
+      "longitude": 54.3532,
+      "alternatePhone": null
+    },
+    "customerName": "خالد المنصوري",
+    "customerPhone": "+971501234567",
+    "status": "delivered",
+    "createdAt": "2026-09-26T08:09:02.573Z",
+    "timeline": [
+      {
+        "status": "pending",
+        "at": "2026-09-26T08:09:02.573Z"
+      },
+      {
+        "status": "driverAssigned",
+        "at": "2026-09-26T15:51:09.538Z"
+      },
+      {
+        "status": "pickedUp",
+        "at": "2026-09-26T22:12:30.043Z"
+      },
+      {
+        "status": "atFacility",
+        "at": "2026-09-27T00:15:35.401Z"
+      },
+      {
+        "status": "awaitingPayment",
+        "at": "2026-09-27T03:22:10.376Z"
+      },
+      {
+        "status": "processing",
+        "at": "2026-09-27T07:29:02.170Z"
+      },
+      {
+        "status": "outForDelivery",
+        "at": "2026-09-27T17:29:02.170Z"
+      },
+      {
+        "status": "delivered",
+        "at": "2026-09-27T21:21:11.586Z"
+      }
+    ],
+    "driverName": "أحمد علي",
+    "invoice": {
+      "id": "INV-1218",
+      "items": [
+        {
+          "name": "T-shirt",
+          "quantity": 1,
+          "unitPrice": 2,
+          "productId": "prod-tshirt",
+          "categoryId": "cat-clothes"
+        },
+        {
+          "name": "Curtain panel",
+          "quantity": 2,
+          "unitPrice": 30,
+          "productId": "prod-curtain-panel",
+          "categoryId": "cat-curtains"
+        }
+      ],
+      "conditions": [
+        {
+          "itemName": "T-shirt",
+          "kind": "stain",
+          "note": "Found at sorting",
+          "photoUrl": null
+        }
+      ],
+      "note": null,
+      "paymentMethod": "cashOnDelivery",
+      "vipSurcharge": 0,
+      "codFee": 5,
+      "paid": true
+    },
+    "failure": null,
+    "rating": {
+      "stars": 5,
+      "comment": null,
+      "ratedAt": "2026-09-28T23:54:23.428Z"
+    }
+  },
+  {
+    "id": "cmulai2xe006jb4ux2mz1dyyw",
+    "number": 1239,
+    "lines": [
+      {
+        "category": {
+          "id": "cat-carpets",
+          "name": "Carpets",
+          "description": "Deep cleaning & wash",
+          "iconKey": "carpet",
+          "imageUrl": "http://localhost:3000/catalog/cat-carpets.webp"
+        },
+        "subService": {
+          "id": "sub-carpet-deep",
+          "categoryId": "cat-carpets",
+          "name": "Deep cleaning & wash",
+          "description": "Dust & stain removal"
+        }
+      }
+    ],
+    "tier": {
+      "id": "tier-standard",
+      "name": "Standard",
+      "deliveryHours": 48,
+      "isVip": false,
+      "perks": [
+        "Free pickup & delivery",
+        "Daily slots available"
+      ],
+      "surchargeType": "none",
+      "surchargeValue": 0
+    },
+    "pickupSlot": {
+      "id": "2026-09-30-win-1100",
+      "start": "2026-09-30T07:00:00.000Z",
+      "end": "2026-09-30T09:00:00.000Z",
+      "isFull": false
+    },
+    "deliverySlot": {
+      "id": "2026-10-02-win-1100",
+      "start": "2026-10-02T07:00:00.000Z",
+      "end": "2026-10-02T09:00:00.000Z",
+      "isFull": false
+    },
+    "address": {
+      "id": "adr-2",
+      "area": "الميناء",
+      "city": "أبوظبي",
+      "kind": "work",
+      "floor": "2",
+      "label": null,
+      "building": "3",
+      "latitude": 24.519,
+      "apartment": "210",
+      "longitude": 54.379,
+      "alternatePhone": null
+    },
+    "customerName": "خالد المنصوري",
+    "customerPhone": "+971501234567",
+    "status": "cancelled",
+    "createdAt": "2026-09-28T13:35:09.650Z",
+    "timeline": [
+      {
+        "status": "pending",
+        "at": "2026-09-28T13:35:09.657Z"
+      },
+      {
+        "status": "cancelled",
+        "at": "2026-09-28T13:35:14.714Z"
+      }
+    ],
+    "driverName": null,
+    "invoice": null,
+    "failure": null,
+    "rating": null
+  },
+  {
+    "id": "cmul9zs1x004vb4ux8tz9z9jl",
+    "number": 1236,
+    "lines": [
+      {
+        "category": {
+          "id": "cat-carpets",
+          "name": "Carpets",
+          "description": "Deep cleaning & wash",
+          "iconKey": "carpet",
+          "imageUrl": "http://localhost:3000/catalog/cat-carpets.webp"
+        },
+        "subService": {
+          "id": "sub-carpet-deep",
+          "categoryId": "cat-carpets",
+          "name": "Deep cleaning & wash",
+          "description": "Dust & stain removal"
+        }
+      }
+    ],
+    "tier": {
+      "id": "tier-standard",
+      "name": "Standard",
+      "deliveryHours": 48,
+      "isVip": false,
+      "perks": [
+        "Free pickup & delivery",
+        "Daily slots available"
+      ],
+      "surchargeType": "none",
+      "surchargeValue": 0
+    },
+    "pickupSlot": {
+      "id": "2026-09-30-win-1100",
+      "start": "2026-09-30T07:00:00.000Z",
+      "end": "2026-09-30T09:00:00.000Z",
+      "isFull": false
+    },
+    "deliverySlot": {
+      "id": "2026-10-02-win-1100",
+      "start": "2026-10-02T07:00:00.000Z",
+      "end": "2026-10-02T09:00:00.000Z",
+      "isFull": false
+    },
+    "address": {
+      "id": "adr-2",
+      "area": "الميناء",
+      "city": "أبوظبي",
+      "kind": "work",
+      "floor": "2",
+      "label": null,
+      "building": "3",
+      "latitude": 24.519,
+      "apartment": "210",
+      "longitude": 54.379,
+      "alternatePhone": null
+    },
+    "customerName": "خالد المنصوري",
+    "customerPhone": "+971501234567",
+    "status": "cancelled",
+    "createdAt": "2026-09-28T13:20:55.749Z",
+    "timeline": [
+      {
+        "status": "pending",
+        "at": "2026-09-28T13:20:55.756Z"
+      },
+      {
+        "status": "cancelled",
+        "at": "2026-09-28T13:21:00.614Z"
+      }
+    ],
+    "driverName": null,
+    "invoice": null,
+    "failure": null,
+    "rating": null
+  },
+  {
+    "id": "cmul9h7t40037b4uxbltaw5gm",
+    "number": 1233,
+    "lines": [
+      {
+        "category": {
+          "id": "cat-carpets",
+          "name": "Carpets",
+          "description": "Deep cleaning & wash",
+          "iconKey": "carpet",
+          "imageUrl": "http://localhost:3000/catalog/cat-carpets.webp"
+        },
+        "subService": {
+          "id": "sub-carpet-deep",
+          "categoryId": "cat-carpets",
+          "name": "Deep cleaning & wash",
+          "description": "Dust & stain removal"
+        }
+      }
+    ],
+    "tier": {
+      "id": "tier-standard",
+      "name": "Standard",
+      "deliveryHours": 48,
+      "isVip": false,
+      "perks": [
+        "Free pickup & delivery",
+        "Daily slots available"
+      ],
+      "surchargeType": "none",
+      "surchargeValue": 0
+    },
+    "pickupSlot": {
+      "id": "2026-09-30-win-0900",
+      "start": "2026-09-30T05:00:00.000Z",
+      "end": "2026-09-30T07:00:00.000Z",
+      "isFull": false
+    },
+    "deliverySlot": {
+      "id": "2026-10-02-win-0900",
+      "start": "2026-10-02T05:00:00.000Z",
+      "end": "2026-10-02T07:00:00.000Z",
+      "isFull": false
+    },
+    "address": {
+      "id": "adr-2",
+      "area": "الميناء",
+      "city": "أبوظبي",
+      "kind": "work",
+      "floor": "2",
+      "label": null,
+      "building": "3",
+      "latitude": 24.519,
+      "apartment": "210",
+      "longitude": 54.379,
+      "alternatePhone": null
+    },
+    "customerName": "خالد المنصوري",
+    "customerPhone": "+971501234567",
+    "status": "cancelled",
+    "createdAt": "2026-09-28T13:06:29.704Z",
+    "timeline": [
+      {
+        "status": "pending",
+        "at": "2026-09-28T13:06:29.709Z"
+      },
+      {
+        "status": "cancelled",
+        "at": "2026-09-28T13:06:34.810Z"
+      }
+    ],
+    "driverName": null,
+    "invoice": null,
+    "failure": null,
+    "rating": null
+  },
+  {
+    "id": "cmul9bm3t001db4uxmhn4cwxa",
+    "number": 1230,
+    "lines": [
+      {
+        "category": {
+          "id": "cat-clothes",
+          "name": "Clothes",
+          "description": "Wash, iron, full service",
+          "iconKey": "shirt",
+          "imageUrl": "http://localhost:3000/catalog/cat-clothes.webp"
+        },
+        "subService": {
+          "id": "sub-wash-iron",
+          "categoryId": "cat-clothes",
+          "name": "Wash & Iron",
+          "description": "Wash, dry & full iron"
+        }
+      }
+    ],
+    "tier": {
+      "id": "tier-standard",
+      "name": "Standard",
+      "deliveryHours": 48,
+      "isVip": false,
+      "perks": [
+        "Free pickup & delivery",
+        "Daily slots available"
+      ],
+      "surchargeType": "none",
+      "surchargeValue": 0
+    },
+    "pickupSlot": {
+      "id": "2026-09-30-win-0900",
+      "start": "2026-09-30T05:00:00.000Z",
+      "end": "2026-09-30T07:00:00.000Z",
+      "isFull": false
+    },
+    "deliverySlot": {
+      "id": "2026-10-02-win-0900",
+      "start": "2026-10-02T05:00:00.000Z",
+      "end": "2026-10-02T07:00:00.000Z",
+      "isFull": false
+    },
+    "address": {
+      "id": "adr-1",
+      "area": "الخالدية",
+      "city": "أبوظبي",
+      "kind": "home",
+      "floor": "7",
+      "label": null,
+      "building": "12",
+      "latitude": 24.4672,
+      "apartment": "704",
+      "longitude": 54.3532,
+      "alternatePhone": null
+    },
+    "customerName": "خالد المنصوري",
+    "customerPhone": "+971501234567",
+    "status": "atFacility",
+    "createdAt": "2026-09-28T13:02:08.297Z",
+    "timeline": [
+      {
+        "status": "pending",
+        "at": "2026-09-28T13:02:08.303Z"
+      },
+      {
+        "status": "driverAssigned",
+        "at": "2026-09-28T13:02:13.184Z"
+      },
+      {
+        "status": "pickedUp",
+        "at": "2026-09-28T13:02:15.153Z"
+      },
+      {
+        "status": "atFacility",
+        "at": "2026-09-28T13:02:18.956Z"
+      }
+    ],
+    "driverName": "أحمد علي",
+    "invoice": null,
+    "failure": null,
+    "rating": null
+  },
+  {
+    "id": "cmul7fd0201llnluxeipm41kj",
+    "number": 1218,
+    "lines": [
+      {
+        "category": {
+          "id": "cat-clothes",
+          "name": "Clothes",
+          "description": "Wash, iron, full service",
+          "iconKey": "shirt",
+          "imageUrl": "http://localhost:3000/catalog/cat-clothes.webp"
+        },
+        "subService": {
+          "id": "sub-wash-only",
+          "categoryId": "cat-clothes",
+          "name": "Wash only",
+          "description": "Wash & dry, no iron"
+        }
+      }
+    ],
+    "tier": {
+      "id": "tier-standard",
+      "name": "Standard",
+      "deliveryHours": 48,
+      "isVip": false,
+      "perks": [
+        "Free pickup & delivery",
+        "Daily slots available"
+      ],
+      "surchargeType": "none",
+      "surchargeValue": 0
+    },
+    "pickupSlot": {
+      "id": "2026-09-27-win-1800",
+      "start": "2026-09-27T14:00:00.000Z",
+      "end": "2026-09-27T16:00:00.000Z",
+      "isFull": false
+    },
+    "deliverySlot": {
+      "id": "2026-09-29-win-1100",
+      "start": "2026-09-29T07:00:00.000Z",
+      "end": "2026-09-29T09:00:00.000Z",
+      "isFull": false
+    },
+    "address": {
+      "id": "adr-1",
+      "area": "الخالدية",
+      "city": "أبوظبي",
+      "kind": "home",
+      "floor": "7",
+      "label": null,
+      "building": "12",
+      "latitude": 24.4672,
+      "apartment": "704",
+      "longitude": 54.3532,
+      "alternatePhone": null
+    },
+    "customerName": "خالد المنصوري",
+    "customerPhone": "+971501234567",
+    "status": "delivered",
+    "createdAt": "2026-09-26T08:09:02.573Z",
+    "timeline": [
+      {
+        "status": "pending",
+        "at": "2026-09-26T08:09:02.573Z"
+      },
+      {
+        "status": "driverAssigned",
+        "at": "2026-09-26T15:51:09.538Z"
+      },
+      {
+        "status": "pickedUp",
+        "at": "2026-09-26T22:12:30.043Z"
+      },
+      {
+        "status": "atFacility",
+        "at": "2026-09-27T00:15:35.401Z"
+      },
+      {
+        "status": "awaitingPayment",
+        "at": "2026-09-27T03:22:10.376Z"
+      },
+      {
+        "status": "processing",
+        "at": "2026-09-27T07:29:02.170Z"
+      },
+      {
+        "status": "outForDelivery",
+        "at": "2026-09-27T17:29:02.170Z"
+      },
+      {
+        "status": "delivered",
+        "at": "2026-09-27T21:21:11.586Z"
+      }
+    ],
+    "driverName": "أحمد علي",
+    "invoice": {
+      "id": "INV-1218",
+      "items": [
+        {
+          "name": "T-shirt",
+          "quantity": 1,
+          "unitPrice": 2,
+          "productId": "prod-tshirt",
+          "categoryId": "cat-clothes"
+        },
+        {
+          "name": "Curtain panel",
+          "quantity": 2,
+          "unitPrice": 30,
+          "productId": "prod-curtain-panel",
+          "categoryId": "cat-curtains"
+        }
+      ],
+      "conditions": [
+        {
+          "itemName": "T-shirt",
+          "kind": "stain",
+          "note": "Found at sorting",
+          "photoUrl": null
+        }
+      ],
+      "note": null,
+      "paymentMethod": "cashOnDelivery",
+      "vipSurcharge": 0,
+      "codFee": 5,
+      "paid": true
+    },
+    "failure": null,
+    "rating": {
+      "stars": 5,
+      "comment": null,
+      "ratedAt": "2026-09-28T23:54:23.428Z"
+    }
+  },
+  {
+    "id": "cmul7fcyf01jlnluxde8qcnpl",
+    "number": 1209,
+    "lines": [
+      {
+        "category": {
+          "id": "cat-clothes",
+          "name": "Clothes",
+          "description": "Wash, iron, full service",
+          "iconKey": "shirt",
+          "imageUrl": "http://localhost:3000/catalog/cat-clothes.webp"
+        },
+        "subService": {
+          "id": "sub-iron-only",
+          "categoryId": "cat-clothes",
+          "name": "Iron only",
+          "description": "Iron clean items"
+        }
+      }
+    ],
+    "tier": {
+      "id": "tier-vip",
+      "name": "VIP",
+      "deliveryHours": 24,
+      "isVip": true,
+      "perks": [
+        "Priority processing",
+        "Extended delivery slots"
+      ],
+      "surchargeType": "percentage",
+      "surchargeValue": 15
+    },
+    "pickupSlot": {
+      "id": "2026-09-25-win-1800",
+      "start": "2026-09-25T14:00:00.000Z",
+      "end": "2026-09-25T16:00:00.000Z",
+      "isFull": false
+    },
+    "deliverySlot": {
+      "id": "2026-09-26-win-1800",
+      "start": "2026-09-26T14:00:00.000Z",
+      "end": "2026-09-26T16:00:00.000Z",
+      "isFull": false
+    },
+    "address": {
+      "id": "adr-1",
+      "area": "الخالدية",
+      "city": "أبوظبي",
+      "kind": "home",
+      "floor": "7",
+      "label": null,
+      "building": "12",
+      "latitude": 24.4672,
+      "apartment": "704",
+      "longitude": 54.3532,
+      "alternatePhone": null
+    },
+    "customerName": "خالد المنصوري",
+    "customerPhone": "+971501234567",
+    "status": "delivered",
+    "createdAt": "2026-09-24T12:09:02.573Z",
+    "timeline": [
+      {
+        "status": "pending",
+        "at": "2026-09-24T12:09:02.573Z"
+      },
+      {
+        "status": "driverAssigned",
+        "at": "2026-09-24T17:50:02.105Z"
+      },
+      {
+        "status": "pickedUp",
+        "at": "2026-09-24T23:34:38.906Z"
+      },
+      {
+        "status": "atFacility",
+        "at": "2026-09-25T05:11:11.021Z"
+      },
+      {
+        "status": "awaitingPayment",
+        "at": "2026-09-25T07:33:03.461Z"
+      },
+      {
+        "status": "processing",
+        "at": "2026-09-25T13:10:37.470Z"
+      },
+      {
+        "status": "outForDelivery",
+        "at": "2026-09-25T23:10:37.470Z"
+      },
+      {
+        "status": "delivered",
+        "at": "2026-09-26T05:17:08.263Z"
+      }
+    ],
+    "driverName": "أحمد علي",
+    "invoice": {
+      "id": "INV-1209",
+      "items": [
+        {
+          "name": "Duvet cover",
+          "quantity": 4,
+          "unitPrice": 35,
+          "productId": "prod-duvet-cover",
+          "categoryId": "cat-textiles"
+        }
+      ],
+      "conditions": [
+        {
+          "itemName": "Duvet cover",
+          "kind": "damage",
+          "note": "Found at sorting",
+          "photoUrl": null
+        }
+      ],
+      "note": null,
+      "paymentMethod": "cashOnDelivery",
+      "vipSurcharge": 21,
+      "codFee": 5,
+      "paid": true
+    },
+    "failure": null,
+    "rating": {
+      "stars": 5,
+      "comment": null,
+      "ratedAt": "2026-09-27T11:11:46.579Z"
+    }
+  },
+  {
+    "id": "cmul7fcy801jenluxpi19kjui",
+    "number": 1208,
+    "lines": [
+      {
+        "category": {
+          "id": "cat-clothes",
+          "name": "Clothes",
+          "description": "Wash, iron, full service",
+          "iconKey": "shirt",
+          "imageUrl": "http://localhost:3000/catalog/cat-clothes.webp"
+        },
+        "subService": {
+          "id": "sub-full-service",
+          "categoryId": "cat-clothes",
+          "name": "Full Service",
+          "description": "Wash, iron, hang & wrap"
+        }
+      }
+    ],
+    "tier": {
+      "id": "tier-standard",
+      "name": "Standard",
+      "deliveryHours": 48,
+      "isVip": false,
+      "perks": [
+        "Free pickup & delivery",
+        "Daily slots available"
+      ],
+      "surchargeType": "none",
+      "surchargeValue": 0
+    },
+    "pickupSlot": {
+      "id": "2026-09-25-win-1600",
+      "start": "2026-09-25T12:00:00.000Z",
+      "end": "2026-09-25T14:00:00.000Z",
+      "isFull": false
+    },
+    "deliverySlot": {
+      "id": "2026-09-27-win-0900",
+      "start": "2026-09-27T05:00:00.000Z",
+      "end": "2026-09-27T07:00:00.000Z",
+      "isFull": false
+    },
+    "address": {
+      "id": "adr-1",
+      "area": "الخالدية",
+      "city": "أبوظبي",
+      "kind": "home",
+      "floor": "7",
+      "label": null,
+      "building": "12",
+      "latitude": 24.4672,
+      "apartment": "704",
+      "longitude": 54.3532,
+      "alternatePhone": null
+    },
+    "customerName": "خالد المنصوري",
+    "customerPhone": "+971501234567",
+    "status": "cancelled",
+    "createdAt": "2026-09-24T08:09:02.573Z",
+    "timeline": [
+      {
+        "status": "pending",
+        "at": "2026-09-24T08:09:02.573Z"
+      },
+      {
+        "status": "driverAssigned",
+        "at": "2026-09-24T14:20:19.688Z"
+      },
+      {
+        "status": "pickupFailed",
+        "at": "2026-09-24T22:12:07.876Z"
+      },
+      {
+        "status": "cancelled",
+        "at": "2026-09-24T22:12:08.876Z"
+      }
+    ],
+    "driverName": "Rashid Khan",
+    "invoice": null,
+    "failure": {
+      "reason": "customerAbsent",
+      "note": null,
+      "photoUrl": null
+    },
+    "rating": null
+  },
+  {
+    "id": "cmul7fcxu01innlux1gmbo1me",
+    "number": 1206,
+    "lines": [
+      {
+        "category": {
+          "id": "cat-clothes",
+          "name": "Clothes",
+          "description": "Wash, iron, full service",
+          "iconKey": "shirt",
+          "imageUrl": "http://localhost:3000/catalog/cat-clothes.webp"
+        },
+        "subService": {
+          "id": "sub-full-service",
+          "categoryId": "cat-clothes",
+          "name": "Full Service",
+          "description": "Wash, iron, hang & wrap"
+        }
+      }
+    ],
+    "tier": {
+      "id": "tier-vip",
+      "name": "VIP",
+      "deliveryHours": 24,
+      "isVip": true,
+      "perks": [
+        "Priority processing",
+        "Extended delivery slots"
+      ],
+      "surchargeType": "percentage",
+      "surchargeValue": 15
+    },
+    "pickupSlot": {
+      "id": "2026-09-24-win-0900",
+      "start": "2026-09-24T05:00:00.000Z",
+      "end": "2026-09-24T07:00:00.000Z",
+      "isFull": false
+    },
+    "deliverySlot": {
+      "id": "2026-09-25-win-1100",
+      "start": "2026-09-25T07:00:00.000Z",
+      "end": "2026-09-25T09:00:00.000Z",
+      "isFull": false
+    },
+    "address": {
+      "id": "adr-1",
+      "area": "الخالدية",
+      "city": "أبوظبي",
+      "kind": "home",
+      "floor": "7",
+      "label": null,
+      "building": "12",
+      "latitude": 24.4672,
+      "apartment": "704",
+      "longitude": 54.3532,
+      "alternatePhone": null
+    },
+    "customerName": "خالد المنصوري",
+    "customerPhone": "+971501234567",
+    "status": "delivered",
+    "createdAt": "2026-09-23T08:09:02.573Z",
+    "timeline": [
+      {
+        "status": "pending",
+        "at": "2026-09-23T08:09:02.573Z"
+      },
+      {
+        "status": "driverAssigned",
+        "at": "2026-09-23T11:26:28.071Z"
+      },
+      {
+        "status": "pickedUp",
+        "at": "2026-09-23T16:59:04.853Z"
+      },
+      {
+        "status": "atFacility",
+        "at": "2026-09-24T00:51:05.975Z"
+      },
+      {
+        "status": "awaitingPayment",
+        "at": "2026-09-24T04:13:46.330Z"
+      },
+      {
+        "status": "processing",
+        "at": "2026-09-24T11:37:41.132Z"
+      },
+      {
+        "status": "outForDelivery",
+        "at": "2026-09-24T21:37:41.132Z"
+      },
+      {
+        "status": "delivered",
+        "at": "2026-09-25T00:33:57.180Z"
+      }
+    ],
+    "driverName": "Rashid Khan",
+    "invoice": {
+      "id": "INV-1206",
+      "items": [
+        {
+          "name": "Curtain set",
+          "quantity": 3,
+          "unitPrice": 55,
+          "productId": "prod-curtain-set",
+          "categoryId": "cat-curtains"
+        },
+        {
+          "name": "Curtain panel",
+          "quantity": 1,
+          "unitPrice": 30,
+          "productId": "prod-curtain-panel",
+          "categoryId": "cat-curtains"
+        },
+        {
+          "name": "Towel",
+          "quantity": 1,
+          "unitPrice": 8,
+          "productId": "prod-towel",
+          "categoryId": "cat-textiles"
+        }
+      ],
+      "conditions": [],
+      "note": null,
+      "paymentMethod": "card",
+      "vipSurcharge": 30.45,
+      "codFee": 0,
+      "paid": true
+    },
+    "failure": null,
+    "rating": {
+      "stars": 5,
+      "comment": null,
+      "ratedAt": "2026-09-26T02:55:49.597Z"
+    }
+  }
+]

@@ -1,0 +1,10 @@
+{
+  "token": "test-token",
+  "user": {
+    "id": "usr-customer-1",
+    "phone": "+971501234567",
+    "fullName": "خالد المنصوري",
+    "role": "customer",
+    "profileCompleted": true
+  }
+}

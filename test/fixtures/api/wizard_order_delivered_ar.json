@@ -1,0 +1,124 @@
+{
+    "id": "cmul9g9vs001vb4uxofa2q0hd",
+    "number": 1231,
+    "lines": [
+        {
+            "category": {
+                "id": "cat-clothes",
+                "name": "ملابس",
+                "description": "غسيل، كي، خدمة كاملة",
+                "iconKey": "shirt",
+                "imageUrl": "http://localhost:3000/catalog/cat-clothes.webp"
+            },
+            "subService": {
+                "id": "sub-wash-iron",
+                "categoryId": "cat-clothes",
+                "name": "غسيل وكي",
+                "description": "غسيل وتجفيف وكي كامل"
+            }
+        }
+    ],
+    "tier": {
+        "id": "tier-standard",
+        "name": "عادي",
+        "deliveryHours": 48,
+        "isVip": false,
+        "perks": [
+            "استلام وتسليم مجاني",
+            "مواعيد يومية متاحة"
+        ],
+        "surchargeType": "none",
+        "surchargeValue": 0
+    },
+    "pickupSlot": {
+        "id": "2026-09-30-win-0900",
+        "start": "2026-09-30T05:00:00.000Z",
+        "end": "2026-09-30T07:00:00.000Z",
+        "isFull": false
+    },
+    "deliverySlot": {
+        "id": "2026-10-02-win-0900",
+        "start": "2026-10-02T05:00:00.000Z",
+        "end": "2026-10-02T07:00:00.000Z",
+        "isFull": false
+    },
+    "address": {
+        "id": "adr-1",
+        "area": "الخالدية",
+        "city": "أبوظبي",
+        "kind": "home",
+        "floor": "7",
+        "label": null,
+        "building": "12",
+        "latitude": 24.4672,
+        "apartment": "704",
+        "longitude": 54.3532,
+        "alternatePhone": null
+    },
+    "customerName": "خالد المنصوري",
+    "customerPhone": "+971501234567",
+    "status": "delivered",
+    "createdAt": "2026-09-28T13:05:45.736Z",
+    "timeline": [
+        {
+            "status": "pending",
+            "at": "2026-09-28T13:05:45.741Z"
+        },
+        {
+            "status": "driverAssigned",
+            "at": "2026-09-28T13:05:49.142Z"
+        },
+        {
+            "status": "pickedUp",
+            "at": "2026-09-28T13:05:49.474Z"
+        },
+        {
+            "status": "atFacility",
+            "at": "2026-09-28T13:05:51.944Z"
+        },
+        {
+            "status": "awaitingPayment",
+            "at": "2026-09-28T13:05:56.003Z"
+        },
+        {
+            "status": "processing",
+            "at": "2026-09-28T13:06:06.790Z"
+        },
+        {
+            "status": "outForDelivery",
+            "at": "2026-09-28T13:06:11.869Z"
+        },
+        {
+            "status": "delivered",
+            "at": "2026-09-28T13:06:14.798Z"
+        }
+    ],
+    "driverName": "أحمد علي",
+    "invoice": {
+        "id": "INV-1231",
+        "items": [
+            {
+                "name": "قميص",
+                "quantity": 3,
+                "unitPrice": 10,
+                "productId": "prod-shirt",
+                "categoryId": "cat-clothes"
+            }
+        ],
+        "conditions": [
+            {
+                "itemName": "Shirt",
+                "kind": "stain",
+                "note": "Ink on the cuff",
+                "photoUrl": null
+            }
+        ],
+        "note": null,
+        "paymentMethod": "cashOnDelivery",
+        "vipSurcharge": 0,
+        "codFee": 5,
+        "paid": true
+    },
+    "failure": null,
+    "rating": null
+}

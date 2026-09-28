@@ -1,0 +1,72 @@
+[
+    {
+        "id": "cat-clothes",
+        "name": "ملابس",
+        "description": "غسيل، كي، خدمة كاملة",
+        "iconKey": "shirt",
+        "imageUrl": "http://localhost:3000/catalog/cat-clothes.webp"
+    },
+    {
+        "id": "cat-textiles",
+        "name": "مفروشات",
+        "description": "مفارش، أغطية، وسائد",
+        "iconKey": "bed",
+        "imageUrl": "http://localhost:3000/catalog/cat-textiles.webp"
+    },
+    {
+        "id": "cat-carpets",
+        "name": "سجاد",
+        "description": "تنظيف عميق وغسيل",
+        "iconKey": "carpet",
+        "imageUrl": "http://localhost:3000/catalog/cat-carpets.webp"
+    },
+    {
+        "id": "cat-curtains",
+        "name": "ستائر",
+        "description": "فك، غسيل، وكي",
+        "iconKey": "curtain",
+        "imageUrl": "http://localhost:3000/catalog/cat-curtains.webp"
+    },
+    {
+        "id": "cmul98wnh000ib4ux6b9erjcd",
+        "name": "أحذية 99897",
+        "description": "تنظيف وتلميع",
+        "iconKey": "shoe",
+        "imageUrl": null
+    },
+    {
+        "id": "cmul9b6hm0018b4uxb5blqgh5",
+        "name": "أحذية 07555",
+        "description": "تنظيف وتلميع",
+        "iconKey": "shoe",
+        "imageUrl": null
+    },
+    {
+        "id": "cmul9fnns001qb4ux23k3zasl",
+        "name": "أحذية 16520",
+        "description": "تنظيف وتلميع",
+        "iconKey": "shoe",
+        "imageUrl": null
+    },
+    {
+        "id": "cmul9hj7b003eb4uxylkgy21s",
+        "name": "أحذية 04020",
+        "description": "تنظيف وتلميع",
+        "iconKey": "shoe",
+        "imageUrl": null
+    },
+    {
+        "id": "cmula028f0052b4ux9fji9e9v",
+        "name": "أحذية 68533",
+        "description": "تنظيف وتلميع",
+        "iconKey": "shoe",
+        "imageUrl": null
+    },
+    {
+        "id": "cmulaiczg006qb4uxy2uobwed",
+        "name": "أحذية 22343",
+        "description": "تنظيف وتلميع",
+        "iconKey": "shoe",
+        "imageUrl": null
+    }
+]
