@@ -7,7 +7,16 @@ typedef VerifyOtpResponse = ({String token, AppUser user});
 
 abstract interface class AuthRemoteDataSource {
   Future<void> requestOtp(String phone);
-  Future<VerifyOtpResponse> verifyOtp(String phone, String code);
+
+  /// Whether [phone] already has an account (decides "Log in" vs "Verify").
+  Future<bool> isRegistered(String phone);
+
+  /// [fullName] names a new account; an existing one keeps its name.
+  Future<VerifyOtpResponse> verifyOtp(
+    String phone,
+    String code, {
+    String? fullName,
+  });
   Future<AppUser> getMe();
   Future<AppUser> updateProfile(String fullName);
 }
@@ -22,10 +31,23 @@ class AuthApiDataSource implements AuthRemoteDataSource {
       _api.post(ApiEndpoints.requestOtp, data: {'phone': phone});
 
   @override
-  Future<VerifyOtpResponse> verifyOtp(String phone, String code) async {
+  Future<bool> isRegistered(String phone) async {
+    final json = await _api.post(
+      ApiEndpoints.lookupPhone,
+      data: {'phone': phone},
+    ) as Map<String, dynamic>;
+    return json['registered'] as bool;
+  }
+
+  @override
+  Future<VerifyOtpResponse> verifyOtp(
+    String phone,
+    String code, {
+    String? fullName,
+  }) async {
     final json = await _api.post(
       ApiEndpoints.verifyOtp,
-      data: {'phone': phone, 'code': code},
+      data: {'phone': phone, 'code': code, 'fullName': ?fullName},
     ) as Map<String, dynamic>;
     return (
       token: json['token'] as String,

@@ -6,6 +6,7 @@ import 'data/datasources/auth_remote_data_source.dart';
 import 'data/datasources/saved_account_local_data_source.dart';
 import 'data/repositories/auth_repository_impl.dart';
 import 'domain/repositories/auth_repository.dart';
+import 'domain/usecases/check_phone.dart';
 import 'domain/usecases/complete_profile.dart';
 import 'domain/usecases/get_saved_account.dart';
 import 'domain/usecases/request_otp.dart';
@@ -37,6 +38,7 @@ void registerAuthFeature(GetIt sl) {
     ..registerLazySingleton(
       () => SessionCubit(restoreSession: sl(), logout: sl()),
     )
-    ..registerFactory(() => LoginCubit(sl(), sl()))
+    ..registerFactory(() => CheckPhone(sl()))
+    ..registerFactory(() => LoginCubit(sl(), sl(), sl()))
     ..registerFactory(() => CompleteProfileCubit(sl()));
 }

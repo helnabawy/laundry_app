@@ -209,6 +209,44 @@ void main() {
       expect(s.unauthorized, hasLength(1));
     });
 
+    test(
+      'lookup says Log in for a known number, Verify for a new one',
+      () async {
+        final auth = AuthApiDataSource(session().api);
+        expect(await auth.isRegistered(customerPhone), isTrue);
+        expect(await auth.isRegistered(driverPhone), isTrue);
+        final fresh =
+            '+97150${DateTime.now().millisecondsSinceEpoch % 10000000}'
+                .padRight(13, '0');
+        expect(await auth.isRegistered(fresh), isFalse);
+        await expectLater(
+          auth.isRegistered('+201001234567'),
+          throwsA(
+            isA<ServerException>().having((e) => e.statusCode, 'status', 400),
+          ),
+        );
+
+        // Verifying a new number with a name creates the account with it.
+        await auth.requestOtp(fresh);
+        final created = await auth.verifyOtp(
+          fresh,
+          '1234',
+          fullName: 'Sara Ahmed',
+        );
+        expect(created.user.fullName, 'Sara Ahmed');
+        expect(await auth.isRegistered(fresh), isTrue);
+
+        // A known number keeps its name whatever is typed.
+        await auth.requestOtp(customerPhone);
+        final existing = await auth.verifyOtp(
+          customerPhone,
+          '1234',
+          fullName: 'Someone Else',
+        );
+        expect(existing.user.fullName, isNot('Someone Else'));
+      },
+    );
+
     test('me and profile update', () async {
       final auth = AuthApiDataSource(customer.api);
       final me = await auth.getMe();

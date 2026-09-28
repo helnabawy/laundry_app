@@ -28,12 +28,17 @@ void main() {
     final result = await verifyOtp(VerifyOtpParams(phone: phone, code: '12'));
 
     expect(result.failureOrNull, const InputFailure(InputError.invalidOtp));
-    verifyNever(() => repository.verifyOtp(any(), any()));
+    verifyNever(
+      () =>
+          repository.verifyOtp(any(), any(), fullName: any(named: 'fullName')),
+    );
   });
 
   test('normalizes Arabic-Indic digits before verifying', () async {
-    when(() => repository.verifyOtp(phone, '1234'))
-        .thenAnswer((_) async => Ok(user(UserRole.customer)));
+    when(
+      () =>
+          repository.verifyOtp(phone, '1234', fullName: any(named: 'fullName')),
+    ).thenAnswer((_) async => Ok(user(UserRole.customer)));
 
     final result = await verifyOtp(VerifyOtpParams(phone: phone, code: '١٢٣٤'));
 
@@ -41,8 +46,10 @@ void main() {
   });
 
   test('signs out staff accounts, which must use the web portal', () async {
-    when(() => repository.verifyOtp(phone, '1234'))
-        .thenAnswer((_) async => Ok(user(UserRole.staff)));
+    when(
+      () =>
+          repository.verifyOtp(phone, '1234', fullName: any(named: 'fullName')),
+    ).thenAnswer((_) async => Ok(user(UserRole.staff)));
     when(() => repository.logout()).thenAnswer((_) async => const Ok(null));
 
     final result = await verifyOtp(VerifyOtpParams(phone: phone, code: '1234'));
@@ -52,6 +59,39 @@ void main() {
   });
 
   group('name typed at login', () {
+    test('goes to the server with the code, trimmed', () async {
+      when(
+        () => repository.verifyOtp(
+          phone,
+          '1234',
+          fullName: any(named: 'fullName'),
+        ),
+      ).thenAnswer((_) async => Ok(user(UserRole.customer)));
+      when(() => repository.updateProfile(fullName: 'Sara'))
+          .thenAnswer((_) async => Ok(user(UserRole.customer)));
+
+      await verifyOtp(
+        VerifyOtpParams(phone: phone, code: '1234', fullName: '  Sara '),
+      );
+
+      verify(() => repository.verifyOtp(phone, '1234', fullName: 'Sara'))
+          .called(1);
+    });
+
+    test('is not sent when blank (a registered number logs in)', () async {
+      when(
+        () => repository.verifyOtp(
+          phone,
+          '1234',
+          fullName: any(named: 'fullName'),
+        ),
+      ).thenAnswer((_) async => Ok(user(UserRole.customer)));
+
+      await verifyOtp(VerifyOtpParams(phone: phone, code: '1234'));
+
+      verify(() => repository.verifyOtp(phone, '1234')).called(1);
+    });
+
     test('is given to a new account with no name', () async {
       final named = AppUser(
         id: 'u1',
@@ -60,8 +100,13 @@ void main() {
         profileCompleted: false,
         fullName: 'Khalid',
       );
-      when(() => repository.verifyOtp(phone, '1234'))
-          .thenAnswer((_) async => Ok(user(UserRole.customer)));
+      when(
+        () => repository.verifyOtp(
+          phone,
+          '1234',
+          fullName: any(named: 'fullName'),
+        ),
+      ).thenAnswer((_) async => Ok(user(UserRole.customer)));
       when(() => repository.updateProfile(fullName: 'Khalid'))
           .thenAnswer((_) async => Ok(named));
 
@@ -80,8 +125,13 @@ void main() {
         profileCompleted: true,
         fullName: 'Khalid Al Mansouri',
       );
-      when(() => repository.verifyOtp(phone, '1234'))
-          .thenAnswer((_) async => Ok(existing));
+      when(
+        () => repository.verifyOtp(
+          phone,
+          '1234',
+          fullName: any(named: 'fullName'),
+        ),
+      ).thenAnswer((_) async => Ok(existing));
 
       final result = await verifyOtp(
         VerifyOtpParams(phone: phone, code: '1234', fullName: 'K'),
@@ -94,8 +144,13 @@ void main() {
     });
 
     test('still signs in if saving the name fails', () async {
-      when(() => repository.verifyOtp(phone, '1234'))
-          .thenAnswer((_) async => Ok(user(UserRole.customer)));
+      when(
+        () => repository.verifyOtp(
+          phone,
+          '1234',
+          fullName: any(named: 'fullName'),
+        ),
+      ).thenAnswer((_) async => Ok(user(UserRole.customer)));
       when(() => repository.updateProfile(fullName: 'Khalid'))
           .thenAnswer((_) async => const Err(NetworkFailure()));
 

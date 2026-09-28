@@ -7,8 +7,17 @@ abstract interface class AuthRepository {
   /// Sends an SMS code (Unifonic / Message Central on the backend).
   Future<Result<void>> requestOtp(PhoneNumber phone);
 
-  /// Verifies the code and persists the issued JWT.
-  Future<Result<AppUser>> verifyOtp(PhoneNumber phone, String code);
+  /// Whether [phone] already has an account: the login screen asks for a
+  /// name (and says "Verify") only for a new number.
+  Future<Result<bool>> isRegistered(PhoneNumber phone);
+
+  /// Verifies the code and persists the issued JWT. [fullName] names a new
+  /// account, linking the number to it.
+  Future<Result<AppUser>> verifyOtp(
+    PhoneNumber phone,
+    String code, {
+    String? fullName,
+  });
 
   /// The signed-in user from a stored JWT, or null if there is none / it
   /// expired.

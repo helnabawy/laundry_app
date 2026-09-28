@@ -7,6 +7,7 @@ abstract final class ApiEndpoints {
   // ---- Phase 1 (from the plan) -------------------------------------------
   static const requestOtp = '/api/auth/request-otp';
   static const verifyOtp = '/api/auth/verify-otp';
+  static const lookupPhone = '/api/auth/lookup';
   static const serviceCategories = '/api/service-categories';
   static String subServices(String categoryId) =>
       '/api/service-categories/$categoryId/sub-services';

@@ -39,7 +39,12 @@ class VerifyOtp implements UseCase<AppUser, VerifyOtpParams> {
     if (!_codePattern.hasMatch(code)) {
       return const Err(InputFailure(InputError.invalidOtp));
     }
-    final result = await _repository.verifyOtp(params.phone, code);
+    final name = params.fullName?.trim();
+    final result = await _repository.verifyOtp(
+      params.phone,
+      code,
+      fullName: name == null || name.isEmpty ? null : name,
+    );
     // Operators/admins must use the web portal, not the mobile app.
     if (result case Ok(value: AppUser(role: UserRole.staff))) {
       await _repository.logout();

@@ -7,6 +7,7 @@ import 'package:laundry_app/features/auth/data/repositories/auth_repository_impl
 import 'package:laundry_app/features/auth/domain/entities/app_user.dart';
 import 'package:laundry_app/features/auth/domain/entities/phone_number.dart';
 import 'package:laundry_app/features/auth/domain/entities/saved_account.dart';
+import 'package:laundry_app/features/auth/domain/usecases/check_phone.dart';
 import 'package:laundry_app/features/auth/domain/usecases/get_saved_account.dart';
 import 'package:laundry_app/features/auth/domain/usecases/request_otp.dart';
 import 'package:laundry_app/features/auth/domain/usecases/start_sign_in.dart';
@@ -52,9 +53,10 @@ void main() {
     );
   });
 
-  void answerVerify(AppUser user) =>
-      when(() => remote.verifyOtp(phone.e164, '1234'))
-          .thenAnswer((_) async => (token: 't', user: user));
+  void answerVerify(AppUser user) => when(
+    () =>
+        remote.verifyOtp(phone.e164, '1234', fullName: any(named: 'fullName')),
+  ).thenAnswer((_) async => (token: 't', user: user));
 
   group('saved account', () {
     test('is remembered after a named sign-in and survives logout', () async {
@@ -94,6 +96,7 @@ void main() {
     LoginCubit cubit() => LoginCubit(
       StartSignIn(RequestOtp(repository)),
       GetSavedAccount(repository),
+      CheckPhone(repository),
     );
 
     test('opens on the saved account when there is one', () async {
@@ -122,13 +125,53 @@ void main() {
       expect(login.state.codeSentTo?.fullName, isNull);
     });
 
-    test('a typed number needs a name before any code is sent', () async {
+    test('a new number needs a name before any code is sent', () async {
+      when(() => remote.isRegistered(phone.e164))
+          .thenAnswer((_) async => false);
       final login = cubit();
-      await login.submit(phone: '501234567', fullName: '  ');
 
+      // First press: the number turns out to be new, so the name field
+      // appears instead of an error.
+      await login.submit(phone: '501234567', fullName: '  ');
+      expect(login.state.asksForName, isTrue);
+      expect(login.state.failure, isNull);
+
+      // Pressing Verify with the name still blank is an error.
+      await login.submit(phone: '501234567', fullName: '  ');
       expect(login.state.nameMissing, isTrue);
       verifyNever(() => remote.requestOtp(any()));
     });
+
+    test('a registered number sends the code without asking a name', () async {
+      when(() => remote.isRegistered(phone.e164)).thenAnswer((_) async => true);
+      when(() => remote.requestOtp(phone.e164)).thenAnswer((_) async {});
+      final login = cubit();
+
+      await login.phoneChanged('501234567');
+      expect(login.state.isLogin, isTrue);
+
+      await login.submit(phone: '501234567', fullName: '');
+      expect(login.state.codeSentTo?.fullName, isNull);
+    });
+
+    test(
+      'a slow check for an old number never overrides the current one',
+      () async {
+        when(() => remote.isRegistered('+971501234567')).thenAnswer((_) async {
+          await Future<void>.delayed(const Duration(milliseconds: 50));
+          return true;
+        });
+        when(() => remote.isRegistered('+971509876543'))
+            .thenAnswer((_) async => false);
+        final login = cubit();
+
+        final slow = login.phoneChanged('501234567');
+        await login.phoneChanged('509876543');
+        await slow;
+
+        expect(login.state.phoneStatus, PhoneStatus.unregistered);
+      },
+    );
 
     test('a bad number is reported before a missing name', () async {
       final login = cubit();

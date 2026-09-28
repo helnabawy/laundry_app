@@ -41,7 +41,21 @@ class AuthMockDataSource implements AuthRemoteDataSource {
   Future<void> requestOtp(String phone) => _db.delay();
 
   @override
-  Future<VerifyOtpResponse> verifyOtp(String phone, String code) async {
+  Future<bool> isRegistered(String phone) async {
+    await _db.delay();
+    final row = _db.table(table).where((u) => u['phone'] == phone).firstOrNull;
+    if (row == null) return false;
+    // A number that signed up but never gave a name still needs one.
+    return row['role'] != 'customer' ||
+        ((row['fullName'] as String?)?.trim().isNotEmpty ?? false);
+  }
+
+  @override
+  Future<VerifyOtpResponse> verifyOtp(
+    String phone,
+    String code, {
+    String? fullName,
+  }) async {
     await _db.delay();
     if (code != MockDatabase.otpCode) _db.badRequest('Invalid code');
     final users = _db.table(table);
@@ -51,7 +65,9 @@ class AuthMockDataSource implements AuthRemoteDataSource {
         final created = {
           'id': 'usr-${_db.nextNumber()}',
           'phone': phone,
-          'fullName': null,
+          'fullName': fullName?.trim().isNotEmpty ?? false
+              ? fullName!.trim()
+              : null,
           'role': 'customer',
         };
         users.add(created);

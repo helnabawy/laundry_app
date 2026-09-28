@@ -21,9 +21,21 @@ class AuthRepositoryImpl implements AuthRepository {
       guard(() => _remote.requestOtp(phone.e164));
 
   @override
-  Future<Result<AppUser>> verifyOtp(PhoneNumber phone, String code) async {
+  Future<Result<bool>> isRegistered(PhoneNumber phone) =>
+      guard(() => _remote.isRegistered(phone.e164));
+
+  @override
+  Future<Result<AppUser>> verifyOtp(
+    PhoneNumber phone,
+    String code, {
+    String? fullName,
+  }) async {
     final result = await guard(() async {
-      final response = await _remote.verifyOtp(phone.e164, code);
+      final response = await _remote.verifyOtp(
+        phone.e164,
+        code,
+        fullName: fullName,
+      );
       await _tokens.write(response.token);
       return _remember(response.user);
     });

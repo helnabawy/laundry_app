@@ -14,10 +14,13 @@ import '../../../../core/utils/digits.dart';
 import '../../domain/entities/saved_account.dart';
 import '../cubit/login_cubit.dart';
 
-/// Mobile number + name + "send code" — no password (steps 1.2, 1.4).
+/// Mobile number + code — no password (steps 1.2, 1.4).
 ///
-/// A device that has signed in before opens on that account instead: one tap
-/// sends its code, and the name isn't asked again.
+/// As soon as a complete number is typed the server says whether it is
+/// registered: a known number shows "Log in" and needs only the code; a new
+/// one asks for the full name and shows "Verify", and the account is created
+/// with that name. A device that has signed in before opens on that account
+/// instead: one tap sends its code.
 class LoginPage extends StatelessWidget {
   const LoginPage({super.key});
 
@@ -67,10 +70,16 @@ class _LoginViewState extends State<_LoginView> {
 
     return BlocConsumer<LoginCubit, LoginState>(
       listenWhen: (prev, curr) =>
-          curr.codeSentTo != null && prev.codeSentTo != curr.codeSentTo,
+          (curr.codeSentTo != null && prev.codeSentTo != curr.codeSentTo) ||
+          (curr.asksForName && !prev.asksForName),
       listener: (context, state) {
-        context.push(Routes.otp, extra: state.codeSentTo);
-        context.read<LoginCubit>().acknowledge();
+        if (state.codeSentTo != null) {
+          context.push(Routes.otp, extra: state.codeSentTo);
+          context.read<LoginCubit>().acknowledge();
+        } else if (state.asksForName && _name.text.isEmpty) {
+          // A new number: the name is the next thing to type.
+          _nameFocus.requestFocus();
+        }
       },
       builder: (context, state) => Scaffold(
         backgroundColor: colors.tape,
@@ -119,8 +128,14 @@ class _LoginViewState extends State<_LoginView> {
                         note: l10n.termsNotice,
                         children: [
                           ActionButton(
-                            label: l10n.sendCode,
-                            loading: state.submitting,
+                            label: state.isLogin
+                                ? l10n.logIn
+                                : state.asksForName
+                                ? l10n.verify
+                                : l10n.sendCode,
+                            loading:
+                                state.submitting ||
+                                state.phoneStatus == PhoneStatus.checking,
                             onPressed: _submit,
                           ),
                         ],
@@ -206,7 +221,8 @@ class _SavedAccountSection extends StatelessWidget {
   }
 }
 
-/// A number this device hasn't signed in with: the number, then the name.
+/// A number this device hasn't signed in with: the number, and — only when
+/// the server doesn't know it — the full name.
 class _NewNumberSection extends StatelessWidget {
   const _NewNumberSection({
     required this.phone,
@@ -243,32 +259,41 @@ class _NewNumberSection extends StatelessWidget {
           _PhoneField(
             controller: phone,
             hasError: phoneFailure != null,
-            onChanged: (_) => cubit.clearError(),
-            onSubmitted: nameFocus.requestFocus,
+            onChanged: cubit.phoneChanged,
+            onSubmitted: state.asksForName ? nameFocus.requestFocus : onSubmit,
           ),
           if (phoneFailure case final failure?) ...[
             const SizedBox(height: DesignSpace.sm),
             _ErrorLine(failure.localized(l10n)),
           ],
-          const SizedBox(height: DesignSpace.xl),
-          Text(
-            l10n.fullName.toUpperCase(),
-            style: DesignTypography.stamp(colors.inkSecondary),
-          ),
-          TextField(
-            controller: name,
-            focusNode: nameFocus,
-            textInputAction: TextInputAction.done,
-            textCapitalization: TextCapitalization.words,
-            autofillHints: const [AutofillHints.name],
-            style: text.bodyLarge,
-            onChanged: (_) => cubit.clearError(),
-            onSubmitted: (_) => onSubmit(),
-            decoration: InputDecoration(
-              isDense: true,
-              errorText: state.nameMissing ? l10n.requiredField : null,
+          if (_statusHint(state.phoneStatus, l10n) case final hint?) ...[
+            const SizedBox(height: DesignSpace.sm),
+            Text(
+              hint,
+              style: text.bodySmall?.copyWith(color: colors.inkSecondary),
             ),
-          ),
+          ],
+          if (state.asksForName) ...[
+            const SizedBox(height: DesignSpace.xl),
+            Text(
+              l10n.fullName.toUpperCase(),
+              style: DesignTypography.stamp(colors.inkSecondary),
+            ),
+            TextField(
+              controller: name,
+              focusNode: nameFocus,
+              textInputAction: TextInputAction.done,
+              textCapitalization: TextCapitalization.words,
+              autofillHints: const [AutofillHints.name],
+              style: text.bodyLarge,
+              onChanged: (_) => cubit.clearError(),
+              onSubmitted: (_) => onSubmit(),
+              decoration: InputDecoration(
+                isDense: true,
+                errorText: state.nameMissing ? l10n.requiredField : null,
+              ),
+            ),
+          ],
           const SizedBox(height: DesignSpace.lg),
           Text(
             l10n.smsHint,
@@ -297,6 +322,14 @@ class _NewNumberSection extends StatelessWidget {
     );
   }
 }
+
+String? _statusHint(PhoneStatus status, AppLocalizations l10n) =>
+    switch (status) {
+      PhoneStatus.checking => l10n.checkingNumber,
+      PhoneStatus.registered => l10n.numberRegisteredHint,
+      PhoneStatus.unregistered => l10n.numberNewHint,
+      PhoneStatus.unknown => null,
+    };
 
 class _ErrorLine extends StatelessWidget {
   const _ErrorLine(this.message);
