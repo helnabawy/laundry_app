@@ -11,6 +11,8 @@ import '../../features/auth/presentation/pages/language_page.dart';
 import '../../features/auth/presentation/pages/login_page.dart';
 import '../../features/auth/presentation/pages/otp_page.dart';
 import '../../features/auth/presentation/pages/splash_page.dart';
+import '../../features/laundries/presentation/cubit/laundry_cubit.dart';
+import '../../features/laundries/presentation/pages/laundry_picker_page.dart';
 import '../../features/notifications/presentation/pages/notifications_page.dart';
 import '../../features/orders/domain/entities/laundry_order.dart';
 import '../../features/orders/presentation/pages/customer_home_shell.dart';
@@ -31,13 +33,19 @@ import 'routes.dart';
 GoRouter createRouter({
   required SessionCubit session,
   required LocaleCubit locale,
+  required LaundryCubit laundry,
 }) {
   return GoRouter(
     initialLocation: Routes.splash,
-    refreshListenable: StreamRefreshListenable([session.stream, locale.stream]),
+    refreshListenable: StreamRefreshListenable([
+      session.stream,
+      locale.stream,
+      laundry.stream.map((s) => s.selected?.id).distinct(),
+    ]),
     redirect: (context, state) => resolveRedirect(
       session: session.state,
       hasChosenLanguage: locale.hasChosenLanguage,
+      hasChosenLaundry: laundry.state.selected != null,
       location: state.matchedLocation,
     ),
     routes: [
@@ -77,6 +85,10 @@ GoRouter createRouter({
       GoRoute(
         path: Routes.customerHome,
         builder: (_, _) => const CustomerHomeShell(),
+      ),
+      GoRoute(
+        path: Routes.chooseLaundry,
+        builder: (_, _) => const LaundryPickerPage(),
       ),
       GoRoute(
         path: Routes.orderNew,
@@ -159,6 +171,7 @@ String? resolveRedirect({
   required SessionState session,
   required bool hasChosenLanguage,
   required String location,
+  bool hasChosenLaundry = true,
 }) {
   if (session is SessionUnknown) {
     return location == Routes.splash ? null : Routes.splash;
@@ -180,6 +193,11 @@ String? resolveRedirect({
             : Routes.completeProfile;
       }
       final isDriver = user.role == UserRole.driver;
+      // A customer orders from one laundry at a time; drivers belong to one
+      // already, so only customers choose.
+      if (!isDriver && !hasChosenLaundry) {
+        return location == Routes.chooseLaundry ? null : Routes.chooseLaundry;
+      }
       final home = isDriver ? Routes.driverHome : Routes.customerHome;
       const entryPoints = {
         Routes.splash,
@@ -197,6 +215,7 @@ String? resolveRedirect({
         Routes.addresses,
         Routes.shop,
         Routes.checkout,
+        Routes.chooseLaundry,
       ];
       final inCustomerArea = customerAreaPrefixes.any(location.startsWith);
       final inDriverArea = location.startsWith(Routes.driverHome);

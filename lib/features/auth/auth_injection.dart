@@ -1,5 +1,7 @@
 import 'package:get_it/get_it.dart';
 
+import '../../core/push/push_service.dart';
+
 import '../../core/config/app_config.dart';
 import 'data/datasources/auth_mock_data_source.dart';
 import 'data/datasources/auth_remote_data_source.dart';
@@ -36,7 +38,11 @@ void registerAuthFeature(GetIt sl) {
     ..registerFactory(() => Logout(sl()))
     ..registerFactory(() => CompleteProfile(sl(), sl()))
     ..registerLazySingleton(
-      () => SessionCubit(restoreSession: sl(), logout: sl()),
+      () => SessionCubit(
+        restoreSession: sl(),
+        logout: sl(),
+        beforeLogout: () => sl<PushService>().unregister(),
+      ),
     )
     ..registerFactory(() => CheckPhone(sl()))
     ..registerFactory(() => LoginCubit(sl(), sl(), sl()))

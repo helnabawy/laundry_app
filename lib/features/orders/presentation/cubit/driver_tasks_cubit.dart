@@ -6,6 +6,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import '../../../../core/error/failures.dart';
 import '../../domain/entities/driver_task.dart';
 import '../../domain/usecases/driver_task_usecases.dart';
+import '../../../../core/sync/refresh_bus.dart';
 
 /// Plan §8.2 "مهام اليوم" + §8.3-adjacent "السجل" (history) tab.
 class DriverTasksState extends Equatable {
@@ -57,12 +58,15 @@ class DriverTasksState extends Equatable {
   ];
 }
 
-class DriverTasksCubit extends Cubit<DriverTasksState> {
+class DriverTasksCubit extends Cubit<DriverTasksState> with RefreshesOnSignal {
   DriverTasksCubit(
     this._getTodayTasks,
     this._getCompletedTasks,
-    this._setAvailability,
-  ) : super(const DriverTasksState());
+    this._setAvailability, {
+    RefreshBus? refreshBus,
+  }) : super(const DriverTasksState()) {
+    refreshOn(refreshBus, (s) => s is OrderChanged || s is AppResumed, load);
+  }
 
   final GetTodayTasks _getTodayTasks;
   final GetCompletedTasks _getCompletedTasks;

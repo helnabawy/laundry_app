@@ -17,6 +17,13 @@ abstract final class ApiEndpoints {
   static const orders = '/api/orders';
   static String order(String orderId) => '/api/orders/$orderId';
 
+  // ---- Multi-laundry & push ---------------------------------------------------
+  /// Active laundries the customer can order from (public).
+  static const laundries = '/api/vendors';
+
+  /// Registers / removes this install's push token (POST / DELETE).
+  static const devices = '/api/me/devices';
+
   // ---- Proposed ------------------------------------------------------------
   static const me = '/api/me';
   static const profile = '/api/me/profile';

@@ -352,5 +352,17 @@
   "appearance": "المظهر",
   "themeSystem": "النظام",
   "themeLight": "فاتح",
-  "themeDark": "داكن"
+  "themeDark": "داكن",
+  "chooseLaundryTitle": "اختر المغسلة",
+  "chooseLaundryIntro": "لكل مغسلة خدماتها وأسعارها ومواعيد استلامها. يمكنك تغييرها لاحقاً من الصفحة الرئيسية.",
+  "laundryOrderingFrom": "تطلب من",
+  "laundryOrderingFromName": "تطلب من {name}",
+  "laundryCurrent": "الحالية",
+  "laundrySwitchTitle": "تغيير المغسلة؟",
+  "laundrySwitchMessage": "في سلتك قطع من {name}. تختلف الأسعار بين المغاسل، لذا سيتم إفراغ السلة عند التغيير.",
+  "laundrySwitchConfirm": "تغيير وإفراغ السلة",
+  "laundryNoneAvailable": "لا توجد مغسلة تستقبل الطلبات الآن. حاول مرة أخرى لاحقاً.",
+  "orderLaundry": "المغسلة",
+  "pushNewUpdate": "{title}: {body}",
+  "pushView": "عرض"
 }

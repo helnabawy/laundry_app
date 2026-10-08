@@ -24,7 +24,7 @@ void registerShopFeature(GetIt sl) {
     ..registerFactory(() => LoadCart(sl()))
     ..registerFactory(() => SaveCart(sl()))
     ..registerFactory(() => ClearCart(sl()))
-    ..registerFactory(() => CatalogCubit(sl(), sl()))
+    ..registerFactory(() => CatalogCubit(sl(), sl(), refreshBus: sl()))
     // Shared across Home/Shop/Checkout — sibling pushed routes with no
     // common `BlocProvider` ancestor, so this is a singleton rather than the
     // usual per-visit factory.

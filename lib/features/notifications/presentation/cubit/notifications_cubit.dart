@@ -4,6 +4,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import '../../../../core/error/failures.dart';
 import '../../domain/entities/app_notification.dart';
 import '../../domain/usecases/notification_usecases.dart';
+import '../../../../core/sync/refresh_bus.dart';
 
 class NotificationsState extends Equatable {
   const NotificationsState({
@@ -24,9 +25,15 @@ class NotificationsState extends Equatable {
 }
 
 /// Backs both the bell (its unread count) and the inbox itself.
-class NotificationsCubit extends Cubit<NotificationsState> {
-  NotificationsCubit(this._getNotifications, this._markAllRead)
-    : super(const NotificationsState());
+class NotificationsCubit extends Cubit<NotificationsState>
+    with RefreshesOnSignal {
+  NotificationsCubit(
+    this._getNotifications,
+    this._markAllRead, {
+    RefreshBus? refreshBus,
+  }) : super(const NotificationsState()) {
+    refreshOn(refreshBus, (s) => s is OrderChanged || s is AppResumed, load);
+  }
 
   final GetNotifications _getNotifications;
   final MarkAllNotificationsRead _markAllRead;

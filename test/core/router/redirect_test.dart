@@ -16,9 +16,11 @@ void main() {
     SessionState session,
     String location, {
     bool language = true,
+    bool laundry = true,
   }) => resolveRedirect(
     session: session,
     hasChosenLanguage: language,
+    hasChosenLaundry: laundry,
     location: location,
   );
 
@@ -84,5 +86,41 @@ void main() {
       ),
       isNull,
     );
+  });
+
+  group('laundry choice', () {
+    final customer = SessionAuthenticated(user(UserRole.customer));
+    final driver = SessionAuthenticated(user(UserRole.driver));
+
+    test('a customer picks a laundry before anything else', () {
+      expect(
+        redirect(customer, Routes.customerHome, laundry: false),
+        Routes.chooseLaundry,
+      );
+      expect(
+        redirect(customer, Routes.login, laundry: false),
+        Routes.chooseLaundry,
+      );
+      expect(redirect(customer, Routes.chooseLaundry, laundry: false), isNull);
+    });
+
+    test('a customer can come back to change it', () {
+      expect(redirect(customer, Routes.chooseLaundry), isNull);
+    });
+
+    test('drivers never pick one: they belong to a laundry', () {
+      expect(redirect(driver, Routes.driverHome, laundry: false), isNull);
+      expect(redirect(driver, Routes.chooseLaundry), Routes.driverHome);
+    });
+
+    test('profile completion still comes first', () {
+      final fresh = SessionAuthenticated(
+        user(UserRole.customer, completed: false),
+      );
+      expect(
+        redirect(fresh, Routes.customerHome, laundry: false),
+        Routes.completeProfile,
+      );
+    });
   });
 }

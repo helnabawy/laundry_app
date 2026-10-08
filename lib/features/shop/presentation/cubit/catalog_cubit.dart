@@ -7,6 +7,7 @@ import '../../../../core/error/failures.dart';
 import '../../../orders/domain/entities/product.dart';
 import '../../../orders/domain/entities/service_category.dart';
 import '../../../orders/domain/usecases/catalog_usecases.dart';
+import '../../../../core/sync/refresh_bus.dart';
 
 const _unset = Object();
 
@@ -60,17 +61,24 @@ class CatalogState extends Equatable {
 }
 
 /// The flat product grid + category filter chips behind the shop page.
-class CatalogCubit extends Cubit<CatalogState> {
-  CatalogCubit(this._getProducts, this._getCategories)
+class CatalogCubit extends Cubit<CatalogState> with RefreshesOnSignal {
+  CatalogCubit(this._getProducts, this._getCategories, {RefreshBus? refreshBus})
     : super(const CatalogState()) {
     load();
+    refreshOn(
+      refreshBus,
+      (s) => s is CatalogueChanged || s is AppResumed,
+      () => load(silent: true),
+    );
   }
 
   final GetProducts _getProducts;
   final GetServiceCategories _getCategories;
 
-  Future<void> load() async {
-    emit(state.copyWith(loading: true, failure: null));
+  /// [silent] refreshes keep the grid on screen instead of a loading state —
+  /// used when the laundry changed its prices while the page was open.
+  Future<void> load({bool silent = false}) async {
+    if (!silent) emit(state.copyWith(loading: true, failure: null));
     final (productsResult, categoriesResult) = await (
       _getProducts(),
       _getCategories(),

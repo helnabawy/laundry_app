@@ -737,5 +737,41 @@
   "appearance": "Appearance",
   "themeSystem": "System",
   "themeLight": "Light",
-  "themeDark": "Dark"
+  "themeDark": "Dark",
+  "chooseLaundryTitle": "Choose a laundry",
+  "chooseLaundryIntro": "Each laundry has its own services, prices and pickup times. You can change this later from Home.",
+  "laundryOrderingFrom": "Ordering from",
+  "laundryOrderingFromName": "Ordering from {name}",
+  "@laundryOrderingFromName": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "laundryCurrent": "Current",
+  "laundrySwitchTitle": "Switch laundry?",
+  "laundrySwitchMessage": "Your cart has items from {name}. Prices differ between laundries, so switching empties your cart.",
+  "@laundrySwitchMessage": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "laundrySwitchConfirm": "Switch and empty cart",
+  "laundryNoneAvailable": "No laundry is taking orders right now. Please try again later.",
+  "orderLaundry": "Laundry",
+  "pushNewUpdate": "{title}: {body}",
+  "@pushNewUpdate": {
+    "placeholders": {
+      "title": {
+        "type": "String"
+      },
+      "body": {
+        "type": "String"
+      }
+    }
+  },
+  "pushView": "View"
 }

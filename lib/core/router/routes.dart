@@ -13,6 +13,9 @@ abstract final class Routes {
   static String editAddress(String id) => '$addresses/$id/edit';
 
   static const customerHome = '/customer';
+
+  /// Which laundry to order from — required before the customer's Home.
+  static const chooseLaundry = '/laundry';
   static const orderNew = '/orders/new';
 
   /// The shop flow: flat product grid + cart, additive alongside the order

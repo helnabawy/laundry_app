@@ -1,4 +1,4 @@
-import 'package:flutter/widgets.dart';
+import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
 import '../../../../core/design/design.dart';
@@ -46,7 +46,10 @@ class _ProductGridView extends StatelessWidget {
     return BlocBuilder<CatalogCubit, CatalogState>(
       builder: (context, state) {
         final cubit = context.read<CatalogCubit>();
-        final labels = [l10n.categoryAll, for (final c in state.categories) c.name];
+        final labels = [
+          l10n.categoryAll,
+          for (final c in state.categories) c.name,
+        ];
         final selectedIndex = state.selectedCategoryId == null
             ? 0
             : state.categories.indexWhere(
@@ -70,7 +73,9 @@ class _ProductGridView extends StatelessWidget {
                     ),
                   ),
                 ),
-              Expanded(child: _Body(state: state, cubit: cubit)),
+              Expanded(
+                child: _Body(state: state, cubit: cubit),
+              ),
             ],
           ),
         );
@@ -100,17 +105,25 @@ class _Body extends StatelessWidget {
     final visible = state.visible;
     if (visible.isEmpty) return EmptyView(message: l10n.shopEmptyState);
 
-    return CustomScrollView(
-      slivers: [
-        SliverPadding(
-          padding: const EdgeInsets.symmetric(vertical: DesignSpace.sm),
-          sliver: ProductGrid(
-            itemCount: visible.length,
-            itemBuilder: (context, i) => ProductTile(product: visible[i]),
+    // Pull for the laundry's latest prices; a push refreshes them too.
+    final colors = context.colors;
+    return RefreshIndicator(
+      color: colors.ink,
+      backgroundColor: colors.tape,
+      onRefresh: () => cubit.load(silent: true),
+      child: CustomScrollView(
+        physics: const AlwaysScrollableScrollPhysics(),
+        slivers: [
+          SliverPadding(
+            padding: const EdgeInsets.symmetric(vertical: DesignSpace.sm),
+            sliver: ProductGrid(
+              itemCount: visible.length,
+              itemBuilder: (context, i) => ProductTile(product: visible[i]),
+            ),
           ),
-        ),
-        const SliverToBoxAdapter(child: SizedBox(height: DesignSpace.huge)),
-      ],
+          const SliverToBoxAdapter(child: SizedBox(height: DesignSpace.huge)),
+        ],
+      ),
     );
   }
 }

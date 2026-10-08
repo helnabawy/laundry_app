@@ -84,7 +84,7 @@ void registerOrdersFeature(GetIt sl) {
     ..registerFactory(() => ConfirmDelivery(sl()))
     ..registerFactory(() => ReportDeliveryFailed(sl()))
     // Cubits
-    ..registerFactory(() => OrdersCubit(sl()))
+    ..registerFactory(() => OrdersCubit(sl(), refreshBus: sl()))
     // param1: the past order to repeat, or null for a fresh order.
     // param2: a category id already chosen on Home, or null.
     ..registerFactoryParam<OrderWizardCubit, LaundryOrder?, String?>(
@@ -101,10 +101,21 @@ void registerOrdersFeature(GetIt sl) {
       ),
     )
     ..registerFactoryParam<OrderTrackingCubit, String, void>(
-      (orderId, _) => OrderTrackingCubit(orderId, sl(), sl(), sl()),
+      (orderId, _) =>
+          OrderTrackingCubit(orderId, sl(), sl(), sl(), refreshBus: sl()),
     )
-    ..registerFactory(() => DriverTasksCubit(sl(), sl(), sl()))
+    ..registerFactory(
+      () => DriverTasksCubit(sl(), sl(), sl(), refreshBus: sl()),
+    )
     ..registerFactoryParam<TaskDetailCubit, String, void>(
-      (orderId, _) => TaskDetailCubit(orderId, sl(), sl(), sl(), sl(), sl()),
+      (orderId, _) => TaskDetailCubit(
+        orderId,
+        sl(),
+        sl(),
+        sl(),
+        sl(),
+        sl(),
+        refreshBus: sl(),
+      ),
     );
 }

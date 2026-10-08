@@ -29,6 +29,8 @@ class LaundryOrder extends Equatable {
     this.invoice,
     this.failure,
     this.rating,
+    this.laundryId,
+    this.laundryName,
   });
 
   final String id;
@@ -56,6 +58,11 @@ class LaundryOrder extends Equatable {
   final List<OrderTimelineEvent> timeline;
   final String? driverName;
   final Invoice? invoice;
+
+  /// The laundry handling the order; null from a backend that predates
+  /// multiple laundries (and in the mock).
+  final String? laundryId;
+  final String? laundryName;
 
   /// Set once the customer rates the delivered order.
   final OrderRating? rating;
@@ -118,5 +125,7 @@ class LaundryOrder extends Equatable {
     invoice,
     failure,
     rating,
+    laundryId,
+    laundryName,
   ];
 }

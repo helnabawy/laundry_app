@@ -5,6 +5,7 @@ import '../../../../core/error/failures.dart';
 import '../../domain/entities/invoice.dart';
 import '../../domain/entities/laundry_order.dart';
 import '../../domain/usecases/order_usecases.dart';
+import '../../../../core/sync/refresh_bus.dart';
 
 /// One order: used by both the tracking page and the invoice page, so
 /// paying immediately reflects on the timeline behind it.
@@ -29,14 +30,26 @@ class OrderTrackingState extends Equatable {
   List<Object?> get props => [order, loading, paying, rating, failure];
 }
 
-class OrderTrackingCubit extends Cubit<OrderTrackingState> {
+class OrderTrackingCubit extends Cubit<OrderTrackingState>
+    with RefreshesOnSignal {
   OrderTrackingCubit(
     this._orderId,
     this._getOrder,
     this._choosePaymentMethod,
-    this._rateOrder,
-  ) : super(const OrderTrackingState()) {
+    this._rateOrder, {
+    RefreshBus? refreshBus,
+  }) : super(const OrderTrackingState()) {
     load();
+    refreshOn(
+      refreshBus,
+      (s) => (s is OrderChanged && s.orderId == _orderId) || s is AppResumed,
+      _reloadUnlessBusy,
+    );
+  }
+
+  /// A push mustn't clobber a payment or rating in flight.
+  Future<void> _reloadUnlessBusy() async {
+    if (!state.paying && !state.rating) await load();
   }
 
   final String _orderId;

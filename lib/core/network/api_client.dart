@@ -18,8 +18,8 @@ class ApiClient {
   Future<dynamic> put(String path, {Object? data}) =>
       _send(() => _dio.put<dynamic>(path, data: data));
 
-  Future<dynamic> delete(String path) =>
-      _send(() => _dio.delete<dynamic>(path));
+  Future<dynamic> delete(String path, {Object? data}) =>
+      _send(() => _dio.delete<dynamic>(path, data: data));
 
   Future<dynamic> _send(Future<Response<dynamic>> Function() request) async {
     try {

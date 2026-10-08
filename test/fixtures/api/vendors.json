@@ -1,0 +1,24 @@
+[
+  {
+    "id": "fac-1",
+    "slug": "main",
+    "name": "Laundry",
+    "phone": null,
+    "logoUrl": null,
+    "address": null,
+    "city": null,
+    "area": null,
+    "codFee": 5
+  },
+  {
+    "id": "cmv03nz240000jsux46veuwae",
+    "slug": "e2e-3n2jk",
+    "name": "Marina Laundry 3N2JK",
+    "phone": null,
+    "logoUrl": null,
+    "address": null,
+    "city": "Abu Dhabi",
+    "area": "Al Marina",
+    "codFee": 5
+  }
+]

@@ -7,12 +7,14 @@ import 'dart:io';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:laundry_app/core/error/exceptions.dart';
 import 'package:laundry_app/core/network/api_client.dart';
+import 'package:laundry_app/core/network/api_endpoints.dart';
 import 'package:laundry_app/core/network/dio_factory.dart';
 import 'package:laundry_app/core/storage/token_storage.dart';
 import 'package:laundry_app/features/addresses/data/datasources/address_remote_data_source.dart';
 import 'package:laundry_app/features/addresses/domain/entities/address.dart';
 import 'package:laundry_app/features/auth/data/datasources/auth_remote_data_source.dart';
 import 'package:laundry_app/features/auth/domain/entities/app_user.dart';
+import 'package:laundry_app/features/laundries/data/datasources/laundry_remote_data_source.dart';
 import 'package:laundry_app/features/notifications/data/datasources/notification_remote_data_source.dart';
 import 'package:laundry_app/features/notifications/domain/entities/app_notification.dart';
 import 'package:laundry_app/features/orders/data/datasources/catalog_api_data_source.dart';
@@ -50,6 +52,7 @@ void main() {
   /// One app session: token storage + Dio + ApiClient, as the app wires them.
   ({ApiClient api, _MemoryTokens tokens, List<int> unauthorized}) session({
     String lang = 'en',
+    String? laundryId,
   }) {
     final tokens = _MemoryTokens();
     final unauthorized = <int>[];
@@ -58,6 +61,7 @@ void main() {
       tokenStorage: tokens,
       languageCode: () => lang,
       onUnauthorized: () => unauthorized.add(1),
+      laundryId: () => laundryId,
     );
     return (api: ApiClient(dio), tokens: tokens, unauthorized: unauthorized);
   }
@@ -119,21 +123,21 @@ void main() {
     List<NewOrderItem> items = const [],
     String tierId = 'tier-standard',
     PaymentMethod? paymentMethod,
+    CatalogApiDataSource? atCatalog,
+    OrderApiDataSource? atOrders,
   }) async {
-    final tier = (await catalog.getTiers()).firstWhere((t) => t.id == tierId);
+    final at = atCatalog ?? catalog;
+    final placing = atOrders ?? orders;
+    final tier = (await at.getTiers()).firstWhere((t) => t.id == tierId);
     final day = DateTime.now().add(const Duration(days: 2));
-    final pickup = (await catalog.getPickupSlots(
+    final pickup = (await at.getPickupSlots(
       day,
       tierId,
     )).firstWhere((s) => !s.isFull);
     final notBefore = pickup.start.add(Duration(hours: tier.deliveryHours));
     for (var extra = 0; extra < 5; extra++) {
       final deliveryDay = notBefore.toLocal().add(Duration(days: extra));
-      final slots = await catalog.getDeliverySlots(
-        deliveryDay,
-        tierId,
-        notBefore,
-      );
+      final slots = await at.getDeliverySlots(deliveryDay, tierId, notBefore);
       final open = slots.where((s) => !s.isFull);
       if (open.isNotEmpty) {
         expect(
@@ -141,7 +145,7 @@ void main() {
           isFalse,
           reason: 'server honoured notBefore',
         );
-        return orders.createOrder(
+        return placing.createOrder(
           NewOrderParams(
             lines: lines,
             items: items,
@@ -511,6 +515,53 @@ void main() {
     },
     skip: skip,
   );
+
+  test(
+    'several laundries: the customer orders from the one they chose',
+    () async {
+      final laundries = await LaundryApiDataSource(customer.api).getLaundries();
+      if (laundries.length < 2) {
+        markTestSkipped('Needs a second laundry (add one in the portal).');
+        return;
+      }
+      final other = laundries.last;
+      final there = session(laundryId: other.id);
+      await there.tokens.write((await customer.tokens.read())!);
+      final otherCatalog = CatalogApiDataSource(there.api);
+      final otherOrders = OrderApiDataSource(there.api);
+
+      // Its own catalogue: same kind of things, different ids.
+      final mainIds = {for (final p in await catalog.getProducts()) p.id};
+      final products = await otherCatalog.getProducts();
+      expect(products, isNotEmpty);
+      expect(products.any((p) => mainIds.contains(p.id)), isFalse);
+
+      final tier = (await otherCatalog.getTiers()).firstWhere((t) => !t.isVip);
+      final order = await book(
+        items: [NewOrderItem(productId: products.first.id, quantity: 1)],
+        tierId: tier.id,
+        paymentMethod: PaymentMethod.card,
+        atCatalog: otherCatalog,
+        atOrders: otherOrders,
+      );
+      expect(order.laundryId, other.id);
+      expect(order.laundryName, other.name);
+
+      // The customer's history spans every laundry.
+      final mine = await orders.getOrders();
+      expect(mine.any((o) => o.id == order.id), isTrue);
+    },
+    skip: skip,
+  );
+
+  test('push: this phone\'s token is registered and removed', () async {
+    const token = 'live-test-token-0123456789abcdef';
+    await customer.api.post(
+      ApiEndpoints.devices,
+      data: {'token': token, 'platform': 'android'},
+    );
+    await customer.api.delete(ApiEndpoints.devices, data: {'token': token});
+  }, skip: skip);
 
   test('support: FAQs, assistant, hand-off to a person', () async {
     final ds = SupportApiDataSource(customer.api);

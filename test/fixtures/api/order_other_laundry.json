@@ -1,0 +1,78 @@
+{
+  "id": "cmv03pl1m001032ux9ljlx4qn",
+  "number": 1042,
+  "vendor": {
+    "id": "cmv03pk8h000032uxrxprlx7m",
+    "name": "Marina Laundry 3PFE0",
+    "phone": null
+  },
+  "lines": [],
+  "tier": {
+    "id": "cmv03pkbl000s32ux90w91n3v",
+    "name": "Standard",
+    "deliveryHours": 48,
+    "isVip": false,
+    "perks": [
+      "Free pickup & delivery",
+      "Daily slots available"
+    ],
+    "surchargeType": "none",
+    "surchargeValue": 0
+  },
+  "pickupSlot": {
+    "id": "2026-10-11-cmv03pkc1000u32ux5htmjzeo",
+    "start": "2026-10-11T05:00:00.000Z",
+    "end": "2026-10-11T07:00:00.000Z",
+    "isFull": false
+  },
+  "deliverySlot": {
+    "id": "2026-10-13-cmv03pkc1000u32ux5htmjzeo",
+    "start": "2026-10-13T05:00:00.000Z",
+    "end": "2026-10-13T07:00:00.000Z",
+    "isFull": false
+  },
+  "address": {
+    "id": "adr-1",
+    "area": "الخالدية",
+    "city": "أبوظبي",
+    "kind": "home",
+    "floor": "7",
+    "label": null,
+    "building": "12",
+    "latitude": 24.4672,
+    "apartment": "704",
+    "longitude": 54.3532,
+    "alternatePhone": null
+  },
+  "customerName": "خالد المنصوري",
+  "customerPhone": "+971501234567",
+  "status": "pending",
+  "createdAt": "2026-10-08T22:21:35.050Z",
+  "timeline": [
+    {
+      "status": "pending",
+      "at": "2026-10-08T22:21:35.066Z"
+    }
+  ],
+  "driverName": null,
+  "invoice": {
+    "id": "E3PFE0-1042",
+    "items": [
+      {
+        "name": "Shirt",
+        "quantity": 2,
+        "unitPrice": 10,
+        "productId": "cmv03pk9n000732ux01i47v62",
+        "categoryId": "cmv03pk93000132ux7bk5f633"
+      }
+    ],
+    "conditions": [],
+    "note": null,
+    "paymentMethod": "card",
+    "vipSurcharge": 0,
+    "codFee": 0,
+    "paid": true
+  },
+  "failure": null,
+  "rating": null
+}

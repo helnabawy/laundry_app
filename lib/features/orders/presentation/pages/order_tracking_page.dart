@@ -7,6 +7,7 @@ import '../../../../core/design/design.dart';
 import '../../../../core/di/injection.dart';
 import '../../../../core/l10n/l10n.dart';
 import '../../../../core/router/routes.dart';
+import '../../../laundries/presentation/cubit/laundry_cubit.dart';
 import '../../domain/entities/order_status.dart';
 import '../cubit/order_tracking_cubit.dart';
 import '../widgets/invoice_summary_card.dart';
@@ -68,7 +69,10 @@ class _OrderTrackingView extends StatelessWidget {
 
         return DetailPage(
           title: l10n.orderNumber(order.number.toString()),
-          subtitle: order.servicesLabel,
+          subtitle: [
+            order.servicesLabel,
+            order.laundryName,
+          ].whereType<String>().join(' · '),
           // Plan §9 Stage 5: any finished order can be repeated in one tap,
           // with the wizard filled from it. A cancelled pickup reads as
           // rebooking, since that is what the customer is doing.
@@ -84,8 +88,12 @@ class _OrderTrackingView extends StatelessWidget {
                       tone: order.canRate
                           ? ActionTone.secondary
                           : ActionTone.primary,
-                      onPressed: () =>
-                          context.push(Routes.orderNew, extra: order),
+                      onPressed: () async {
+                        await sl<LaundryCubit>().switchTo(order.laundryId);
+                        if (context.mounted) {
+                          await context.push(Routes.orderNew, extra: order);
+                        }
+                      },
                     ),
                   ],
                 )

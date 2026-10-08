@@ -7,6 +7,7 @@ import '../../domain/entities/laundry_order.dart';
 import '../../domain/repositories/driver_task_repository.dart';
 import '../../domain/usecases/driver_task_usecases.dart';
 import '../../domain/usecases/order_usecases.dart';
+import '../../../../core/sync/refresh_bus.dart';
 
 /// Backs both the pickup and delivery detail screens (plan §8.2): they
 /// operate on the same [LaundryOrder], just at different statuses.
@@ -31,16 +32,27 @@ class TaskDetailState extends Equatable {
   List<Object?> get props => [order, loading, submitting, done, failure];
 }
 
-class TaskDetailCubit extends Cubit<TaskDetailState> {
+class TaskDetailCubit extends Cubit<TaskDetailState> with RefreshesOnSignal {
   TaskDetailCubit(
     this._orderId,
     this._getOrder,
     this._confirmPickup,
     this._reportPickupFailed,
     this._confirmDelivery,
-    this._reportDeliveryFailed,
-  ) : super(const TaskDetailState()) {
+    this._reportDeliveryFailed, {
+    RefreshBus? refreshBus,
+  }) : super(const TaskDetailState()) {
     load();
+    refreshOn(
+      refreshBus,
+      (s) => (s is OrderChanged && s.orderId == _orderId) || s is AppResumed,
+      _reloadUnlessBusy,
+    );
+  }
+
+  /// A push mustn't clobber a confirm the driver is in the middle of.
+  Future<void> _reloadUnlessBusy() async {
+    if (!state.submitting) await load();
   }
 
   final String _orderId;

@@ -4,6 +4,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import '../../../../core/error/failures.dart';
 import '../../domain/entities/laundry_order.dart';
 import '../../domain/usecases/order_usecases.dart';
+import '../../../../core/sync/refresh_bus.dart';
 
 /// The customer's order list, shared by the home screen and "My orders"
 /// (plan §8.1 "الطلب الحالي" / "طلباتك السابقة" / "طلباتي").
@@ -35,8 +36,11 @@ class OrdersState extends Equatable {
   List<Object?> get props => [orders, loading, failure];
 }
 
-class OrdersCubit extends Cubit<OrdersState> {
-  OrdersCubit(this._getOrders) : super(const OrdersState());
+class OrdersCubit extends Cubit<OrdersState> with RefreshesOnSignal {
+  OrdersCubit(this._getOrders, {RefreshBus? refreshBus})
+    : super(const OrdersState()) {
+    refreshOn(refreshBus, (s) => s is OrderChanged || s is AppResumed, load);
+  }
 
   final GetOrders _getOrders;
 

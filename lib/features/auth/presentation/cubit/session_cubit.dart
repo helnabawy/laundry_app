@@ -43,13 +43,21 @@ final class SessionAuthenticated extends SessionState {
 
 /// App-wide auth state; drives the router's role-based redirects.
 class SessionCubit extends Cubit<SessionState> {
-  SessionCubit({required RestoreSession restoreSession, required Logout logout})
-    : _restoreSession = restoreSession,
-      _logout = logout,
-      super(const SessionUnknown());
+  SessionCubit({
+    required RestoreSession restoreSession,
+    required Logout logout,
+    Future<void> Function()? beforeLogout,
+  }) : _restoreSession = restoreSession,
+       _logout = logout,
+       _beforeLogout = beforeLogout,
+       super(const SessionUnknown());
 
   final RestoreSession _restoreSession;
   final Logout _logout;
+
+  /// Runs while the session is still valid (e.g. removing this phone's push
+  /// token), before a deliberate sign-out.
+  final Future<void> Function()? _beforeLogout;
 
   Future<void> restore() async {
     emit(const SessionUnknown());
@@ -69,6 +77,7 @@ class SessionCubit extends Cubit<SessionState> {
   void userUpdated(AppUser user) => emit(SessionAuthenticated(user));
 
   Future<void> logout() async {
+    await _beforeLogout?.call();
     await _logout();
     emit(const SessionUnauthenticated());
   }

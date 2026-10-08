@@ -4,13 +4,15 @@ import 'package:flutter/foundation.dart';
 import '../storage/token_storage.dart';
 
 /// Builds the [Dio] instance used by [ApiClient]:
-/// - attaches the JWT and the UI language to every request;
+/// - attaches the JWT, the UI language and the chosen laundry
+///   (`X-Vendor-Id`) to every request;
 /// - reports 401s so the app can end the session.
 Dio createDio({
   required String baseUrl,
   required TokenStorage tokenStorage,
   required String Function() languageCode,
   required void Function() onUnauthorized,
+  String? Function()? laundryId,
 }) {
   final dio = Dio(
     BaseOptions(
@@ -30,6 +32,9 @@ Dio createDio({
           options.headers['Authorization'] = 'Bearer $token';
         }
         options.headers['Accept-Language'] = languageCode();
+        if (laundryId?.call() case final id?) {
+          options.headers['X-Vendor-Id'] = id;
+        }
         handler.next(options);
       },
       onError: (error, handler) {

@@ -57,6 +57,8 @@ abstract final class LaundryOrderModel {
       ),
       _ => null,
     },
+    laundryId: (json['vendor'] as Map<String, dynamic>?)?['id'] as String?,
+    laundryName: (json['vendor'] as Map<String, dynamic>?)?['name'] as String?,
   );
 
   /// Reads the multi-line shape, falling back to the single `category` /

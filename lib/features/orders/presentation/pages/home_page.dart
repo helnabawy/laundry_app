@@ -3,8 +3,11 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../../core/design/design.dart';
+import '../../../../core/di/injection.dart';
 import '../../../../core/l10n/l10n.dart';
 import '../../../../core/router/routes.dart';
+import '../../../laundries/presentation/cubit/laundry_cubit.dart';
+import '../../../laundries/presentation/widgets/current_laundry_row.dart';
 import '../../../notifications/presentation/cubit/notifications_cubit.dart';
 import '../../../notifications/presentation/widgets/notification_bell.dart';
 import '../../../shop/presentation/widgets/cart_icon_button.dart';
@@ -32,6 +35,8 @@ class HomePage extends StatelessWidget {
   /// wizard otherwise, unchanged.
   Future<void> _startOrder(BuildContext context, {LaundryOrder? from}) async {
     final cubit = context.read<OrdersCubit>();
+    await sl<LaundryCubit>().switchTo(from?.laundryId);
+    if (!context.mounted) return;
     if (from != null && from.lines.isEmpty) {
       await context.push(Routes.checkout, extra: from);
     } else {
@@ -75,9 +80,15 @@ class HomePage extends StatelessWidget {
         await Future.wait([
           context.read<OrdersCubit>().load(),
           context.read<NotificationsCubit>().load(),
+          sl<LaundryCubit>().load(),
         ]);
       },
       slivers: [
+        SliverToBoxAdapter(
+          child: CurrentLaundryRow(
+            onChanged: () => context.read<OrdersCubit>().load(),
+          ),
+        ),
         if (state.loading && state.orders.isEmpty)
           const SliverToBoxAdapter(
             child: Padding(

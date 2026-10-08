@@ -20,5 +20,5 @@ void registerNotificationsFeature(GetIt sl) {
     )
     ..registerFactory(() => GetNotifications(sl()))
     ..registerFactory(() => MarkAllNotificationsRead(sl()))
-    ..registerFactory(() => NotificationsCubit(sl(), sl()));
+    ..registerFactory(() => NotificationsCubit(sl(), sl(), refreshBus: sl()));
 }

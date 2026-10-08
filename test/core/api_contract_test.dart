@@ -5,6 +5,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:laundry_app/features/addresses/data/models/address_model.dart';
 import 'package:laundry_app/features/auth/data/models/app_user_model.dart';
 import 'package:laundry_app/features/auth/domain/entities/app_user.dart';
+import 'package:laundry_app/features/laundries/data/models/laundry_model.dart';
 import 'package:laundry_app/features/notifications/data/models/app_notification_model.dart';
 import 'package:laundry_app/features/orders/data/models/driver_task_model.dart';
 import 'package:laundry_app/features/orders/data/models/laundry_order_model.dart';
@@ -96,6 +97,33 @@ void main() {
     test('notifications and support FAQs parse', () {
       list('notifications').map(AppNotificationModel.fromJson).toList();
       expect(list('faqs_ar').map(FaqEntryModel.fromJson), isNotEmpty);
+    });
+  });
+
+  group('laundries', () {
+    test('GET /api/vendors parses, with optional details left null', () {
+      final laundries = list('vendors').map(LaundryModel.fromJson).toList();
+      expect(laundries, hasLength(2));
+      expect(laundries.first.id, 'fac-1');
+      expect(laundries.first.locality, isNull);
+      expect(laundries.last.locality, 'Al Marina, Abu Dhabi');
+      expect(laundries.last.codFee, 5);
+    });
+
+    test('an order says which laundry handles it', () {
+      final order = LaundryOrderModel.fromJson(
+        fixture('order_other_laundry') as Map<String, dynamic>,
+      );
+      expect(order.laundryId, isNotEmpty);
+      expect(order.laundryName, startsWith('Marina Laundry'));
+    });
+
+    test('an order from an older backend has no laundry', () {
+      final order = LaundryOrderModel.fromJson(
+        fixture('shop_order') as Map<String, dynamic>,
+      );
+      expect(order.laundryId, isNull);
+      expect(order.laundryName, isNull);
     });
   });
 }
