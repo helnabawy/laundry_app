@@ -9,6 +9,7 @@ extension PaymentMethodLabel on PaymentMethod {
   String label(AppLocalizations l10n) => switch (this) {
     PaymentMethod.card => l10n.card,
     PaymentMethod.cashOnDelivery => l10n.cashOnDelivery,
+    PaymentMethod.payLater => l10n.payLater,
   };
 }
 
@@ -33,8 +34,14 @@ class InvoiceSummaryCard extends StatelessWidget {
       children: [
         LabelRow(
           title: l10n.invoiceNumber(invoice.id.toUpperCase()),
-          subtitle: invoice.paid
+          subtitle: invoice.isRefunded
+              ? l10n.refunded
+              : invoice.isPartiallyRefunded
+              ? l10n.partiallyRefunded
+              : invoice.paid
               ? l10n.paidWith(invoice.paymentMethod?.label(l10n) ?? '')
+              : invoice.awaitingOnlinePayment
+              ? l10n.paymentPending
               : l10n.unpaid,
           value: format.money(invoice.total),
           trailing: Icon(

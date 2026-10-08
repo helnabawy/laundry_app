@@ -11,9 +11,12 @@ import '../../../../core/utils/formatters.dart';
 import '../../domain/entities/invoice.dart';
 import '../../domain/entities/item_condition.dart';
 import '../../domain/entities/laundry_order.dart';
+import '../../domain/entities/payment_info.dart';
+import '../../domain/usecases/payment_usecases.dart';
 import '../cubit/order_tracking_cubit.dart';
 import '../utils/treatment_symbols.dart';
 import '../widgets/invoice_summary_card.dart';
+import '../widgets/payment_panel.dart';
 
 /// The label's reverse: what was counted, what it costs, and how it is paid.
 class InvoicePage extends StatelessWidget {
@@ -43,6 +46,26 @@ class _InvoiceViewState extends State<_InvoiceView> {
   /// Stains and damage must be seen before processing starts, and choosing a
   /// payment method is what starts it.
   var _acknowledged = false;
+
+  /// The customer just chose card / pay-later: open its checkout on sight.
+  var _launchCheckout = false;
+
+  /// How the laundry accepts payment; pay-later shows only when offered.
+  List<PaymentOption> _options = const [];
+
+  @override
+  void initState() {
+    super.initState();
+    _loadOptions();
+  }
+
+  Future<void> _loadOptions() async {
+    final result = await sl<GetPaymentOptions>()();
+    if (!mounted) return;
+    if (result.valueOrNull case final options?) {
+      setState(() => _options = options);
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -79,18 +102,25 @@ class _InvoiceViewState extends State<_InvoiceView> {
                       : null,
                   children: [
                     ActionButton(
+                      // Cash on delivery adds the handling fee on top.
                       label: l10n.payAmount(
-                        AppFormat.of(context).money(invoice.total),
+                        AppFormat.of(context)
+                            .money(invoice.total + _method.codFee),
                       ),
                       loading: state.paying,
                       onPressed: mustAcknowledge
                           ? null
-                          : () => context
-                                .read<OrderTrackingCubit>()
-                                .choosePaymentMethod(
-                                  _method,
-                                  conditionsAcknowledged: _acknowledged,
-                                ),
+                          : () {
+                              setState(
+                                () => _launchCheckout = _method.isOnline,
+                              );
+                              context
+                                  .read<OrderTrackingCubit>()
+                                  .choosePaymentMethod(
+                                    _method,
+                                    conditionsAcknowledged: _acknowledged,
+                                  );
+                            },
                     ),
                   ],
                 ),
@@ -105,10 +135,15 @@ class _InvoiceViewState extends State<_InvoiceView> {
                             context.read<OrderTrackingCubit>().load(),
                       ))
               : isShopOrder
-              ? _ShopInvoiceBody(invoice: invoice)
+              ? _ShopInvoiceBody(
+                  invoice: invoice,
+                  payment: _paymentPanel(context, invoice),
+                )
               : _InvoiceBody(
                   order: order,
                   invoice: invoice,
+                  payment: _paymentPanel(context, invoice),
+                  payLater: _payLaterFor(invoice),
                   method: _method,
                   onMethod: (m) => setState(() => _method = m),
                   acknowledged: _acknowledged,
@@ -120,10 +155,31 @@ class _InvoiceViewState extends State<_InvoiceView> {
   }
 }
 
+extension on _InvoiceViewState {
+  /// Card / pay-later chosen but not paid yet: finish, check or retry.
+  Widget? _paymentPanel(BuildContext context, Invoice invoice) {
+    if (!invoice.awaitingOnlinePayment) return null;
+    final cubit = context.read<OrderTrackingCubit>();
+    return PaymentPanel(
+      key: ValueKey(invoice.payment?.id),
+      payment: invoice.payment,
+      autoLaunch: _launchCheckout,
+      onSettled: (_) => cubit.load(),
+      onRetry: cubit.retryPayment,
+    );
+  }
+
+  /// Pay-later's terms when the laundry offers it, or null.
+  PaymentOption? _payLaterFor(Invoice invoice) =>
+      _options.where((o) => o.method == PaymentMethod.payLater).firstOrNull;
+}
+
 class _InvoiceBody extends StatelessWidget {
   const _InvoiceBody({
     required this.order,
     required this.invoice,
+    required this.payment,
+    required this.payLater,
     required this.method,
     required this.onMethod,
     required this.acknowledged,
@@ -132,6 +188,8 @@ class _InvoiceBody extends StatelessWidget {
 
   final LaundryOrder order;
   final Invoice invoice;
+  final Widget? payment;
+  final PaymentOption? payLater;
   final PaymentMethod method;
   final ValueChanged<PaymentMethod> onMethod;
   final bool acknowledged;
@@ -146,6 +204,7 @@ class _InvoiceBody extends StatelessWidget {
     return ListView(
       padding: EdgeInsets.zero,
       children: [
+        ?payment,
         _ConditionReport(
           invoice: invoice,
           acknowledged: acknowledged,
@@ -215,14 +274,29 @@ class _InvoiceBody extends StatelessWidget {
             children: [
               FieldLine(
                 label: l10n.subtotal,
-                value: format.money(invoice.total),
+                value: format.money(invoice.subtotal),
               ),
+              if (invoice.vipSurcharge > 0) ...[
+                const StitchRule.dashed(),
+                FieldLine(
+                  label: l10n.vipSurchargeLabel,
+                  value: format.money(invoice.vipSurcharge),
+                ),
+              ],
+              if (invoice.codFee > 0) ...[
+                const StitchRule.dashed(),
+                FieldLine(
+                  label: l10n.codFeeLabel,
+                  value: format.money(invoice.codFee),
+                ),
+              ],
               const StitchRule.dashed(),
               FieldLine(
                 label: l10n.total,
                 value: format.money(invoice.total),
                 emphasised: true,
               ),
+              ..._refundLines(context, invoice),
             ],
           ),
         ),
@@ -284,6 +358,33 @@ class _InvoiceBody extends StatelessWidget {
                     : null,
                 onTap: () => onMethod(PaymentMethod.card),
               ),
+              if (payLater case final option?)
+                LabelRow(
+                  leading: Icon(
+                    CupertinoIcons.calendar,
+                    color: method == PaymentMethod.payLater
+                        ? colors.onInk
+                        : colors.ink,
+                  ),
+                  title: l10n.payLater,
+                  subtitle: option.accepts(invoice.total)
+                      ? l10n.payLaterSubtitle(
+                          option.installments ?? 4,
+                          format.money(
+                            invoice.total / (option.installments ?? 4),
+                          ),
+                        )
+                      : l10n.payLaterLimits(
+                          format.money(option.minAmount ?? 0),
+                          format.money(option.maxAmount ?? 0),
+                        ),
+                  enabled: option.accepts(invoice.total),
+                  selected: method == PaymentMethod.payLater,
+                  trailing: method == PaymentMethod.payLater
+                      ? const Icon(CupertinoIcons.checkmark_alt)
+                      : null,
+                  onTap: () => onMethod(PaymentMethod.payLater),
+                ),
               LabelRow(
                 leading: Icon(
                   CupertinoIcons.money_dollar_circle,
@@ -292,6 +393,9 @@ class _InvoiceBody extends StatelessWidget {
                       : colors.ink,
                 ),
                 title: l10n.cashOnDelivery,
+                subtitle: l10n.codFeeSubtitle(
+                  format.money(PaymentMethod.cashOnDelivery.codFee),
+                ),
                 selected: method == PaymentMethod.cashOnDelivery,
                 trailing: method == PaymentMethod.cashOnDelivery
                     ? const Icon(CupertinoIcons.checkmark_alt)
@@ -443,9 +547,10 @@ class _ConditionRow extends StatelessWidget {
 /// facility-inspection artifact the shop flow never produces) and no
 /// payment-method chooser.
 class _ShopInvoiceBody extends StatelessWidget {
-  const _ShopInvoiceBody({required this.invoice});
+  const _ShopInvoiceBody({required this.invoice, required this.payment});
 
   final Invoice invoice;
+  final Widget? payment;
 
   @override
   Widget build(BuildContext context) {
@@ -456,6 +561,7 @@ class _ShopInvoiceBody extends StatelessWidget {
     return ListView(
       padding: EdgeInsets.zero,
       children: [
+        ?payment,
         Padding(
           padding: const EdgeInsets.symmetric(horizontal: DesignSpace.gutter),
           child: StampHeading(
@@ -511,6 +617,7 @@ class _ShopInvoiceBody extends StatelessWidget {
                 value: format.money(invoice.total),
                 emphasised: true,
               ),
+              ..._refundLines(context, invoice),
             ],
           ),
         ),
@@ -533,14 +640,21 @@ class _ShopInvoiceBody extends StatelessWidget {
         LabelGroup(
           children: [
             LabelRow(
-              leading: Icon(
-                invoice.paymentMethod == PaymentMethod.card
-                    ? CupertinoIcons.creditcard
-                    : CupertinoIcons.money_dollar_circle,
-                color: colors.ink,
-              ),
+              leading: Icon(switch (invoice.paymentMethod) {
+                PaymentMethod.card => CupertinoIcons.creditcard,
+                PaymentMethod.payLater => CupertinoIcons.calendar,
+                _ => CupertinoIcons.money_dollar_circle,
+              }, color: colors.ink),
               title: invoice.paymentMethod?.label(l10n) ?? '',
-              subtitle: invoice.paid ? l10n.paid : l10n.unpaid,
+              subtitle: invoice.isRefunded
+                  ? l10n.refunded
+                  : invoice.isPartiallyRefunded
+                  ? l10n.partiallyRefunded
+                  : invoice.paid
+                  ? l10n.paid
+                  : invoice.awaitingOnlinePayment
+                  ? l10n.paymentPending
+                  : l10n.unpaid,
             ),
           ],
         ),
@@ -549,4 +663,18 @@ class _ShopInvoiceBody extends StatelessWidget {
       ],
     );
   }
+}
+
+/// What the laundry has paid back, under the total.
+List<Widget> _refundLines(BuildContext context, Invoice invoice) {
+  if (invoice.amountRefunded <= 0) return const [];
+  final l10n = context.l10n;
+  final format = AppFormat.of(context);
+  return [
+    const StitchRule.dashed(),
+    FieldLine(
+      label: l10n.amountRefunded,
+      value: '−${format.money(invoice.amountRefunded)}',
+    ),
+  ];
 }

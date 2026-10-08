@@ -16,6 +16,9 @@ extension NotificationKindPresentation on NotificationKind {
     NotificationKind.pickupFailed => l10n.pickupFailedCustomerTitle,
     NotificationKind.deliveryFailed => l10n.notifDeliveryFailedTitle,
     NotificationKind.cancelled => l10n.notifCancelledTitle,
+    NotificationKind.paymentReceived => l10n.notifPaymentReceivedTitle,
+    NotificationKind.paymentFailed => l10n.notifPaymentFailedTitle,
+    NotificationKind.refundIssued => l10n.notifRefundIssuedTitle,
     NotificationKind.newPickup => l10n.notifNewPickupTitle,
     NotificationKind.newDelivery => l10n.notifNewDeliveryTitle,
     NotificationKind.update => l10n.notifUpdateTitle,
@@ -33,6 +36,9 @@ extension NotificationKindPresentation on NotificationKind {
       NotificationKind.pickupFailed => l10n.notifPickupFailedBody(number),
       NotificationKind.deliveryFailed => l10n.notifDeliveryFailedBody(number),
       NotificationKind.cancelled => l10n.notifCancelledBody(number),
+      NotificationKind.paymentReceived => l10n.notifPaymentReceivedBody(number),
+      NotificationKind.paymentFailed => l10n.notifPaymentFailedBody(number),
+      NotificationKind.refundIssued => l10n.notifRefundIssuedBody(number),
       NotificationKind.newPickup => l10n.notifNewPickupBody(number),
       NotificationKind.newDelivery => l10n.notifNewDeliveryBody(number),
       NotificationKind.update => l10n.notifUpdateBody(number),
@@ -46,7 +52,10 @@ extension NotificationKindPresentation on NotificationKind {
     NotificationKind.pickedUp ||
     NotificationKind.cancelled ||
     NotificationKind.update => CareGlyph.custody,
-    NotificationKind.invoiceReady => CareGlyph.inspect,
+    NotificationKind.invoiceReady ||
+    NotificationKind.paymentReceived ||
+    NotificationKind.paymentFailed ||
+    NotificationKind.refundIssued => CareGlyph.inspect,
     NotificationKind.processing => CareGlyph.treat,
     NotificationKind.outForDelivery ||
     NotificationKind.delivered ||
@@ -57,7 +66,8 @@ extension NotificationKindPresentation on NotificationKind {
   bool get isFailure =>
       this == NotificationKind.pickupFailed ||
       this == NotificationKind.deliveryFailed ||
-      this == NotificationKind.cancelled;
+      this == NotificationKind.cancelled ||
+      this == NotificationKind.paymentFailed;
 
   bool get isComplete => this == NotificationKind.delivered;
 }

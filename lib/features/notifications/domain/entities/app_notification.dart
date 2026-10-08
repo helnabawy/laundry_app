@@ -13,6 +13,9 @@ enum NotificationKind {
   pickupFailed,
   deliveryFailed,
   cancelled,
+  paymentReceived,
+  paymentFailed,
+  refundIssued,
 
   // ---- Driver ------------------------------------------------------------
   newPickup,

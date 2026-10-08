@@ -123,6 +123,6 @@ void main() {
   );
 
   test('an unknown kind from a newer backend reads as a generic update', () {
-    expect(NotificationKind.fromJson('refundIssued'), NotificationKind.update);
+    expect(NotificationKind.fromJson('loyaltyPoints'), NotificationKind.update);
   });
 }

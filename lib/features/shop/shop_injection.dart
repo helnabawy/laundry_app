@@ -40,6 +40,8 @@ void registerShopFeature(GetIt sl) {
         getDeliverySlots: sl(),
         getAddresses: sl(),
         createOrder: sl(),
+        getPaymentOptions: sl(),
+        retryPayment: sl(),
         reorderFrom: reorderFrom,
       ),
     );

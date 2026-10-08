@@ -2,13 +2,20 @@ import 'package:equatable/equatable.dart';
 
 import 'item_condition.dart';
 import 'order_item.dart';
+import 'payment_info.dart';
 
 enum PaymentMethod {
   card,
-  cashOnDelivery;
+  cashOnDelivery,
+
+  /// Buy now, pay later in four installments (Tabby).
+  payLater;
 
   static PaymentMethod fromJson(String value) =>
       PaymentMethod.values.firstWhere((m) => m.name == value);
+
+  /// Paid through a hosted checkout page rather than at the door.
+  bool get isOnline => this != PaymentMethod.cashOnDelivery;
 
   /// A flat handling fee for paying cash at the door — covers the driver
   /// carrying and reconciling cash, which a card charge doesn't need. The
@@ -32,6 +39,9 @@ class Invoice extends Equatable {
     this.vipSurcharge = 0,
     this.codFee = 0,
     this.note,
+    this.paidAt,
+    this.amountRefunded = 0,
+    this.payment,
   });
 
   final String id;
@@ -52,21 +62,47 @@ class Invoice extends Equatable {
   /// [PaymentMethod.codFee] for whichever method was chosen — 0 for card.
   final double codFee;
 
+  final DateTime? paidAt;
+
+  /// Sum of every refund the laundry has issued on this invoice.
+  final double amountRefunded;
+
+  /// The latest online payment attempt (or the cash collection), if any.
+  final PaymentInfo? payment;
+
   double get subtotal => items.fold(0, (sum, item) => sum + item.total);
 
   double get total => subtotal + vipSurcharge + codFee;
 
   bool get hasConditions => conditions.isNotEmpty;
 
-  Invoice copyWith({PaymentMethod? paymentMethod, bool? paid}) => Invoice(
+  /// Card or pay-later was chosen and the money isn't in yet: the customer
+  /// still has a checkout to finish (or retry).
+  bool get awaitingOnlinePayment => !paid && (paymentMethod?.isOnline ?? false);
+
+  bool get isRefunded => amountRefunded > 0 && amountRefunded >= total;
+
+  bool get isPartiallyRefunded => amountRefunded > 0 && amountRefunded < total;
+
+  Invoice copyWith({
+    PaymentMethod? paymentMethod,
+    bool? paid,
+    double? codFee,
+    DateTime? paidAt,
+    double? amountRefunded,
+    PaymentInfo? payment,
+  }) => Invoice(
     id: id,
     items: items,
     conditions: conditions,
     vipSurcharge: vipSurcharge,
-    codFee: codFee,
+    codFee: codFee ?? this.codFee,
     note: note,
     paymentMethod: paymentMethod ?? this.paymentMethod,
     paid: paid ?? this.paid,
+    paidAt: paidAt ?? this.paidAt,
+    amountRefunded: amountRefunded ?? this.amountRefunded,
+    payment: payment ?? this.payment,
   );
 
   @override
@@ -79,5 +115,8 @@ class Invoice extends Equatable {
     note,
     paymentMethod,
     paid,
+    paidAt,
+    amountRefunded,
+    payment,
   ];
 }

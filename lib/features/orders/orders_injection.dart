@@ -9,21 +9,28 @@ import 'data/datasources/driver_task_remote_data_source.dart';
 import 'data/datasources/order_api_data_source.dart';
 import 'data/datasources/order_mock_data_source.dart';
 import 'data/datasources/order_remote_data_source.dart';
+import 'data/datasources/payment_api_data_source.dart';
+import 'data/datasources/payment_remote_data_source.dart';
 import 'data/repositories/catalog_repository_impl.dart';
 import 'data/repositories/driver_task_repository_impl.dart';
 import 'data/repositories/order_repository_impl.dart';
+import 'data/repositories/payment_repository_impl.dart';
 import 'domain/entities/laundry_order.dart';
 import 'domain/repositories/catalog_repository.dart';
 import 'domain/repositories/driver_task_repository.dart';
 import 'domain/repositories/order_repository.dart';
+import 'domain/repositories/payment_repository.dart';
 import 'domain/usecases/catalog_usecases.dart';
 import 'domain/usecases/driver_task_usecases.dart';
 import 'domain/usecases/order_usecases.dart';
+import 'domain/usecases/payment_usecases.dart';
 import 'presentation/cubit/driver_tasks_cubit.dart';
 import 'presentation/cubit/order_tracking_cubit.dart';
 import 'presentation/cubit/order_wizard_cubit.dart';
 import 'presentation/cubit/orders_cubit.dart';
+import 'presentation/cubit/payment_status_cubit.dart';
 import 'presentation/cubit/task_detail_cubit.dart';
+import 'presentation/utils/payment_launcher.dart';
 
 void registerOrdersFeature(GetIt sl) {
   if (AppConfig.useMockApi) {
@@ -40,6 +47,13 @@ void registerOrdersFeature(GetIt sl) {
       )
       ..registerLazySingleton<DriverTaskRemoteDataSource>(
         () => sl<OrderMockDataSource>(),
+      )
+      // The mock also plays the payment provider (see its doc comment).
+      ..registerLazySingleton<PaymentRemoteDataSource>(
+        () => sl<OrderMockDataSource>(),
+      )
+      ..registerLazySingleton<PaymentLauncher>(
+        () => MockPaymentLauncher(sl<OrderMockDataSource>()),
       );
   } else {
     sl
@@ -51,6 +65,12 @@ void registerOrdersFeature(GetIt sl) {
       )
       ..registerLazySingleton<DriverTaskRemoteDataSource>(
         () => DriverTaskApiDataSource(sl()),
+      )
+      ..registerLazySingleton<PaymentRemoteDataSource>(
+        () => PaymentApiDataSource(sl()),
+      )
+      ..registerLazySingleton<PaymentLauncher>(
+        () => const BrowserPaymentLauncher(),
       );
   }
 
@@ -61,6 +81,9 @@ void registerOrdersFeature(GetIt sl) {
     ..registerLazySingleton<OrderRepository>(() => OrderRepositoryImpl(sl()))
     ..registerLazySingleton<DriverTaskRepository>(
       () => DriverTaskRepositoryImpl(sl()),
+    )
+    ..registerLazySingleton<PaymentRepository>(
+      () => PaymentRepositoryImpl(sl()),
     )
     // Catalog
     ..registerFactory(() => GetServiceCategories(sl()))
@@ -75,6 +98,11 @@ void registerOrdersFeature(GetIt sl) {
     ..registerFactory(() => GetOrder(sl()))
     ..registerFactory(() => ChoosePaymentMethod(sl()))
     ..registerFactory(() => RateOrder(sl()))
+    // Payments
+    ..registerFactory(() => GetPaymentOptions(sl()))
+    ..registerFactory(() => RetryPayment(sl()))
+    ..registerFactory(() => GetPaymentStatus(sl()))
+    ..registerFactory(() => PaymentStatusCubit(sl()))
     // Driver tasks
     ..registerFactory(() => GetTodayTasks(sl()))
     ..registerFactory(() => GetCompletedTasks(sl()))
@@ -101,8 +129,14 @@ void registerOrdersFeature(GetIt sl) {
       ),
     )
     ..registerFactoryParam<OrderTrackingCubit, String, void>(
-      (orderId, _) =>
-          OrderTrackingCubit(orderId, sl(), sl(), sl(), refreshBus: sl()),
+      (orderId, _) => OrderTrackingCubit(
+        orderId,
+        sl(),
+        sl(),
+        sl(),
+        retryPayment: sl(),
+        refreshBus: sl(),
+      ),
     )
     ..registerFactory(
       () => DriverTasksCubit(sl(), sl(), sl(), refreshBus: sl()),

@@ -773,5 +773,76 @@
       }
     }
   },
-  "pushView": "View"
+  "pushView": "View",
+  "payLater": "Pay later with tabby",
+  "payLaterSubtitle": "{count} interest-free payments of {amount}",
+  "@payLaterSubtitle": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      },
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
+  "payLaterLimits": "For orders from {min} to {max}",
+  "@payLaterLimits": {
+    "placeholders": {
+      "min": {
+        "type": "String"
+      },
+      "max": {
+        "type": "String"
+      }
+    }
+  },
+  "paymentPending": "Waiting for payment",
+  "paymentPendingBody": "Finish paying on the secure page. Your order goes ahead once the payment goes through.",
+  "paymentFailed": "Payment didn't go through",
+  "paymentFailedBody": "Nothing was charged. Try again, or use another card.",
+  "paymentOpenFailed": "Couldn't open the payment page. Try again.",
+  "completePayment": "Complete payment",
+  "retryPayment": "Try payment again",
+  "iFinishedPaying": "I've finished paying",
+  "refunded": "Refunded",
+  "partiallyRefunded": "Partly refunded",
+  "amountRefunded": "Refunded",
+  "mockGatewayTitle": "Test checkout · {provider}",
+  "@mockGatewayTitle": {
+    "placeholders": {
+      "provider": {
+        "type": "String"
+      }
+    }
+  },
+  "mockGatewayBody": "A simulated payment page. No real money moves.",
+  "mockGatewayDecline": "Simulate a decline",
+  "notifPaymentReceivedTitle": "Payment received",
+  "notifPaymentReceivedBody": "Thanks — the payment for order {number} went through.",
+  "@notifPaymentReceivedBody": {
+    "placeholders": {
+      "number": {
+        "type": "String"
+      }
+    }
+  },
+  "notifPaymentFailedTitle": "Payment didn't go through",
+  "notifPaymentFailedBody": "The payment for order {number} was declined. Open the order to try again.",
+  "@notifPaymentFailedBody": {
+    "placeholders": {
+      "number": {
+        "type": "String"
+      }
+    }
+  },
+  "notifRefundIssuedTitle": "Refund issued",
+  "notifRefundIssuedBody": "A refund for order {number} is on its way to you.",
+  "@notifRefundIssuedBody": {
+    "placeholders": {
+      "number": {
+        "type": "String"
+      }
+    }
+  }
 }

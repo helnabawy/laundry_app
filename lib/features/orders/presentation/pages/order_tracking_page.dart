@@ -11,6 +11,7 @@ import '../../../laundries/presentation/cubit/laundry_cubit.dart';
 import '../../domain/entities/order_status.dart';
 import '../cubit/order_tracking_cubit.dart';
 import '../widgets/invoice_summary_card.dart';
+import '../widgets/payment_panel.dart';
 import '../widgets/hero_custody.dart';
 import '../widgets/order_rating_panel.dart';
 import '../widgets/order_timeline.dart';
@@ -160,6 +161,21 @@ class _OrderTrackingView extends StatelessWidget {
                       ),
                       title: l10n.conditionsFoundTitle,
                       message: l10n.conditionsNoticeBody,
+                    ),
+                  ),
+                // Card / pay-later not settled yet: finish or retry here.
+                if (order.invoice case final invoice?
+                    when invoice.awaitingOnlinePayment &&
+                        order.status != OrderStatus.cancelled)
+                  Padding(
+                    padding: const EdgeInsets.only(bottom: DesignSpace.md),
+                    child: PaymentPanel(
+                      key: ValueKey(invoice.payment?.id),
+                      payment: invoice.payment,
+                      onSettled: (_) =>
+                          context.read<OrderTrackingCubit>().load(),
+                      onRetry: () =>
+                          context.read<OrderTrackingCubit>().retryPayment(),
                     ),
                   ),
                 if (order.pickupFailedAndCancelled)

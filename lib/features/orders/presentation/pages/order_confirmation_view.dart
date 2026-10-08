@@ -12,9 +12,13 @@ import '../utils/order_status_x.dart';
 /// Replaces the wizard body once the order is created: the label is printed,
 /// the strip starts at stage one, and the amount slot is held open.
 class OrderConfirmationView extends StatelessWidget {
-  const OrderConfirmationView({super.key, required this.order});
+  const OrderConfirmationView({super.key, required this.order, this.payment});
 
   final LaundryOrder order;
+
+  /// Where the order's online payment stands (shop orders paid by card or
+  /// pay-later); null for cash and for wizard orders.
+  final Widget? payment;
 
   @override
   Widget build(BuildContext context) {
@@ -55,6 +59,7 @@ class OrderConfirmationView extends StatelessWidget {
                 ),
               ),
             ),
+            ?payment,
             CustodyStrip(
               stages: custodyStagesFor(
                 order.status,

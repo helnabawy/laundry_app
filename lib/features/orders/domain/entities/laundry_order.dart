@@ -102,6 +102,28 @@ class LaundryOrder extends Equatable {
       ? invoice!.items.first.categoryId!
       : lines.first.category.id;
 
+  /// The same order with a newer [invoice] (e.g. after a payment settled).
+  LaundryOrder withInvoice(Invoice invoice) => LaundryOrder(
+    id: id,
+    number: number,
+    lines: lines,
+    tier: tier,
+    pickupSlot: pickupSlot,
+    deliverySlot: deliverySlot,
+    address: address,
+    customerName: customerName,
+    customerPhone: customerPhone,
+    status: status,
+    createdAt: createdAt,
+    timeline: timeline,
+    driverName: driverName,
+    invoice: invoice,
+    failure: failure,
+    rating: rating,
+    laundryId: laundryId,
+    laundryName: laundryName,
+  );
+
   DateTime? timeOf(OrderStatus status) => timeline
       .cast<OrderTimelineEvent?>()
       .lastWhere((e) => e?.status == status, orElse: () => null)

@@ -1,6 +1,7 @@
 import '../../domain/entities/invoice.dart';
 import 'item_condition_model.dart';
 import 'order_item_model.dart';
+import 'payment_info_model.dart';
 
 abstract final class InvoiceModel {
   static Invoice fromJson(Map<String, dynamic> json) => Invoice(
@@ -20,5 +21,13 @@ abstract final class InvoiceModel {
     vipSurcharge: (json['vipSurcharge'] as num?)?.toDouble() ?? 0,
     codFee: (json['codFee'] as num?)?.toDouble() ?? 0,
     paid: json['paid'] as bool,
+    // Added with online payments; older payloads omit them.
+    paidAt: (json['paidAt'] as String?) != null
+        ? DateTime.parse(json['paidAt'] as String)
+        : null,
+    amountRefunded: (json['amountRefunded'] as num?)?.toDouble() ?? 0,
+    payment: json['payment'] != null
+        ? PaymentInfoModel.fromJson(json['payment'] as Map<String, dynamic>)
+        : null,
   );
 }

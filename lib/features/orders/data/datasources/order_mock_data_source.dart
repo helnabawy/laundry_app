@@ -15,6 +15,7 @@ import '../../domain/entities/new_order_params.dart';
 import '../../domain/entities/order_item.dart';
 import '../../domain/entities/order_status.dart';
 import '../../domain/entities/order_timeline_event.dart';
+import '../../domain/entities/payment_info.dart';
 import '../../domain/entities/service_category.dart';
 import '../../domain/entities/service_tier.dart';
 import '../../domain/entities/sub_service.dart';
@@ -24,6 +25,7 @@ import '../../domain/repositories/driver_task_repository.dart';
 import 'catalog_mock_data_source.dart';
 import 'driver_task_remote_data_source.dart';
 import 'order_remote_data_source.dart';
+import 'payment_remote_data_source.dart';
 
 /// Backs both [OrderRemoteDataSource] (customer side) and
 /// [DriverTaskRemoteDataSource] (driver side): the two share one `orders`
@@ -34,8 +36,15 @@ import 'order_remote_data_source.dart';
 /// them into instant, deterministic steps right after the driver confirms
 /// pickup / the customer chooses a payment method — enough to demo the full
 /// customer + driver loop end-to-end with a single seeded driver.
+///
+/// It also plays the payment gateway: card and pay-later open a pending
+/// payment whose outcome the in-app mock checkout sheet decides
+/// ([completeCheckout]), standing in for the provider's hosted page.
 class OrderMockDataSource
-    implements OrderRemoteDataSource, DriverTaskRemoteDataSource {
+    implements
+        OrderRemoteDataSource,
+        DriverTaskRemoteDataSource,
+        PaymentRemoteDataSource {
   OrderMockDataSource(this._db, this._catalog);
 
   static const _table = 'orders';
@@ -95,17 +104,22 @@ class OrderMockDataSource
           }(),
       ];
       final subtotal = items.fold<double>(0, (sum, i) => sum + i.total);
+      final method = params.paymentMethod!;
       invoice = Invoice(
         id: 'inv-$orderNumber',
         items: items,
         vipSurcharge: tier.surchargeFor(subtotal),
         // Cash on delivery carries a flat handling fee card doesn't.
-        codFee: params.paymentMethod!.codFee,
-        paymentMethod: params.paymentMethod,
-        // Card payment is simulated as an instant successful charge; cash is
-        // collected by the driver on delivery.
-        paid: params.paymentMethod == PaymentMethod.card,
+        codFee: method.codFee,
+        paymentMethod: method,
+        // Card / pay-later are paid on the mock checkout right after this;
+        // cash is collected by the driver on delivery.
+        paid: false,
       );
+      if (method.isOnline) {
+        _requireAccepted(method, invoice.total);
+        invoice = invoice.copyWith(payment: _newPayment(method, invoice.total));
+      }
     } else {
       // ---- Wizard flow: price is set later by the facility after pickup.
       lines = [
@@ -129,17 +143,15 @@ class OrderMockDataSource
       'address': AddressModel.fromJson(addressRow),
       'customerName': customer['fullName'] as String? ?? '',
       'customerPhone': customer['phone'] as String,
-      'status': OrderStatus.driverAssigned,
-      // Single seeded driver handles both legs (Phase 3 replaces this with
-      // the real auto-dispatch algorithm).
-      'driverId': MockDatabase.driverId,
+      'status': OrderStatus.pending,
+      'driverId': null,
       'createdAt': now,
-      'timeline': [
-        OrderTimelineEvent(status: OrderStatus.pending, at: now),
-        OrderTimelineEvent(status: OrderStatus.driverAssigned, at: now),
-      ],
+      'timeline': [OrderTimelineEvent(status: OrderStatus.pending, at: now)],
       'invoice': invoice,
     };
+    // Like the backend, a shop order paid online gets no driver until the
+    // money is in (see [completeCheckout]).
+    if (!(invoice?.awaitingOnlinePayment ?? false)) _assignDriver(row, now);
     _db.table(_table).add(row);
     return _toOrder(row);
   }
@@ -177,25 +189,183 @@ class OrderMockDataSource
       _db.badRequest('Order is not awaiting payment');
     }
     final invoice = row['invoice'] as Invoice;
+    if (invoice.paid) _db.badRequest('This order is already paid');
     if (invoice.hasConditions && !conditionsAcknowledged) {
       _db.badRequest('Condition report must be acknowledged first');
     }
-    row['invoice'] = invoice.copyWith(
-      paymentMethod: method,
-      // Card payment is simulated as an instant successful charge; cash is
-      // collected by the driver on delivery.
-      paid: method == PaymentMethod.card,
+    if (method.isOnline) {
+      // The order waits for the gateway; the mock checkout decides.
+      final unpaid = invoice.copyWith(paymentMethod: method, codFee: 0);
+      _requireAccepted(method, unpaid.total);
+      row['invoice'] = _cancelPending(unpaid)
+          .copyWith(payment: _newPayment(method, unpaid.total));
+      return _toOrder(row);
+    }
+    // Cash on delivery: the backend adds the vendor's handling fee.
+    row['invoice'] = _cancelPending(
+      invoice.copyWith(paymentMethod: method, codFee: method.codFee),
     );
+    _startCleaning(row);
+    return _toOrder(row);
+  }
+
+  // ---- Payments -------------------------------------------------------------
+
+  /// What the seeded laundry accepts — mirrors the backend's defaults.
+  static const paymentOptions = [
+    PaymentOption(
+      method: PaymentMethod.card,
+      provider: PaymentProvider.networkIntl,
+    ),
+    PaymentOption(
+      method: PaymentMethod.payLater,
+      provider: PaymentProvider.tabby,
+      minAmount: 50,
+      maxAmount: 5000,
+      installments: 4,
+    ),
+    PaymentOption(
+      method: PaymentMethod.cashOnDelivery,
+      provider: PaymentProvider.cash,
+      fee: 5,
+    ),
+  ];
+
+  @override
+  Future<List<PaymentOption>> getPaymentOptions() async {
+    await _db.delay();
+    return paymentOptions;
+  }
+
+  @override
+  Future<LaundryOrder> retryPayment(
+    String orderId, {
+    PaymentMethod? method,
+  }) async {
+    await _db.delay();
+    final row = _findOrder(orderId);
+    if (row['userId'] != _db.requireUserId()) _db.notFound('Order not found');
+    final invoice = row['invoice'] as Invoice?;
+    if (invoice == null) _db.badRequest("The invoice isn't ready yet");
+    if (invoice.paid) _db.badRequest('This order is already paid');
+    final current = invoice.paymentMethod;
+    if (current == null || !current.isOnline) {
+      _db.badRequest('Choose how to pay first');
+    }
+    final next = method ?? current;
+    _requireAccepted(next, invoice.total);
+    row['invoice'] = _cancelPending(
+      invoice,
+    ).copyWith(paymentMethod: next, payment: _newPayment(next, invoice.total));
+    return _toOrder(row);
+  }
+
+  @override
+  Future<PaymentInfo> getPayment(String paymentId) async {
+    await _db.delay();
+    final row = _rowWithPayment(paymentId);
+    return (row['invoice'] as Invoice).payment!;
+  }
+
+  /// The mock checkout's verdict, as the provider's webhook would deliver it.
+  Future<PaymentInfo> completeCheckout(
+    String paymentId, {
+    required bool succeeded,
+  }) async {
+    await _db.delay();
+    final row = _rowWithPayment(paymentId);
+    final invoice = row['invoice'] as Invoice;
+    final payment = invoice.payment!;
+    if (!payment.isPending) return payment;
+    if (!succeeded) {
+      final failed = payment.copyWith(
+        status: PaymentStatus.failed,
+        failureReason: 'Card declined by issuer (test)',
+      );
+      row['invoice'] = invoice.copyWith(payment: failed);
+      return failed;
+    }
+    final now = DateTime.now();
+    final paid = PaymentInfo(
+      id: payment.id,
+      status: PaymentStatus.succeeded,
+      provider: payment.provider,
+      method: payment.method,
+      amount: payment.amount,
+      reference: payment.reference,
+      paidAt: now,
+    );
+    row['invoice'] = invoice.copyWith(paid: true, paidAt: now, payment: paid);
+    switch (row['status']) {
+      case OrderStatus.awaitingPayment:
+        _startCleaning(row);
+      case OrderStatus.pending:
+        _assignDriver(row, now);
+    }
+    return paid;
+  }
+
+  PaymentInfo _newPayment(PaymentMethod method, double amount) {
+    final id = 'pay-${_db.nextNumber()}';
+    return PaymentInfo(
+      id: id,
+      status: PaymentStatus.pending,
+      provider: method == PaymentMethod.payLater
+          ? PaymentProvider.tabby
+          : PaymentProvider.networkIntl,
+      method: method,
+      amount: amount,
+      reference: 'MOCK-$id',
+      checkoutUrl: 'mock://checkout/$id',
+    );
+  }
+
+  /// A new attempt replaces any checkout still open.
+  Invoice _cancelPending(Invoice invoice) {
+    final payment = invoice.payment;
+    if (payment == null || !payment.isPending) return invoice;
+    return invoice.copyWith(
+      payment: payment.copyWith(status: PaymentStatus.cancelled),
+    );
+  }
+
+  void _requireAccepted(PaymentMethod method, double amount) {
+    final option = paymentOptions.firstWhere((o) => o.method == method);
+    if (!option.accepts(amount)) {
+      _db.badRequest("This payment method isn't available for this amount");
+    }
+  }
+
+  Map<String, dynamic> _rowWithPayment(String paymentId) {
+    final userId = _db.requireUserId();
+    return _db
+        .table(_table)
+        .firstWhere(
+          (r) =>
+              r['userId'] == userId &&
+              (r['invoice'] as Invoice?)?.payment?.id == paymentId,
+          orElse: () => _db.notFound('Payment not found'),
+        );
+  }
+
+  /// Payment settled on a wizard order: cleaning starts, and (Phase 3/4
+  /// stand-in) the delivery driver is dispatched right away so the driver
+  /// app has a delivery task to demo immediately.
+  void _startCleaning(Map<String, dynamic> row) {
     final now = DateTime.now();
     _appendStatus(row, OrderStatus.processing, now);
-    // Phase 3/4 stand-in: auto-dispatch the delivery driver right away so
-    // the driver app has a delivery task to demo immediately.
     _appendStatus(
       row,
       OrderStatus.outForDelivery,
       now.add(const Duration(seconds: 1)),
     );
-    return _toOrder(row);
+  }
+
+  /// Single seeded driver handles both legs (Phase 3 replaces this with the
+  /// real auto-dispatch algorithm).
+  void _assignDriver(Map<String, dynamic> row, DateTime at) {
+    row['driverId'] = MockDatabase.driverId;
+    _appendStatus(row, OrderStatus.driverAssigned, at);
   }
 
   @override
@@ -376,7 +546,19 @@ class OrderMockDataSource
       if (!cashCollected) {
         _db.badRequest('Cash must be collected before confirming delivery');
       }
-      row['invoice'] = invoice.copyWith(paid: true);
+      final now = DateTime.now();
+      row['invoice'] = invoice.copyWith(
+        paid: true,
+        paidAt: now,
+        payment: PaymentInfo(
+          id: 'pay-${_db.nextNumber()}',
+          status: PaymentStatus.succeeded,
+          provider: PaymentProvider.cash,
+          method: PaymentMethod.cashOnDelivery,
+          amount: invoice.total,
+          paidAt: now,
+        ),
+      );
     }
     _appendStatus(row, OrderStatus.delivered, DateTime.now());
     return _toOrder(row);

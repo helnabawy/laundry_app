@@ -37,6 +37,8 @@ void main() {
         addressId: 'adr-1',
       ),
     );
+    // Card: the driver is only assigned once the checkout succeeds.
+    await orders.completeCheckout(order.invoice!.payment!.id, succeeded: true);
     return order.id;
   }
 

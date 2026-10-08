@@ -37,6 +37,17 @@ abstract final class ApiEndpoints {
       '/api/orders/$orderId/payment-method';
   static String orderRating(String orderId) => '/api/orders/$orderId/rating';
 
+  // ---- Payments ---------------------------------------------------------------
+  /// How the current laundry accepts payment (public).
+  static const paymentOptions = '/api/payment-options';
+
+  /// Opens a fresh hosted checkout after a declined / abandoned one.
+  static String orderPayments(String orderId) =>
+      '/api/orders/$orderId/payments';
+
+  /// One payment's status — polled after the hosted checkout.
+  static String payment(String paymentId) => '/api/payments/$paymentId';
+
   static const supportInvoiceFaqs = '/api/support/faqs/invoice';
   static const supportAssistant = '/api/support/assistant';
   static const supportRequests = '/api/support/requests';

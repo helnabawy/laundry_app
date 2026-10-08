@@ -4,7 +4,9 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import '../../../../core/error/failures.dart';
 import '../../domain/entities/invoice.dart';
 import '../../domain/entities/laundry_order.dart';
+import '../../domain/entities/payment_info.dart';
 import '../../domain/usecases/order_usecases.dart';
+import '../../domain/usecases/payment_usecases.dart';
 import '../../../../core/sync/refresh_bus.dart';
 
 /// One order: used by both the tracking page and the invoice page, so
@@ -37,8 +39,10 @@ class OrderTrackingCubit extends Cubit<OrderTrackingState>
     this._getOrder,
     this._choosePaymentMethod,
     this._rateOrder, {
+    RetryPayment? retryPayment,
     RefreshBus? refreshBus,
-  }) : super(const OrderTrackingState()) {
+  }) : _retryPayment = retryPayment,
+       super(const OrderTrackingState()) {
     load();
     refreshOn(
       refreshBus,
@@ -56,6 +60,7 @@ class OrderTrackingCubit extends Cubit<OrderTrackingState>
   final GetOrder _getOrder;
   final ChoosePaymentMethod _choosePaymentMethod;
   final RateOrder _rateOrder;
+  final RetryPayment? _retryPayment;
 
   Future<void> load() async {
     emit(OrderTrackingState(order: state.order, loading: true));
@@ -86,6 +91,24 @@ class OrderTrackingCubit extends Cubit<OrderTrackingState>
         onOk: (order) => OrderTrackingState(order: order, loading: false),
       ),
     );
+  }
+
+  /// Opens a fresh checkout after a declined, cancelled or expired one.
+  /// Returns the new pending payment, or null when it couldn't be opened.
+  Future<PaymentInfo?> retryPayment({PaymentMethod? method}) async {
+    final retry = _retryPayment;
+    if (retry == null || state.paying) return null;
+    emit(OrderTrackingState(order: state.order, loading: false, paying: true));
+    final result = await retry((orderId: _orderId, method: method));
+    if (isClosed) return null;
+    emit(
+      result.fold(
+        onErr: (f) =>
+            OrderTrackingState(order: state.order, loading: false, failure: f),
+        onOk: (order) => OrderTrackingState(order: order, loading: false),
+      ),
+    );
+    return result.valueOrNull?.invoice?.payment;
   }
 
   Future<void> rate(int stars, {String? comment}) async {

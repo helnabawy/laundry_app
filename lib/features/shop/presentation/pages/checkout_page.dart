@@ -10,7 +10,9 @@ import '../../../../core/l10n/l10n.dart';
 import '../../../../core/utils/formatters.dart';
 import '../../../orders/domain/entities/invoice.dart';
 import '../../../orders/domain/entities/laundry_order.dart';
+import '../../../orders/domain/entities/payment_info.dart';
 import '../../../orders/presentation/pages/order_confirmation_view.dart';
+import '../../../orders/presentation/widgets/payment_panel.dart';
 import '../../domain/entities/cart.dart';
 import '../cubit/cart_cubit.dart';
 import '../cubit/checkout_cubit.dart';
@@ -57,10 +59,24 @@ class _CheckoutView extends StatelessWidget {
         ).showSnackBar(SnackBar(content: Text(state.failure!.localized(l10n))));
       },
       builder: (context, state) {
-        if (state.created case final order?) {
-          return OrderConfirmationView(order: order);
-        }
         final cubit = context.read<CheckoutCubit>();
+        if (state.created case final order?) {
+          final invoice = order.invoice;
+          return OrderConfirmationView(
+            order: order,
+            // Card / pay-later: the checkout opens right away, and this
+            // tracks it until the money is in.
+            payment: invoice != null && invoice.paymentMethod!.isOnline
+                ? PaymentPanel(
+                    key: ValueKey(invoice.payment?.id),
+                    payment: invoice.payment,
+                    autoLaunch: true,
+                    onSettled: cubit.paymentSettled,
+                    onRetry: cubit.retryPayment,
+                  )
+                : null,
+          );
+        }
         final cart = context.watch<CartCubit>().state;
 
         switch (state.reorderStage) {
@@ -130,7 +146,11 @@ class _CheckoutView extends StatelessWidget {
 
 /// Step 1: VIP toggle + payment method, with a live, already-confirmed total.
 class _PaymentStep extends StatelessWidget {
-  const _PaymentStep({required this.state, required this.cubit, required this.cart});
+  const _PaymentStep({
+    required this.state,
+    required this.cubit,
+    required this.cart,
+  });
 
   final CheckoutState state;
   final CheckoutCubit cubit;
@@ -183,7 +203,9 @@ class _PaymentStep extends StatelessWidget {
                     bars: vip ? 2 : 1,
                   ),
                   title: l10n.vipSurchargeToggleTitle,
-                  subtitle: l10n.vipSurchargeToggleSubtitle(vipTier.deliveryHours),
+                  subtitle: l10n.vipSurchargeToggleSubtitle(
+                    vipTier.deliveryHours,
+                  ),
                   selected: vip,
                   trailing: vip
                       ? const Icon(CupertinoIcons.checkmark_alt)
@@ -216,6 +238,14 @@ class _PaymentStep extends StatelessWidget {
                   : null,
               onTap: () => cubit.selectPaymentMethod(PaymentMethod.card),
             ),
+            if (state.payLaterOption case final option?)
+              _PayLaterRow(
+                option: option,
+                total: cart.total,
+                selected: state.paymentMethod == PaymentMethod.payLater,
+                enabled: cubit.accepts(PaymentMethod.payLater),
+                onTap: () => cubit.selectPaymentMethod(PaymentMethod.payLater),
+              ),
             LabelRow(
               leading: Icon(
                 CupertinoIcons.money_dollar_circle,
@@ -263,6 +293,49 @@ class _PaymentStep extends StatelessWidget {
           ),
         ),
       ],
+    );
+  }
+}
+
+/// "Pay later with tabby": split into equal parts, offered only for totals
+/// inside the provider's limits — outside them the row says why.
+class _PayLaterRow extends StatelessWidget {
+  const _PayLaterRow({
+    required this.option,
+    required this.total,
+    required this.selected,
+    required this.enabled,
+    required this.onTap,
+  });
+
+  final PaymentOption option;
+  final double total;
+  final bool selected;
+  final bool enabled;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = context.l10n;
+    final colors = context.colors;
+    final format = AppFormat.of(context);
+    final parts = option.installments ?? 4;
+    return LabelRow(
+      leading: Icon(
+        CupertinoIcons.calendar,
+        color: selected ? colors.onInk : colors.ink,
+      ),
+      title: l10n.payLater,
+      subtitle: enabled
+          ? l10n.payLaterSubtitle(parts, format.money(total / parts))
+          : l10n.payLaterLimits(
+              format.money(option.minAmount ?? 0),
+              format.money(option.maxAmount ?? 0),
+            ),
+      selected: selected,
+      trailing: selected ? const Icon(CupertinoIcons.checkmark_alt) : null,
+      enabled: enabled,
+      onTap: onTap,
     );
   }
 }

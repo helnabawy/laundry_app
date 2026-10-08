@@ -20,11 +20,13 @@ import 'package:laundry_app/features/notifications/domain/entities/app_notificat
 import 'package:laundry_app/features/orders/data/datasources/catalog_api_data_source.dart';
 import 'package:laundry_app/features/orders/data/datasources/driver_task_api_data_source.dart';
 import 'package:laundry_app/features/orders/data/datasources/order_api_data_source.dart';
+import 'package:laundry_app/features/orders/data/datasources/payment_api_data_source.dart';
 import 'package:laundry_app/features/orders/domain/entities/driver_task.dart';
 import 'package:laundry_app/features/orders/domain/entities/invoice.dart';
 import 'package:laundry_app/features/orders/domain/entities/laundry_order.dart';
 import 'package:laundry_app/features/orders/domain/entities/new_order_params.dart';
 import 'package:laundry_app/features/orders/domain/entities/order_status.dart';
+import 'package:laundry_app/features/orders/domain/entities/payment_info.dart';
 import 'package:laundry_app/features/orders/domain/entities/task_failure.dart';
 import 'package:laundry_app/features/support/data/datasources/support_remote_data_source.dart';
 import 'package:laundry_app/features/support/domain/entities/support_message.dart';
@@ -90,6 +92,41 @@ void main() {
       fail('staff ${args.join(' ')} failed: ${json['error']} ${result.stderr}');
     }
     return json['status'] as String;
+  }
+
+  /// Plays the payment provider: sends the signed webhook laundry_admin's
+  /// mock gateway expects (dev secret unless PAYMENT_WEBHOOK_SECRET is set).
+  Future<void> gateway(PaymentInfo payment, String event) async {
+    final body = jsonEncode({
+      'provider': payment.provider.name,
+      'reference': payment.reference,
+      'event': event,
+      'at': DateTime.now().toUtc().toIso8601String(),
+    });
+    final secret =
+        Platform.environment['PAYMENT_WEBHOOK_SECRET'] ??
+        'dev-payment-webhook-secret';
+    final sig = await Process.run(
+      'sh',
+      ['-c', r'printf %s "$BODY" | openssl dgst -sha256 -hmac "$SECRET" -r'],
+      environment: {'BODY': body, 'SECRET': secret},
+    );
+    final signature = (sig.stdout as String).split(' ').first.trim();
+    final client = HttpClient();
+    try {
+      final req = await client.postUrl(
+        Uri.parse('$baseUrl/api/payments/webhooks/${payment.provider.name}'),
+      );
+      req.headers
+        ..contentType = ContentType.json
+        ..set('x-mock-signature', signature);
+      req.write(body);
+      final res = await req.close();
+      await res.drain<void>();
+      expect(res.statusCode, 200, reason: 'webhook $event');
+    } finally {
+      client.close();
+    }
   }
 
   Future<File> photo() async {
@@ -433,6 +470,42 @@ void main() {
     expect((await orders.getOrders()).any((o) => o.id == order.id), isTrue);
   }, skip: skip);
 
+  test('pay later with tabby: declined, retried, paid', () async {
+    final payments = PaymentApiDataSource(customer.api);
+    final options = await payments.getPaymentOptions();
+    final payLater = options.firstWhere(
+      (o) => o.method == PaymentMethod.payLater,
+    );
+    expect(payLater.provider, PaymentProvider.tabby);
+    expect(payLater.accepts(10), isFalse);
+
+    var order = await book(
+      items: const [NewOrderItem(productId: 'prod-suit', quantity: 2)],
+      paymentMethod: PaymentMethod.payLater,
+    );
+    final first = order.invoice!.payment!;
+    expect(first.isPending, isTrue);
+    expect(first.provider, PaymentProvider.tabby);
+    expect(first.checkoutUrl, contains('/pay/'));
+
+    await gateway(first, 'failed');
+    expect((await payments.getPayment(first.id)).status, PaymentStatus.failed);
+
+    order = await payments.retryPayment(order.id);
+    final second = order.invoice!.payment!;
+    expect(second.id, isNot(first.id));
+    expect(second.isPending, isTrue);
+
+    await gateway(second, 'succeeded');
+    expect(
+      (await payments.getPayment(second.id)).status,
+      PaymentStatus.succeeded,
+    );
+    order = await orders.getOrder(order.id);
+    expect(order.invoice!.paid, isTrue);
+    expect(order.invoice!.paidAt, isNotNull);
+  }, skip: skip);
+
   test('shop order paid by card, then a failed pickup cancels it', () async {
     var order = await book(
       items: const [NewOrderItem(productId: 'prod-suit', quantity: 2)],
@@ -442,7 +515,13 @@ void main() {
     expect(order.lines, isEmpty);
     expect(order.invoice!.subtotal, 90);
     expect(order.invoice!.vipSurcharge, 13.5);
+    // Card opens a hosted checkout; the order is paid once it succeeds.
+    expect(order.invoice!.paid, isFalse);
+    expect(order.invoice!.payment!.isPending, isTrue);
+    await gateway(order.invoice!.payment!, 'succeeded');
+    order = await orders.getOrder(order.id);
     expect(order.invoice!.paid, isTrue);
+    expect(order.invoice!.payment!.status, PaymentStatus.succeeded);
 
     await staff(['assign', order.id, driverId]);
     final shot = await photo();

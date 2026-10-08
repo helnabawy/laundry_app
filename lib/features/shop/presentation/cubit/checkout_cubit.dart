@@ -11,10 +11,12 @@ import '../../../addresses/domain/usecases/get_addresses.dart';
 import '../../../orders/domain/entities/invoice.dart';
 import '../../../orders/domain/entities/laundry_order.dart';
 import '../../../orders/domain/entities/new_order_params.dart';
+import '../../../orders/domain/entities/payment_info.dart';
 import '../../../orders/domain/entities/service_tier.dart';
 import '../../../orders/domain/entities/time_slot.dart';
 import '../../../orders/domain/usecases/catalog_usecases.dart';
 import '../../../orders/domain/usecases/order_usecases.dart';
+import '../../../orders/domain/usecases/payment_usecases.dart';
 import 'cart_cubit.dart';
 
 const _unset = Object();
@@ -48,6 +50,7 @@ class CheckoutState extends Equatable {
     this.tiers = const [],
     this.loadingTiers = true,
     this.paymentMethod = PaymentMethod.card,
+    this.paymentOptions = const [],
     DateTime? pickupDay,
     this.pickupSlots = const [],
     this.loadingPickupSlots = false,
@@ -72,6 +75,15 @@ class CheckoutState extends Equatable {
   final List<ServiceTier> tiers;
   final bool loadingTiers;
   final PaymentMethod paymentMethod;
+
+  /// How the laundry accepts payment. Empty until loaded (or when the
+  /// backend can't say): card and cash on delivery are then offered.
+  final List<PaymentOption> paymentOptions;
+
+  /// Pay-later's terms, when the laundry offers it.
+  PaymentOption? get payLaterOption => paymentOptions
+      .where((o) => o.method == PaymentMethod.payLater)
+      .firstOrNull;
 
   final DateTime pickupDay;
   final List<TimeSlot> pickupSlots;
@@ -112,6 +124,7 @@ class CheckoutState extends Equatable {
     List<ServiceTier>? tiers,
     bool? loadingTiers,
     PaymentMethod? paymentMethod,
+    List<PaymentOption>? paymentOptions,
     DateTime? pickupDay,
     List<TimeSlot>? pickupSlots,
     bool? loadingPickupSlots,
@@ -134,6 +147,7 @@ class CheckoutState extends Equatable {
       tiers: tiers ?? this.tiers,
       loadingTiers: loadingTiers ?? this.loadingTiers,
       paymentMethod: paymentMethod ?? this.paymentMethod,
+      paymentOptions: paymentOptions ?? this.paymentOptions,
       pickupDay: pickupDay ?? this.pickupDay,
       pickupSlots: pickupSlots ?? this.pickupSlots,
       loadingPickupSlots: loadingPickupSlots ?? this.loadingPickupSlots,
@@ -167,6 +181,7 @@ class CheckoutState extends Equatable {
     tiers,
     loadingTiers,
     paymentMethod,
+    paymentOptions,
     pickupDay,
     pickupSlots,
     loadingPickupSlots,
@@ -195,6 +210,8 @@ class CheckoutCubit extends Cubit<CheckoutState> {
     required GetDeliverySlots getDeliverySlots,
     required GetAddresses getAddresses,
     required CreateOrder createOrder,
+    GetPaymentOptions? getPaymentOptions,
+    RetryPayment? retryPayment,
     LaundryOrder? reorderFrom,
     this.undoWindow = DesignMotion.undoWindow,
   }) : _cart = cart,
@@ -204,6 +221,8 @@ class CheckoutCubit extends Cubit<CheckoutState> {
        _getDeliverySlots = getDeliverySlots,
        _getAddresses = getAddresses,
        _createOrder = createOrder,
+       _getPaymentOptions = getPaymentOptions,
+       _retryPayment = retryPayment,
        super(
          CheckoutState(
            reorderOf: reorderFrom?.number,
@@ -215,6 +234,7 @@ class CheckoutCubit extends Cubit<CheckoutState> {
     } else {
       _loadTiers();
     }
+    _loadPaymentOptions();
   }
 
   /// How many days the pickup and delivery strips offer.
@@ -231,6 +251,8 @@ class CheckoutCubit extends Cubit<CheckoutState> {
   final GetDeliverySlots _getDeliverySlots;
   final GetAddresses _getAddresses;
   final CreateOrder _createOrder;
+  final GetPaymentOptions? _getPaymentOptions;
+  final RetryPayment? _retryPayment;
 
   /// The tier the order will actually be priced against: the cart's chosen
   /// tier (set by the VIP toggle), or the non-VIP tier once loaded.
@@ -240,8 +262,67 @@ class CheckoutCubit extends Cubit<CheckoutState> {
 
   void toggleVip(bool value) => _cart.setTier(value ? state.vipTier : null);
 
-  void selectPaymentMethod(PaymentMethod method) =>
-      emit(state.copyWith(paymentMethod: method));
+  void selectPaymentMethod(PaymentMethod method) {
+    if (!accepts(method)) return;
+    emit(state.copyWith(paymentMethod: method));
+  }
+
+  /// Whether [method] can pay for the cart as it stands (pay-later has a
+  /// minimum and maximum order total).
+  bool accepts(PaymentMethod method) {
+    if (method != PaymentMethod.payLater) return true;
+    final option = state.payLaterOption;
+    return option != null && option.accepts(_cart.state.total);
+  }
+
+  /// The payment for the order just placed reached a final state.
+  void paymentSettled(PaymentInfo payment) {
+    final order = state.created;
+    final invoice = order?.invoice;
+    if (order == null || invoice == null) return;
+    final paid = payment.status.isCaptured;
+    emit(
+      state.copyWith(
+        created: order.withInvoice(
+          invoice.copyWith(
+            payment: payment,
+            paid: paid,
+            paidAt: paid ? payment.paidAt : null,
+          ),
+        ),
+      ),
+    );
+  }
+
+  /// Opens a fresh checkout for the order just placed, after a decline.
+  Future<PaymentInfo?> retryPayment() async {
+    final order = state.created;
+    final retry = _retryPayment;
+    if (order == null || retry == null) return null;
+    final result = await retry((orderId: order.id, method: null));
+    if (isClosed) return null;
+    return result.fold(
+      onErr: (f) {
+        emit(state.copyWith(failure: f));
+        return null;
+      },
+      onOk: (updated) {
+        emit(state.copyWith(created: updated, failure: null));
+        return updated.invoice?.payment;
+      },
+    );
+  }
+
+  Future<void> _loadPaymentOptions() async {
+    final load = _getPaymentOptions;
+    if (load == null) return;
+    final result = await load();
+    if (isClosed) return;
+    // Without options the checkout still offers card and cash on delivery.
+    if (result.valueOrNull case final options?) {
+      emit(state.copyWith(paymentOptions: options));
+    }
+  }
 
   Future<void> selectPickupDay(DateTime day) async {
     emit(
@@ -343,7 +424,11 @@ class CheckoutCubit extends Cubit<CheckoutState> {
         step: step,
         tiers: tiers,
         loadingTiers: false,
-        paymentMethod: source.invoice?.paymentMethod ?? PaymentMethod.card,
+        // Pay-later's limits may not fit the repeated cart; card always does.
+        paymentMethod: switch (source.invoice?.paymentMethod) {
+          PaymentMethod.cashOnDelivery => PaymentMethod.cashOnDelivery,
+          _ => PaymentMethod.card,
+        },
         addresses: addresses,
         address: address,
         failure: failure,
