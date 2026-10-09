@@ -1,0 +1,16 @@
+{
+  "Simulator Target Bundle": "com.laundryapp.laundry",
+  "aps": {
+    "alert": {
+      "title": "Items collected",
+      "body": "Order 1042 is on its way to the laundry."
+    },
+    "sound": "default"
+  },
+  "gcm.message_id": "simulator-test",
+  "type": "order",
+  "kind": "pickedUp",
+  "orderId": "REPLACE_WITH_ORDER_ID",
+  "orderNumber": "1042",
+  "status": "pickedUp"
+}

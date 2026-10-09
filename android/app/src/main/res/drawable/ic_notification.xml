@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Status-bar icon for push notifications: a washing machine, white on
+     transparent (Android tints it; colour is ignored). -->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="24dp"
+    android:height="24dp"
+    android:viewportWidth="24"
+    android:viewportHeight="24">
+    <path
+        android:fillColor="#FFFFFFFF"
+        android:fillType="evenOdd"
+        android:pathData="M6,2h12a2,2 0,0 1,2 2v16a2,2 0,0 1,-2 2H6a2,2 0,0 1,-2 -2V4a2,2 0,0 1,2 -2zM6,4v3h12V4H6zM7,5a0.75,0.75 0,1 0,1.5 0a0.75,0.75 0,1 0,-1.5 0zM10,5a0.75,0.75 0,1 0,1.5 0a0.75,0.75 0,1 0,-1.5 0zM12,9a5,5 0,1 0,0 10a5,5 0,1 0,0 -10zM12,11a3,3 0,1 1,0 6a3,3 0,1 1,0 -6z" />
+</vector>

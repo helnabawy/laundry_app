@@ -9,16 +9,16 @@ import '../network/api_client.dart';
 import '../network/api_endpoints.dart';
 import '../router/routes.dart';
 import '../sync/refresh_bus.dart';
-
-/// A push the app received while open, for an in-app banner.
-typedef ForegroundPush = ({String title, String body, String? route});
+import 'local_notifications.dart';
 
 /// Push notifications through Firebase Cloud Messaging.
 ///
 /// - Registers this install's token with the API after sign-in, and removes
 ///   it before sign-out, so pushes follow the account, not the phone.
 /// - Order pushes (`data.type == 'order'`) refresh the screens showing that
-///   order via [RefreshBus], and open it when tapped.
+///   order via [RefreshBus], and open it when tapped. One that arrives while
+///   the app is open still shows as a system notification: iOS shows it
+///   itself, Android through [LocalNotifications].
 /// - Customers follow their laundry's topic; a silent `catalogue` message
 ///   there refetches prices while the shop is open.
 ///
@@ -29,13 +29,18 @@ class PushService {
   PushService({
     required ApiClient api,
     required RefreshBus refreshBus,
+    LocalNotifications? localNotifications,
     AppReporter reporter = const NoopReporter(),
   }) : _api = api,
        _bus = refreshBus,
+       _local = localNotifications,
        _reporter = reporter;
 
   final ApiClient _api;
   final RefreshBus _bus;
+
+  /// Android only; null on iOS, which shows foreground pushes itself.
+  final LocalNotifications? _local;
   final AppReporter _reporter;
 
   bool _enabled = false;
@@ -45,14 +50,10 @@ class PushService {
   String? _wantedTopic;
   StreamSubscription<String>? _tokenRefresh;
 
-  final _foreground = StreamController<ForegroundPush>.broadcast();
   final _opened = StreamController<String>.broadcast();
   Map<String, dynamic>? _launchData;
 
   bool get enabled => _enabled;
-
-  /// Pushes that arrived while the app was in the foreground.
-  Stream<ForegroundPush> get foregroundPushes => _foreground.stream;
 
   /// Routes to open because a push was tapped.
   Stream<String> get openedRoutes => _opened.stream;
@@ -65,28 +66,42 @@ class PushService {
     return data == null ? null : routeFor(data, isDriver: _isDriver);
   }
 
-  /// [firebaseReady]: whether `initFirebase` succeeded.
-  Future<void> init({required bool firebaseReady}) async {
+  /// [firebaseReady]: whether `initFirebase` succeeded. [channelName] and
+  /// [channelDescription] label the Android notification channel in system
+  /// settings, in the app's language.
+  Future<void> init({
+    required bool firebaseReady,
+    String channelName = LocalNotifications.channelId,
+    String channelDescription = '',
+  }) async {
     if (!firebaseReady) return;
     _enabled = true;
     final messaging = FirebaseMessaging.instance;
+    FirebaseMessaging.onBackgroundMessage(firebaseMessagingBackgroundHandler);
     // iOS shows the system banner in the foreground too; Android doesn't, so
-    // the app shows its own (see [foregroundPushes]).
+    // the app posts its own (see [LocalNotifications]).
     await messaging.setForegroundNotificationPresentationOptions(
       alert: true,
       badge: true,
       sound: true,
     );
-    FirebaseMessaging.onMessage.listen(_onMessage);
-    FirebaseMessaging.onMessageOpenedApp.listen((message) {
-      _reporter.log('push opened', data: {'type': message.data['type']});
-      _signal(message.data);
-      if (routeFor(message.data, isDriver: _isDriver) case final route?) {
-        _opened.add(route);
-      }
-    });
+    FirebaseMessaging.onMessage.listen(onForegroundMessage);
+    FirebaseMessaging.onMessageOpenedApp.listen((m) => onTapped(m.data));
     final launch = await messaging.getInitialMessage();
     _launchData = launch?.data;
+
+    final local = _local;
+    if (local == null) return;
+    try {
+      final localLaunch = await local.init(
+        channelName: channelName,
+        channelDescription: channelDescription,
+      );
+      _launchData ??= localLaunch;
+      local.taps.listen(onTapped);
+    } on Object catch (e, stack) {
+      _failed('local notifications init', e, stack);
+    }
   }
 
   /// After sign-in (or a restored session): ask permission, then register.
@@ -189,16 +204,33 @@ class PushService {
     }
   }
 
-  void _onMessage(RemoteMessage message) {
+  /// A push that arrived while the app is open: refresh what it's about and,
+  /// on Android, show it (iOS already did).
+  @visibleForTesting
+  Future<void> onForegroundMessage(RemoteMessage message) async {
     _reporter.log('push received', data: {'type': message.data['type']});
     _signal(message.data);
     final notification = message.notification;
     if (notification == null) return; // silent catalogue ping
-    _foreground.add((
-      title: notification.title ?? '',
-      body: notification.body ?? '',
-      route: routeFor(message.data, isDriver: _isDriver),
-    ));
+    try {
+      await _local?.show(
+        title: notification.title ?? '',
+        body: notification.body ?? '',
+        data: message.data,
+      );
+    } on Object catch (e, stack) {
+      _failed('local notification', e, stack);
+    }
+  }
+
+  /// A notification — from FCM or [LocalNotifications] — was tapped.
+  @visibleForTesting
+  void onTapped(Map<String, dynamic> data) {
+    _reporter.log('push opened', data: {'type': data['type']});
+    _signal(data);
+    if (routeFor(data, isDriver: _isDriver) case final route?) {
+      _opened.add(route);
+    }
   }
 
   void _signal(Map<String, dynamic> data) {
@@ -218,6 +250,14 @@ class PushService {
     _ => 'web',
   };
 }
+
+/// Runs in its own isolate for pushes that arrive while the app is in the
+/// background or closed. Nothing to do: the system shows notification
+/// messages itself, and a silent catalogue ping doesn't matter while closed —
+/// the app refetches when it opens. Registering it keeps data-only messages
+/// from being dropped with a warning.
+@pragma('vm:entry-point')
+Future<void> firebaseMessagingBackgroundHandler(RemoteMessage message) async {}
 
 /// The FCM topic for a laundry — must match laundry_admin's `vendorTopic()`
 /// (`src/domain/push-copy.ts`).

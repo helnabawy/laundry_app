@@ -762,18 +762,11 @@
   "laundrySwitchConfirm": "Switch and empty cart",
   "laundryNoneAvailable": "No laundry is taking orders right now. Please try again later.",
   "orderLaundry": "Laundry",
-  "pushNewUpdate": "{title}: {body}",
-  "@pushNewUpdate": {
-    "placeholders": {
-      "title": {
-        "type": "String"
-      },
-      "body": {
-        "type": "String"
-      }
-    }
+  "pushChannelName": "Order updates",
+  "@pushChannelName": {
+    "description": "Android notification channel name, shown in system settings."
   },
-  "pushView": "View",
+  "pushChannelDescription": "Status changes for your orders and driver tasks.",
   "payLater": "Pay later with tabby",
   "payLaterSubtitle": "{count} interest-free payments of {amount}",
   "@payLaterSubtitle": {

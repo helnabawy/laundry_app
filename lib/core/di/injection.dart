@@ -1,3 +1,5 @@
+import 'package:flutter/foundation.dart';
+import 'package:flutter/widgets.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:get_it/get_it.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -13,6 +15,7 @@ import '../../features/orders/orders_injection.dart';
 import '../../features/shop/presentation/cubit/cart_cubit.dart';
 import '../../features/shop/shop_injection.dart';
 import '../../features/support/support_injection.dart';
+import '../../l10n/gen/app_localizations.dart';
 import '../config/app_config.dart';
 import '../error/guard.dart';
 import '../firebase/firebase_bootstrap.dart';
@@ -26,6 +29,7 @@ import '../monitoring/firebase/firebase_crash_reporter.dart';
 import '../monitoring/monitoring_bloc_observer.dart';
 import '../network/api_client.dart';
 import '../network/dio_factory.dart';
+import '../push/local_notifications.dart';
 import '../push/push_service.dart';
 import '../router/app_router.dart';
 import '../storage/token_storage.dart';
@@ -67,7 +71,15 @@ Future<void> configureDependencies() async {
     ..registerLazySingleton(RefreshBus.new)
     ..registerLazySingleton(() => AppResumeObserver(sl())..attach())
     ..registerLazySingleton(
-      () => PushService(api: sl(), refreshBus: sl(), reporter: sl()),
+      () => PushService(
+        api: sl(),
+        refreshBus: sl(),
+        // iOS shows foreground pushes itself.
+        localNotifications: defaultTargetPlatform == TargetPlatform.android
+            ? LocalNotifications()
+            : null,
+        reporter: sl(),
+      ),
     );
 
   registerLaundriesFeature(sl);
@@ -88,7 +100,12 @@ Future<void> configureDependencies() async {
   );
 
   sl<AppResumeObserver>();
-  await sl<PushService>().init(firebaseReady: firebaseReady);
+  final l10n = lookupAppLocalizations(Locale(sl<LocaleCubit>().languageCode));
+  await sl<PushService>().init(
+    firebaseReady: firebaseReady,
+    channelName: l10n.pushChannelName,
+    channelDescription: l10n.pushChannelDescription,
+  );
   _followSessionAndLaundry();
   _reportAppState();
 

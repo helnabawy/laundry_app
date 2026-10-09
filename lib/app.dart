@@ -89,9 +89,7 @@ class _PushListenerState extends State<_PushListener> {
   @override
   void initState() {
     super.initState();
-    _subscriptions
-      ..add(_push.openedRoutes.listen(_open))
-      ..add(_push.foregroundPushes.listen(_banner));
+    _subscriptions.add(_push.openedRoutes.listen(_open));
     // The session is usually restored before the first frame.
     if (sl<SessionCubit>().state is SessionAuthenticated) _openLaunchRoute();
   }
@@ -111,23 +109,6 @@ class _PushListenerState extends State<_PushListener> {
   }
 
   void _open(String route) => sl<GoRouter>().push(route);
-
-  void _banner(ForegroundPush push) {
-    // iOS already showed the system banner.
-    if (Theme.of(context).platform == TargetPlatform.iOS) return;
-    final l10n = context.l10n;
-    ScaffoldMessenger.maybeOf(context)?.showSnackBar(
-      SnackBar(
-        content: Text(l10n.pushNewUpdate(push.title, push.body)),
-        action: push.route == null
-            ? null
-            : SnackBarAction(
-                label: l10n.pushView,
-                onPressed: () => _open(push.route!),
-              ),
-      ),
-    );
-  }
 
   @override
   Widget build(BuildContext context) {
