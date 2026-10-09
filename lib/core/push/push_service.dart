@@ -37,6 +37,7 @@ class PushService {
   bool _isDriver = false;
   String? _token;
   String? _topic;
+  String? _wantedTopic;
   StreamSubscription<String>? _tokenRefresh;
 
   final _foreground = StreamController<ForegroundPush>.broadcast();
@@ -93,16 +94,23 @@ class PushService {
   Future<void> register({required bool isDriver}) async {
     _isDriver = isDriver;
     if (!_enabled) return;
+    final messaging = FirebaseMessaging.instance;
+    // Listen first: a token that only arrives later still gets uploaded.
+    await _tokenRefresh?.cancel();
+    _tokenRefresh = messaging.onTokenRefresh.listen(_onToken);
     try {
-      final messaging = FirebaseMessaging.instance;
       final settings = await messaging.requestPermission();
       if (settings.authorizationStatus == AuthorizationStatus.denied) return;
+      // On iOS the FCM token needs the APNs token, which arrives a moment
+      // after permission is granted.
+      if (defaultTargetPlatform == TargetPlatform.iOS) {
+        for (var i = 0; i < 10 && await messaging.getAPNSToken() == null; i++) {
+          await Future<void>.delayed(const Duration(milliseconds: 500));
+        }
+      }
       final token = await messaging.getToken();
-      if (token != null) await _send(token);
-      await _tokenRefresh?.cancel();
-      _tokenRefresh = messaging.onTokenRefresh.listen(_send);
+      if (token != null) await _onToken(token);
     } on Object catch (e) {
-      // e.g. iOS before the APNs token arrives; the refresh stream retries.
       debugPrint('[push] register failed: $e');
     }
   }
@@ -123,10 +131,16 @@ class PushService {
     }
   }
 
-  /// Follow [laundryId]'s catalogue updates (null: follow none).
+  /// Follow [laundryId]'s catalogue updates (null: follow none). Applied as
+  /// soon as this install has a push token.
   Future<void> followLaundry(String? laundryId) async {
-    if (!_enabled) return;
-    final topic = laundryId == null ? null : laundryTopic(laundryId);
+    _wantedTopic = laundryId == null ? null : laundryTopic(laundryId);
+    if (!_enabled || _token == null) return;
+    await _applyTopic();
+  }
+
+  Future<void> _applyTopic() async {
+    final topic = _wantedTopic;
     if (topic == _topic) return;
     final messaging = FirebaseMessaging.instance;
     try {
@@ -136,6 +150,11 @@ class PushService {
     } on Object catch (e) {
       debugPrint('[push] topic change failed: $e');
     }
+  }
+
+  Future<void> _onToken(String token) async {
+    await _send(token);
+    await _applyTopic();
   }
 
   Future<void> _send(String token) async {
