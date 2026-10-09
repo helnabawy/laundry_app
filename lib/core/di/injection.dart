@@ -158,10 +158,13 @@ void _reportAppState() {
   session.stream.listen(onSession);
   reporter
     ..setContext('laundry_id', laundry.state.selected?.id)
+    ..setContext('laundry_name', laundry.state.selected?.name)
     ..setContext('locale', locale.languageCode)
     ..setContext('theme', theme.state.name);
   laundry.stream.listen(
-    (s) => reporter.setContext('laundry_id', s.selected?.id),
+    (s) => reporter
+      ..setContext('laundry_id', s.selected?.id)
+      ..setContext('laundry_name', s.selected?.name),
   );
   locale.stream.listen(
     (_) => reporter.setContext('locale', locale.languageCode),

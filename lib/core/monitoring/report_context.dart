@@ -37,6 +37,30 @@ class UserContext {
   ];
 }
 
+/// The signed-in customer's saved addresses on crash reports: a count, then
+/// one key per address holding all its fields as JSON (building, apartment,
+/// alternate phone and GPS pin included, so support can reproduce
+/// address-specific bugs). Capped at [max] keys; Crashlytics allows 64 in all.
+abstract final class UserAddressKeys {
+  static const count = 'user_address_count';
+  static const max = 5;
+
+  static String at(int index) => 'user_address_${index + 1}';
+
+  /// Keys for [addresses] (each already a field map); unused slots cleared.
+  static Map<String, Object?> of(List<Map<String, Object?>> addresses) => {
+    count: addresses.length,
+    for (var i = 0; i < max; i++)
+      at(i): i < addresses.length ? describe(addresses[i]) : null,
+  };
+
+  /// Every address key, cleared.
+  static Map<String, Object?> get cleared => {
+    count: null,
+    for (var i = 0; i < max; i++) at(i): null,
+  };
+}
+
 /// The HTTP exchange behind an error, already redacted and truncated.
 class RequestContext {
   const RequestContext({
