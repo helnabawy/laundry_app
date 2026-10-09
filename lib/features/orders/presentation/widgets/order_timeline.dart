@@ -52,7 +52,7 @@ class OrderTimeline extends StatelessWidget {
     final milestones = order.lines.isEmpty
         ? _shopMilestones
         : _wizardMilestones;
-    final reachedIndex = milestones.indexOf(order.status);
+    final reachedIndex = reachedMilestone(order, milestones);
     final isFailure =
         order.status.isFailure || order.status == OrderStatus.cancelled;
 
@@ -83,6 +83,20 @@ class OrderTimeline extends StatelessWidget {
       ],
     );
   }
+}
+
+/// The furthest milestone the order has actually reached, or -1 before the
+/// first. Read from the order's history rather than its status alone, since
+/// some statuses aren't milestones: while the laundry waits for payment
+/// (`awaitingPayment`) the order is still "At the laundry", and a failed
+/// stop leaves the order at the step it failed after.
+@visibleForTesting
+int reachedMilestone(LaundryOrder order, List<OrderStatus> milestones) {
+  var reached = milestones.indexOf(order.status);
+  for (var i = reached + 1; i < milestones.length; i++) {
+    if (order.timeOf(milestones[i]) != null) reached = i;
+  }
+  return reached;
 }
 
 enum _EntryState { done, current, upcoming }
