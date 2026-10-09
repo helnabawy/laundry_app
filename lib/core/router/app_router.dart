@@ -27,6 +27,8 @@ import '../../features/shop/presentation/pages/product_grid_page.dart';
 import '../../features/support/presentation/pages/assistant_page.dart';
 import '../../features/support/presentation/pages/invoice_help_page.dart';
 import '../locale/locale_cubit.dart';
+import '../monitoring/app_reporter.dart';
+import '../monitoring/monitoring_route_observer.dart';
 import 'refresh_listenable.dart';
 import 'routes.dart';
 
@@ -34,9 +36,11 @@ GoRouter createRouter({
   required SessionCubit session,
   required LocaleCubit locale,
   required LaundryCubit laundry,
+  AppReporter? reporter,
 }) {
   return GoRouter(
     initialLocation: Routes.splash,
+    observers: [if (reporter != null) MonitoringRouteObserver(reporter)],
     refreshListenable: StreamRefreshListenable([
       session.stream,
       locale.stream,

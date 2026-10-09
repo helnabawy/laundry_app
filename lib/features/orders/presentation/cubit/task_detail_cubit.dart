@@ -2,6 +2,7 @@ import 'package:equatable/equatable.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
 import '../../../../core/error/failures.dart';
+import '../../../../core/monitoring/app_reporter.dart';
 import '../../../../core/result/result.dart';
 import '../../domain/entities/laundry_order.dart';
 import '../../domain/repositories/driver_task_repository.dart';
@@ -41,7 +42,9 @@ class TaskDetailCubit extends Cubit<TaskDetailState> with RefreshesOnSignal {
     this._confirmDelivery,
     this._reportDeliveryFailed, {
     RefreshBus? refreshBus,
-  }) : super(const TaskDetailState()) {
+    AppReporter reporter = const NoopReporter(),
+  }) : _reporter = reporter,
+       super(const TaskDetailState()) {
     load();
     refreshOn(
       refreshBus,
@@ -56,6 +59,7 @@ class TaskDetailCubit extends Cubit<TaskDetailState> with RefreshesOnSignal {
   }
 
   final String _orderId;
+  final AppReporter _reporter;
   final GetOrder _getOrder;
   final ConfirmPickup _confirmPickup;
   final ReportPickupFailed _reportPickupFailed;
@@ -74,13 +78,16 @@ class TaskDetailCubit extends Cubit<TaskDetailState> with RefreshesOnSignal {
     );
   }
 
-  Future<void> confirmPickup() => _run(() => _confirmPickup(_orderId));
+  Future<void> confirmPickup() =>
+      _run('confirm_pickup', () => _confirmPickup(_orderId));
 
   Future<void> reportPickupFailed(
     TaskFailureReason reason,
     String? note, {
     required String photoPath,
   }) => _run(
+    'pickup_failed',
+    reason: reason.name,
     () => _reportPickupFailed((
       orderId: _orderId,
       reason: reason,
@@ -93,6 +100,7 @@ class TaskDetailCubit extends Cubit<TaskDetailState> with RefreshesOnSignal {
     required bool cashCollected,
     String? proofPhotoPath,
   }) => _run(
+    'confirm_delivery',
     () => _confirmDelivery((
       orderId: _orderId,
       cashCollected: cashCollected,
@@ -102,6 +110,8 @@ class TaskDetailCubit extends Cubit<TaskDetailState> with RefreshesOnSignal {
 
   Future<void> reportDeliveryFailed(TaskFailureReason reason, String? note) =>
       _run(
+        'delivery_failed',
+        reason: reason.name,
         () => _reportDeliveryFailed((
           orderId: _orderId,
           reason: reason,
@@ -109,9 +119,20 @@ class TaskDetailCubit extends Cubit<TaskDetailState> with RefreshesOnSignal {
         )),
       );
 
-  Future<void> _run(Future<Result<LaundryOrder>> Function() action) async {
+  Future<void> _run(
+    String name,
+    Future<Result<LaundryOrder>> Function() action, {
+    String? reason,
+  }) async {
     emit(TaskDetailState(order: state.order, loading: false, submitting: true));
     final result = await action();
+    _reporter.track(
+      AnalyticsEvent.driverTask(
+        action: name,
+        success: result is Ok,
+        reason: reason,
+      ),
+    );
     emit(
       result.fold(
         onErr: (f) =>

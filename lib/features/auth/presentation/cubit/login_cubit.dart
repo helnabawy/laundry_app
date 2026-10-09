@@ -3,6 +3,7 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
 import '../../../../core/error/failures.dart';
+import '../../../../core/monitoring/app_reporter.dart';
 import '../../../../core/result/result.dart';
 import '../../domain/entities/phone_number.dart';
 import '../../domain/entities/saved_account.dart';
@@ -95,11 +96,14 @@ class LoginCubit extends Cubit<LoginState> {
   LoginCubit(
     this._startSignIn,
     GetSavedAccount getSavedAccount,
-    this._checkPhone,
-  ) : super(_initial(getSavedAccount()));
+    this._checkPhone, {
+    AppReporter reporter = const NoopReporter(),
+  }) : _reporter = reporter,
+       super(_initial(getSavedAccount()));
 
   final StartSignIn _startSignIn;
   final CheckPhone _checkPhone;
+  final AppReporter _reporter;
 
   /// The number [LoginState.phoneStatus] describes (E.164), or null.
   String? _statusFor;
@@ -215,8 +219,12 @@ class LoginCubit extends Cubit<LoginState> {
       result.fold(
         onErr: (failure) =>
             state.copyWith(submitting: false, failure: () => failure),
-        onOk: (request) =>
-            state.copyWith(submitting: false, codeSentTo: () => request),
+        onOk: (request) {
+          _reporter.track(
+            AnalyticsEvent.otpSent(newAccount: request.fullName != null),
+          );
+          return state.copyWith(submitting: false, codeSentTo: () => request);
+        },
       ),
     );
   }

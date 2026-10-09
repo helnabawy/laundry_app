@@ -6,6 +6,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 
 import '../../../../core/design/tokens/design_metrics.dart';
 import '../../../../core/error/failures.dart';
+import '../../../../core/monitoring/app_reporter.dart';
 import '../../../addresses/domain/entities/address.dart';
 import '../../../addresses/domain/usecases/get_addresses.dart';
 import '../../domain/entities/laundry_order.dart';
@@ -240,7 +241,9 @@ class OrderWizardCubit extends Cubit<OrderWizardState> {
     LaundryOrder? reorderFrom,
     String? startWithCategory,
     this.undoWindow = DesignMotion.undoWindow,
-  }) : _getCategories = getCategories,
+    AppReporter reporter = const NoopReporter(),
+  }) : _reporter = reporter,
+       _getCategories = getCategories,
        _getSubServices = getSubServices,
        _getTiers = getTiers,
        _getPickupSlots = getPickupSlots,
@@ -257,6 +260,9 @@ class OrderWizardCubit extends Cubit<OrderWizardState> {
            reorderStage: reorderFrom == null ? null : ReorderStage.preparing,
          ),
        ) {
+    _reporter.track(
+      AnalyticsEvent.beginCheckout(flow: _flow, reorder: reorderFrom != null),
+    );
     if (reorderFrom case final source?) {
       _prefillFrom(source);
     } else if (startWithCategory case final categoryId?) {
@@ -273,6 +279,9 @@ class OrderWizardCubit extends Cubit<OrderWizardState> {
   final Duration undoWindow;
   Timer? _undoTimer;
 
+  static const _flow = 'wizard';
+
+  final AppReporter _reporter;
   final GetServiceCategories _getCategories;
   final GetSubServices _getSubServices;
   final GetServiceTiers _getTiers;
@@ -526,6 +535,7 @@ class OrderWizardCubit extends Cubit<OrderWizardState> {
     _undoTimer?.cancel();
     if (state.reorderStage
         case ReorderStage.preparing || ReorderStage.countdown) {
+      _reporter.track(AnalyticsEvent.reorderUndone(flow: _flow));
       emit(state.copyWith(reorderStage: ReorderStage.undone));
     }
   }
@@ -749,8 +759,28 @@ class OrderWizardCubit extends Cubit<OrderWizardState> {
     if (isClosed) return;
     emit(
       result.fold(
-        onErr: (f) => state.copyWith(submitting: false, failure: f),
-        onOk: (order) => state.copyWith(submitting: false, created: order),
+        onErr: (f) {
+          _reporter.track(
+            AnalyticsEvent.orderFailed(
+              flow: _flow,
+              failure: '${f.runtimeType}',
+            ),
+          );
+          return state.copyWith(submitting: false, failure: f);
+        },
+        onOk: (order) {
+          _reporter.track(
+            AnalyticsEvent.orderPlaced(
+              orderId: order.id,
+              flow: _flow,
+              value: order.invoice?.total,
+              itemCount: state.selectedCategories.length,
+              tier: tier.isVip ? 'vip' : 'standard',
+              reorder: state.reorderOf != null,
+            ),
+          );
+          return state.copyWith(submitting: false, created: order);
+        },
       ),
     );
   }

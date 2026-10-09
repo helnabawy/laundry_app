@@ -2,6 +2,7 @@ import 'package:equatable/equatable.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
 import '../../../../core/error/failures.dart';
+import '../../../../core/monitoring/app_reporter.dart';
 import '../../domain/entities/laundry.dart';
 import '../../domain/repositories/laundry_repository.dart';
 
@@ -48,10 +49,12 @@ class LaundryState extends Equatable {
 /// restarts (and works offline); every catalogue, slot and order request is
 /// sent for it (see `dio_factory.dart`).
 class LaundryCubit extends Cubit<LaundryState> {
-  LaundryCubit(this._repository)
-    : super(LaundryState(selected: _repository.savedLaundry()));
+  LaundryCubit(this._repository, {AppReporter reporter = const NoopReporter()})
+    : _reporter = reporter,
+      super(LaundryState(selected: _repository.savedLaundry()));
 
   final LaundryRepository _repository;
+  final AppReporter _reporter;
 
   /// Fetches the active laundries and reconciles the saved choice with them:
   /// a laundry that stopped accepting orders is dropped; the only laundry is
@@ -78,6 +81,7 @@ class LaundryCubit extends Cubit<LaundryState> {
   Future<void> choose(Laundry laundry) async {
     if (laundry == state.selected) return;
     await _repository.saveLaundry(laundry);
+    _reporter.track(AnalyticsEvent.laundrySelected(laundry.id));
     emit(state.copyWith(selected: laundry));
   }
 

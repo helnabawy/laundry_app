@@ -5,6 +5,8 @@ import 'package:laundry_app/features/laundries/domain/entities/laundry.dart';
 import 'package:laundry_app/features/laundries/domain/repositories/laundry_repository.dart';
 import 'package:laundry_app/features/laundries/presentation/cubit/laundry_cubit.dart';
 
+import '../../helpers/fake_reporter.dart';
+
 class _FakeRepository implements LaundryRepository {
   _FakeRepository({this.saved, this.remote = const []});
 
@@ -89,5 +91,14 @@ void main() {
     expect(cubit.state.selected, marina);
     await cubit.switchTo(null);
     expect(cubit.state.selected, marina);
+  });
+
+  test('choosing a laundry is tracked', () async {
+    final reporter = RecordingReporter();
+    final cubit = LaundryCubit(_FakeRepository(), reporter: reporter);
+    await cubit.choose(marina);
+    await cubit.choose(marina); // no change, no event
+    expect(reporter.eventNames, ['laundry_selected']);
+    expect(reporter.events.single.params, {'laundry_id': 'fac-2'});
   });
 }

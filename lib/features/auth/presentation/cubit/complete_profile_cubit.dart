@@ -2,6 +2,7 @@ import 'package:equatable/equatable.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
 import '../../../../core/error/failures.dart';
+import '../../../../core/monitoring/app_reporter.dart';
 import '../../../addresses/domain/entities/address.dart';
 import '../../domain/entities/app_user.dart';
 import '../../domain/usecases/complete_profile.dart';
@@ -22,10 +23,14 @@ class CompleteProfileState extends Equatable {
 }
 
 class CompleteProfileCubit extends Cubit<CompleteProfileState> {
-  CompleteProfileCubit(this._completeProfile)
-    : super(const CompleteProfileState());
+  CompleteProfileCubit(
+    this._completeProfile, {
+    AppReporter reporter = const NoopReporter(),
+  }) : _reporter = reporter,
+       super(const CompleteProfileState());
 
   final CompleteProfile _completeProfile;
+  final AppReporter _reporter;
 
   Future<void> submit({required NewAddress address, String? fullName}) async {
     if (state.submitting) return;
@@ -36,7 +41,10 @@ class CompleteProfileCubit extends Cubit<CompleteProfileState> {
     emit(
       result.fold(
         onErr: (failure) => CompleteProfileState(failure: failure),
-        onOk: (user) => CompleteProfileState(user: user),
+        onOk: (user) {
+          _reporter.track(AnalyticsEvent.profileCompleted());
+          return CompleteProfileState(user: user);
+        },
       ),
     );
   }

@@ -1,11 +1,10 @@
 import 'dart:async';
 
-import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/foundation.dart';
 
-import '../../firebase_options.dart';
-import '../config/app_config.dart';
+import '../error/exceptions.dart';
+import '../monitoring/app_reporter.dart';
 import '../network/api_client.dart';
 import '../network/api_endpoints.dart';
 import '../router/routes.dart';
@@ -23,15 +22,21 @@ typedef ForegroundPush = ({String title, String body, String? route});
 /// - Customers follow their laundry's topic; a silent `catalogue` message
 ///   there refetches prices while the shop is open.
 ///
-/// Stays off — every method a no-op — in mock mode or when Firebase fails to
-/// start (e.g. an unsupported platform), so local development needs no setup.
+/// Stays off — every method a no-op — when Firebase didn't start (mock mode,
+/// an unsupported platform; see `initFirebase`), so local development needs
+/// no setup.
 class PushService {
-  PushService({required ApiClient api, required RefreshBus refreshBus})
-    : _api = api,
-      _bus = refreshBus;
+  PushService({
+    required ApiClient api,
+    required RefreshBus refreshBus,
+    AppReporter reporter = const NoopReporter(),
+  }) : _api = api,
+       _bus = refreshBus,
+       _reporter = reporter;
 
   final ApiClient _api;
   final RefreshBus _bus;
+  final AppReporter _reporter;
 
   bool _enabled = false;
   bool _isDriver = false;
@@ -60,16 +65,9 @@ class PushService {
     return data == null ? null : routeFor(data, isDriver: _isDriver);
   }
 
-  Future<void> init() async {
-    if (AppConfig.useMockApi) return;
-    try {
-      await Firebase.initializeApp(
-        options: DefaultFirebaseOptions.currentPlatform,
-      );
-    } on Object catch (e) {
-      debugPrint('[push] Firebase not configured, push disabled: $e');
-      return;
-    }
+  /// [firebaseReady]: whether `initFirebase` succeeded.
+  Future<void> init({required bool firebaseReady}) async {
+    if (!firebaseReady) return;
     _enabled = true;
     final messaging = FirebaseMessaging.instance;
     // iOS shows the system banner in the foreground too; Android doesn't, so
@@ -81,6 +79,7 @@ class PushService {
     );
     FirebaseMessaging.onMessage.listen(_onMessage);
     FirebaseMessaging.onMessageOpenedApp.listen((message) {
+      _reporter.log('push opened', data: {'type': message.data['type']});
       _signal(message.data);
       if (routeFor(message.data, isDriver: _isDriver) case final route?) {
         _opened.add(route);
@@ -104,14 +103,23 @@ class PushService {
       // On iOS the FCM token needs the APNs token, which arrives a moment
       // after permission is granted.
       if (defaultTargetPlatform == TargetPlatform.iOS) {
-        for (var i = 0; i < 10 && await messaging.getAPNSToken() == null; i++) {
+        var apns = await messaging.getAPNSToken();
+        for (var i = 0; i < 10 && apns == null; i++) {
           await Future<void>.delayed(const Duration(milliseconds: 500));
+          apns = await messaging.getAPNSToken();
+        }
+        // Never arrives on a simulator; on a phone, it may come later and
+        // [onTokenRefresh] uploads the FCM token then. Asking for the FCM
+        // token without it throws.
+        if (apns == null) {
+          _reporter.log('push: no APNs token yet, FCM token deferred');
+          return;
         }
       }
       final token = await messaging.getToken();
       if (token != null) await _onToken(token);
-    } on Object catch (e) {
-      debugPrint('[push] register failed: $e');
+    } on Object catch (e, stack) {
+      _failed('push register', e, stack);
     }
   }
 
@@ -126,8 +134,8 @@ class PushService {
     if (token == null) return;
     try {
       await _api.delete(ApiEndpoints.devices, data: {'token': token});
-    } on Object catch (e) {
-      debugPrint('[push] unregister failed: $e');
+    } on Object catch (e, stack) {
+      _failed('push unregister', e, stack);
     }
   }
 
@@ -147,8 +155,8 @@ class PushService {
       if (_topic case final old?) await messaging.unsubscribeFromTopic(old);
       if (topic != null) await messaging.subscribeToTopic(topic);
       _topic = topic;
-    } on Object catch (e) {
-      debugPrint('[push] topic change failed: $e');
+    } on Object catch (e, stack) {
+      _failed('push topic change to $topic', e, stack);
     }
   }
 
@@ -164,12 +172,25 @@ class PushService {
         ApiEndpoints.devices,
         data: {'token': token, 'platform': _platform},
       );
-    } on Object catch (e) {
-      debugPrint('[push] token upload failed: $e');
+    } on Object catch (e, stack) {
+      _failed('push token upload', e, stack);
+    }
+  }
+
+  /// API failures were already reported by the HTTP layer; only the rest
+  /// (Firebase, platform) is reported here.
+  void _failed(String what, Object error, StackTrace stack) {
+    if (error is ServerException ||
+        error is NetworkException ||
+        error is UnauthorizedException) {
+      _reporter.log('$what failed: $error');
+    } else {
+      _reporter.recordError(error, stack, reason: what);
     }
   }
 
   void _onMessage(RemoteMessage message) {
+    _reporter.log('push received', data: {'type': message.data['type']});
     _signal(message.data);
     final notification = message.notification;
     if (notification == null) return; // silent catalogue ping

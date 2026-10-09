@@ -18,5 +18,5 @@ void registerLaundriesFeature(GetIt sl) {
     ..registerLazySingleton<LaundryRepository>(
       () => LaundryRepositoryImpl(sl(), sl()),
     )
-    ..registerLazySingleton(() => LaundryCubit(sl()));
+    ..registerLazySingleton(() => LaundryCubit(sl(), reporter: sl()));
 }

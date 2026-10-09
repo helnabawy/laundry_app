@@ -6,6 +6,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 
 import '../../../../core/design/tokens/design_metrics.dart';
 import '../../../../core/error/failures.dart';
+import '../../../../core/monitoring/app_reporter.dart';
 import '../../../addresses/domain/entities/address.dart';
 import '../../../addresses/domain/usecases/get_addresses.dart';
 import '../../../orders/domain/entities/invoice.dart';
@@ -214,7 +215,9 @@ class CheckoutCubit extends Cubit<CheckoutState> {
     RetryPayment? retryPayment,
     LaundryOrder? reorderFrom,
     this.undoWindow = DesignMotion.undoWindow,
+    AppReporter reporter = const NoopReporter(),
   }) : _cart = cart,
+       _reporter = reporter,
        _getProducts = getProducts,
        _getTiers = getTiers,
        _getPickupSlots = getPickupSlots,
@@ -229,6 +232,14 @@ class CheckoutCubit extends Cubit<CheckoutState> {
            reorderStage: reorderFrom == null ? null : ReorderStage.preparing,
          ),
        ) {
+    _reporter.track(
+      AnalyticsEvent.beginCheckout(
+        flow: _flow,
+        value: cart.state.total,
+        itemCount: cart.state.itemCount,
+        reorder: reorderFrom != null,
+      ),
+    );
     if (reorderFrom case final source?) {
       _prefillFromReorder(source);
     } else {
@@ -244,7 +255,10 @@ class CheckoutCubit extends Cubit<CheckoutState> {
   final Duration undoWindow;
   Timer? _undoTimer;
 
+  static const _flow = 'shop';
+
   final CartCubit _cart;
+  final AppReporter _reporter;
   final GetProducts _getProducts;
   final GetServiceTiers _getTiers;
   final GetPickupSlots _getPickupSlots;
@@ -299,6 +313,7 @@ class CheckoutCubit extends Cubit<CheckoutState> {
     final order = state.created;
     final retry = _retryPayment;
     if (order == null || retry == null) return null;
+    _reporter.track(AnalyticsEvent.paymentRetried());
     final result = await retry((orderId: order.id, method: null));
     if (isClosed) return null;
     return result.fold(
@@ -457,6 +472,7 @@ class CheckoutCubit extends Cubit<CheckoutState> {
     _undoTimer?.cancel();
     if (state.reorderStage
         case ReorderStage.preparing || ReorderStage.countdown) {
+      _reporter.track(AnalyticsEvent.reorderUndone(flow: _flow));
       emit(state.copyWith(reorderStage: ReorderStage.undone));
     }
   }
@@ -630,8 +646,27 @@ class CheckoutCubit extends Cubit<CheckoutState> {
     if (isClosed) return;
     emit(
       result.fold(
-        onErr: (f) => state.copyWith(submitting: false, failure: f),
+        onErr: (f) {
+          _reporter.track(
+            AnalyticsEvent.orderFailed(
+              flow: _flow,
+              failure: '${f.runtimeType}',
+            ),
+          );
+          return state.copyWith(submitting: false, failure: f);
+        },
         onOk: (order) {
+          _reporter.track(
+            AnalyticsEvent.orderPlaced(
+              orderId: order.id,
+              flow: _flow,
+              value: order.invoice?.total ?? cart.total,
+              itemCount: cart.itemCount,
+              paymentMethod: state.paymentMethod.name,
+              tier: tier.isVip ? 'vip' : 'standard',
+              reorder: state.reorderOf != null,
+            ),
+          );
           _cart.clear();
           return state.copyWith(submitting: false, created: order);
         },

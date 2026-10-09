@@ -20,8 +20,12 @@ class OtpPage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return BlocProvider(
-      create: (_) =>
-          OtpCubit(request: request, verifyOtp: sl(), requestOtp: sl()),
+      create: (_) => OtpCubit(
+        request: request,
+        verifyOtp: sl(),
+        requestOtp: sl(),
+        reporter: sl(),
+      ),
       child: const _OtpView(),
     );
   }

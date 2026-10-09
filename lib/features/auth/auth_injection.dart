@@ -42,9 +42,10 @@ void registerAuthFeature(GetIt sl) {
         restoreSession: sl(),
         logout: sl(),
         beforeLogout: () => sl<PushService>().unregister(),
+        reporter: sl(),
       ),
     )
     ..registerFactory(() => CheckPhone(sl()))
-    ..registerFactory(() => LoginCubit(sl(), sl(), sl()))
-    ..registerFactory(() => CompleteProfileCubit(sl()));
+    ..registerFactory(() => LoginCubit(sl(), sl(), sl(), reporter: sl()))
+    ..registerFactory(() => CompleteProfileCubit(sl(), reporter: sl()));
 }

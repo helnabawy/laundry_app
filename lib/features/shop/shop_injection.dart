@@ -43,6 +43,7 @@ void registerShopFeature(GetIt sl) {
         getPaymentOptions: sl(),
         retryPayment: sl(),
         reorderFrom: reorderFrom,
+        reporter: sl(),
       ),
     );
 }

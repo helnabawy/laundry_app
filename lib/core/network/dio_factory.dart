@@ -1,18 +1,22 @@
 import 'package:dio/dio.dart';
 import 'package:flutter/foundation.dart';
 
+import '../monitoring/app_reporter.dart';
+import '../monitoring/monitoring_interceptor.dart';
 import '../storage/token_storage.dart';
 
 /// Builds the [Dio] instance used by [ApiClient]:
 /// - attaches the JWT, the UI language and the chosen laundry
 ///   (`X-Vendor-Id`) to every request;
-/// - reports 401s so the app can end the session.
+/// - reports 401s so the app can end the session;
+/// - leaves a breadcrumb per call and reports API failures to [reporter].
 Dio createDio({
   required String baseUrl,
   required TokenStorage tokenStorage,
   required String Function() languageCode,
   required void Function() onUnauthorized,
   String? Function()? laundryId,
+  AppReporter? reporter,
 }) {
   final dio = Dio(
     BaseOptions(
@@ -43,6 +47,9 @@ Dio createDio({
       },
     ),
   );
+
+  // After the auth interceptor, so reports show the headers actually sent.
+  if (reporter != null) dio.interceptors.add(MonitoringInterceptor(reporter));
 
   if (kDebugMode) {
     dio.interceptors.add(

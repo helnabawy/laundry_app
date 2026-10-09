@@ -72,4 +72,5 @@ class DefaultFirebaseOptions {
     storageBucket: 'laundry-213c2.firebasestorage.app',
     iosBundleId: 'com.laundryapp.laundry',
   );
+
 }

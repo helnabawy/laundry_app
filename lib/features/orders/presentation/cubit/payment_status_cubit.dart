@@ -2,6 +2,7 @@ import 'package:equatable/equatable.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
 import '../../../../core/error/failures.dart';
+import '../../../../core/monitoring/app_reporter.dart';
 import '../../domain/entities/payment_info.dart';
 import '../../domain/usecases/payment_usecases.dart';
 
@@ -31,9 +32,12 @@ class PaymentStatusCubit extends Cubit<PaymentStatusState> {
       Duration(seconds: 2),
       Duration(seconds: 4),
     ],
-  }) : super(const PaymentStatusState());
+    AppReporter reporter = const NoopReporter(),
+  }) : _reporter = reporter,
+       super(const PaymentStatusState());
 
   final GetPaymentStatus _getStatus;
+  final AppReporter _reporter;
   final List<Duration> backoff;
 
   void track(PaymentInfo? payment) =>
@@ -54,6 +58,12 @@ class PaymentStatusCubit extends Cubit<PaymentStatusState> {
       }
       final latest = result.valueOrNull!;
       if (!latest.isPending) {
+        _reporter.track(
+          AnalyticsEvent.paymentStatus(
+            status: latest.status.name,
+            provider: latest.provider.name,
+          ),
+        );
         emit(PaymentStatusState(payment: latest));
         return;
       }

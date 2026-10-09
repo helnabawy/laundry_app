@@ -6,6 +6,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 
 import '../../../../core/config/app_config.dart';
 import '../../../../core/error/failures.dart';
+import '../../../../core/monitoring/app_reporter.dart';
 import '../../domain/entities/app_user.dart';
 import '../../domain/entities/phone_number.dart';
 import '../../domain/entities/sign_in_request.dart';
@@ -75,8 +76,10 @@ class OtpCubit extends Cubit<OtpState> {
     required this.request,
     required VerifyOtp verifyOtp,
     required RequestOtp requestOtp,
+    AppReporter reporter = const NoopReporter(),
   }) : _verifyOtp = verifyOtp,
        _requestOtp = requestOtp,
+       _reporter = reporter,
        super(const OtpState(secondsLeft: AppConfig.otpResendSeconds)) {
     _startCountdown();
   }
@@ -84,6 +87,7 @@ class OtpCubit extends Cubit<OtpState> {
   final SignInRequest request;
   final VerifyOtp _verifyOtp;
   final RequestOtp _requestOtp;
+  final AppReporter _reporter;
   Timer? _timer;
 
   PhoneNumber get phone => request.phone;
@@ -106,7 +110,15 @@ class OtpCubit extends Cubit<OtpState> {
     result.fold(
       onErr: (failure) =>
           emit(state.copyWith(verifying: false, failure: () => failure)),
-      onOk: (user) => emit(state.copyWith(verifying: false, user: user)),
+      onOk: (user) {
+        _reporter.track(
+          AnalyticsEvent.signedIn(
+            newAccount: request.fullName != null,
+            role: user.role.name,
+          ),
+        );
+        emit(state.copyWith(verifying: false, user: user));
+      },
     );
   }
 
@@ -118,6 +130,7 @@ class OtpCubit extends Cubit<OtpState> {
       onErr: (failure) =>
           emit(state.copyWith(resending: false, failure: () => failure)),
       onOk: (_) {
+        _reporter.track(AnalyticsEvent.otpResent());
         emit(
           state.copyWith(
             resending: false,

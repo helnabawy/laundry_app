@@ -102,7 +102,7 @@ void registerOrdersFeature(GetIt sl) {
     ..registerFactory(() => GetPaymentOptions(sl()))
     ..registerFactory(() => RetryPayment(sl()))
     ..registerFactory(() => GetPaymentStatus(sl()))
-    ..registerFactory(() => PaymentStatusCubit(sl()))
+    ..registerFactory(() => PaymentStatusCubit(sl(), reporter: sl()))
     // Driver tasks
     ..registerFactory(() => GetTodayTasks(sl()))
     ..registerFactory(() => GetCompletedTasks(sl()))
@@ -126,6 +126,7 @@ void registerOrdersFeature(GetIt sl) {
         createOrder: sl(),
         reorderFrom: reorderFrom,
         startWithCategory: startWithCategory,
+        reporter: sl(),
       ),
     )
     ..registerFactoryParam<OrderTrackingCubit, String, void>(
@@ -150,6 +151,7 @@ void registerOrdersFeature(GetIt sl) {
         sl(),
         sl(),
         refreshBus: sl(),
+        reporter: sl(),
       ),
     );
 }

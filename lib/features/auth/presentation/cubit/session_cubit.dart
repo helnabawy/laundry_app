@@ -2,6 +2,7 @@ import 'package:equatable/equatable.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
 import '../../../../core/error/failures.dart';
+import '../../../../core/monitoring/app_reporter.dart';
 import '../../domain/entities/app_user.dart';
 import '../../domain/usecases/session_usecases.dart';
 
@@ -47,9 +48,11 @@ class SessionCubit extends Cubit<SessionState> {
     required RestoreSession restoreSession,
     required Logout logout,
     Future<void> Function()? beforeLogout,
+    AppReporter reporter = const NoopReporter(),
   }) : _restoreSession = restoreSession,
        _logout = logout,
        _beforeLogout = beforeLogout,
+       _reporter = reporter,
        super(const SessionUnknown());
 
   final RestoreSession _restoreSession;
@@ -58,6 +61,7 @@ class SessionCubit extends Cubit<SessionState> {
   /// Runs while the session is still valid (e.g. removing this phone's push
   /// token), before a deliberate sign-out.
   final Future<void> Function()? _beforeLogout;
+  final AppReporter _reporter;
 
   Future<void> restore() async {
     emit(const SessionUnknown());
@@ -77,6 +81,7 @@ class SessionCubit extends Cubit<SessionState> {
   void userUpdated(AppUser user) => emit(SessionAuthenticated(user));
 
   Future<void> logout() async {
+    _reporter.track(AnalyticsEvent.logout());
     await _beforeLogout?.call();
     await _logout();
     emit(const SessionUnauthenticated());
@@ -85,6 +90,7 @@ class SessionCubit extends Cubit<SessionState> {
   /// Called when the API rejects the JWT (401).
   Future<void> expire() async {
     if (state is! SessionAuthenticated) return;
+    _reporter.log('session expired (401)');
     await _logout();
     emit(const SessionUnauthenticated(expired: true));
   }
