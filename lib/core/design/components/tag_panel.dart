@@ -8,7 +8,7 @@ import 'woven_label.dart';
 
 /// The routing tag: the driver's side of the same label.
 ///
-/// Hi-vis ground, ink type, marking-ink violet still carrying the actions —
+/// Hi-vis ground, ink type, marking-ink blue still carrying the actions —
 /// one system, the other copy. Colour is committed here because the driver
 /// reads this in direct sun, at arm's length, in a moving vehicle.
 class TagPanel extends StatelessWidget {

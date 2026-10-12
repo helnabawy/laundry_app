@@ -60,7 +60,7 @@ class DesignColors extends ThemeExtension<DesignColors> {
   /// A rule that has to divide rather than whisper.
   final Color ruleStrong;
 
-  /// Marking-ink violet: the one interactive tint, on both roles' grounds.
+  /// Marking-ink blue: the one interactive tint, on both roles' grounds.
   final Color tint;
   final Color tintPressed;
 
@@ -93,9 +93,9 @@ class DesignColors extends ThemeExtension<DesignColors> {
     onInk: Color(0xFFFBFBF9),
     rule: Color(0xFFD8D6D0),
     ruleStrong: Color(0xFFB9B7AF),
-    tint: Color(0xFF5B2D8E),
-    tintPressed: Color(0xFF472170),
-    tintWash: Color(0xFFF0E9F8),
+    tint: Color(0xFF1F5FBF),
+    tintPressed: Color(0xFF184A96),
+    tintWash: Color(0xFFE7EFFB),
     onTint: Color(0xFFFBFBF9),
     signal: Color(0xFFE0311F),
     signalWash: Color(0xFFFBE7E4),
@@ -116,9 +116,9 @@ class DesignColors extends ThemeExtension<DesignColors> {
     onInk: Color(0xFF0E0F11),
     rule: Color(0xFF2A2D31),
     ruleStrong: Color(0xFF3D4147),
-    tint: Color(0xFFB18AE8),
-    tintPressed: Color(0xFFC9AAF2),
-    tintWash: Color(0xFF241A33),
+    tint: Color(0xFF7EAEF2),
+    tintPressed: Color(0xFFA6C7F6),
+    tintWash: Color(0xFF15223A),
     onTint: Color(0xFF0E0F11),
     signal: Color(0xFFFF6B57),
     signalWash: Color(0xFF3A1A15),
